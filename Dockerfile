@@ -7,7 +7,8 @@ COPY . .
 RUN npm run build
 
 # ---------- composer deps ----------
-FROM composer:2-php8.4 AS vendor
+FROM php:8.4-cli-alpine AS vendor
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --prefer-dist --no-interaction
