@@ -58,6 +58,26 @@ class MenuHelper
                 ],
             ],
             [
+                'name' => 'Guru BK',
+                'icon' => 'calendar',
+                'path' => '#!'
+            ],
+            [
+                'name' => 'PPDB',
+                'icon' => 'calendar',
+                'path' => '#!'
+            ],
+            [
+                'name' => 'CBT',
+                'icon' => 'calendar',
+                'path' => '#!'
+            ],
+            [
+                'name' => 'Pengumuman',
+                'icon' => 'calendar',
+                'path' => '#!'
+            ],
+            [
                 'icon' => 'calendar',
                 'name' => 'Calendar',
                 'path' => '/calendar',
