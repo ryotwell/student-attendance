@@ -14,7 +14,6 @@ storage/framework/views/*
 bootstrap/cache/*
 docker-compose.yml
 Dockerfile
-docker/
 *.log
 *.md
 !README.md
