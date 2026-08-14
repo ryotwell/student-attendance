@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Schedule;
 use App\Models\Student;
 use App\Models\Xclass;
 use Illuminate\Database\Migrations\Migration;
@@ -15,9 +16,16 @@ return new class extends Migration
     {
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
+            $table->enum('status', [
+                'HADIR',
+                'IZIN',
+                'SAKIT',
+                'ALPHA',
+            ]);
             $table->timestamp('date');
-            $table->foreignIdFor(Student::class);
-            $table->foreignIdFor(Xclass::class);
+            $table->foreignIdFor(Student::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Xclass::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Schedule::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }

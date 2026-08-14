@@ -50,7 +50,7 @@
 
             <!-- Logo (mobile only) -->
             <a href="/" class="xl:hidden">
-                <img class="dark:hidden" src="/images/logo/logo.svg" alt="Logo" />
+                <img class="dark:hidden" src="/logo.png" alt="Logo" width="80" height="80" />
                 <img class="hidden dark:block" src="/images/logo/logo-dark.svg" alt="Logo" />
             </a>
 
