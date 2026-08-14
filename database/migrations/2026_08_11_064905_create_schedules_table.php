@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Subject;
+use App\Models\User;
 use App\Models\Xclass;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -26,6 +27,7 @@ return new class extends Migration
             ]);
             $table->time('start_time');
             $table->time('end_time');
+            $table->foreignIdFor(User::class);
             $table->foreignIdFor(Subject::class);
             $table->foreignIdFor(Xclass::class);
             $table->timestamps();

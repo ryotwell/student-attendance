@@ -48,11 +48,31 @@ class DatabaseSeeder extends Seeder
             'PPKN', 'Geografi', 'Sejarah', 'PAI', 'Prakarya & Kewirausahaan',
         ])->mapWithKeys(fn ($name) => [$name => Subject::firstOrCreate(['name' => $name, 'grade' => '7'])]);
 
+        // Seed teachers (GURU role) for each subject
+        $teachers = collect([
+            'Bahasa Inggris' => ['name' => 'Budi Santoso', 'email' => 'budi.santoso@sekolah.id'],
+            'PJOK' => ['name' => 'Dewi Anggraini', 'email' => 'dewi.anggraini@sekolah.id'],
+            'Ekonomi' => ['name' => 'Ahmad Wijaya', 'email' => 'ahmad.wijaya@sekolah.id'],
+            'Bahasa Inggris TKL' => ['name' => 'Siti Rahayu', 'email' => 'siti.rahayu@sekolah.id'],
+            'Sosiologi' => ['name' => 'Rina Sari', 'email' => 'rina.sari@sekolah.id'],
+            'Bahasa Indonesia' => ['name' => 'Hendra Gunawan', 'email' => 'hendra.gunawan@sekolah.id'],
+            'Matematika' => ['name' => 'Lestari Putri', 'email' => 'lestari.putri@sekolah.id'],
+            'Seni Budaya' => ['name' => 'Yoga Pratama', 'email' => 'yoga.pratama@sekolah.id'],
+            'PPKN' => ['name' => 'Maya Indah', 'email' => 'maya.indah@sekolah.id'],
+            'Geografi' => ['name' => 'Fajar Nugroho', 'email' => 'fajar.nugroho@sekolah.id'],
+            'Sejarah' => ['name' => 'Nina Kartika', 'email' => 'nina.kartika@sekolah.id'],
+            'PAI' => ['name' => 'Ustadz Rahman', 'email' => 'rahman@sekolah.id'],
+            'Prakarya & Kewirausahaan' => ['name' => 'Doni Setiawan', 'email' => 'doni.setiawan@sekolah.id'],
+        ])->mapWithKeys(fn ($t, $subject) => [$subject => User::firstOrCreate(
+            ['email' => $t['email']],
+            ['name' => $t['name'], 'password' => bcrypt('12345678'), 'role' => 'GURU']
+        )]);
+
         // Seed jadwal kelas 7A
         $xclass7A = Xclass::where('name', '7 A')->first();
         if ($xclass7A) {
             $schedules = [
-                ['day' => 'MONDAY',    'start' => '07:30', 'end' => '08:00', 'subject' => 'Bahasa Inggris'],
+                ['day' => 'MONDAY',    'start' => '07:00', 'end' => '08:00', 'subject' => 'Bahasa Inggris'],
                 ['day' => 'MONDAY',    'start' => '08:00', 'end' => '09:00', 'subject' => 'PJOK'],
                 ['day' => 'MONDAY',    'start' => '09:00', 'end' => '10:00', 'subject' => 'Ekonomi'],
                 ['day' => 'TUESDAY',   'start' => '07:00', 'end' => '08:00', 'subject' => 'Bahasa Inggris TKL'],
@@ -79,6 +99,7 @@ class DatabaseSeeder extends Seeder
                     'start_time' => $s['start'],
                     'end_time'   => $s['end'],
                     'subject_id' => $subjects7[$s['subject']]->id,
+                    'user_id'    => $teachers[$s['subject']]->id,
                     'xclass_id'  => $xclass7A->id,
                 ]);
             }

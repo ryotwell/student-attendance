@@ -12,11 +12,42 @@ class MenuHelper
                 'name' => 'Dashboard',
                 'path' => '/',
             ],
-            // [
-            //     'icon' => 'dashboard',
-            //     'name' => 'Students',
-            //     'path' => '/students',
-            // ],
+            [
+                'name' => 'Guru BK',
+                'icon' => 'calendar',
+                'path' => '#!'
+            ],
+            [
+                'name' => 'PPDB',
+                'icon' => 'calendar',
+                'path' => '#!'
+            ],
+            [
+                'name' => 'CBT',
+                'icon' => 'calendar',
+                'path' => '#!'
+            ],
+            [
+                'name' => 'Riwayat Absen',
+                'icon' => 'calendar',
+                'path' => '#!'
+            ],
+            [
+                'name' => 'Tugas Guru',
+                'icon' => 'calendar',
+                'path' => '#!'
+            ],
+        ];
+    }
+
+    public static function getMastertems()
+    {
+        return [
+            [
+                'name' => 'Kehadiran',
+                'icon' => 'calendar',
+                'path' => '#!'
+            ],
             [
                 'name' => 'Siswa',
                 'icon' => 'forms',
@@ -58,25 +89,19 @@ class MenuHelper
                 ],
             ],
             [
-                'name' => 'Guru BK',
-                'icon' => 'calendar',
-                'path' => '#!'
-            ],
-            [
-                'name' => 'PPDB',
-                'icon' => 'calendar',
-                'path' => '#!'
-            ],
-            [
-                'name' => 'CBT',
-                'icon' => 'calendar',
-                'path' => '#!'
-            ],
-            [
                 'name' => 'Pengumuman',
                 'icon' => 'calendar',
-                'path' => '#!'
+                'subItems' => [
+                    ['name' => 'Daftar', 'path' => '/schedules'],
+                    ['name' => 'Tambah Pengumuman', 'path' => '/schedules/create'],
+                ],
             ],
+        ];
+    }
+
+    public static function getOthersItems()
+    {
+        return [
             [
                 'icon' => 'calendar',
                 'name' => 'Calendar',
@@ -109,12 +134,6 @@ class MenuHelper
                     ['name' => '404 Error', 'path' => '/error-404', 'pro' => false]
                 ],
             ],
-        ];
-    }
-
-    public static function getOthersItems()
-    {
-        return [
             [
                 'icon' => 'charts',
                 'name' => 'Charts',
@@ -154,9 +173,13 @@ class MenuHelper
                 'items' => self::getMainNavItems()
             ],
             [
+                'title' => 'Data Master',
+                'items' => self::getMastertems()
+            ],
+            [
                 'title' => 'Others',
                 'items' => self::getOthersItems()
-            ]
+            ],
         ];
     }
 

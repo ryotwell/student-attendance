@@ -16,8 +16,8 @@ return new class extends Migration
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
             $table->timestamp('date');
-            // $table->foreignIdFor(Student::class);
-            // $table->foreignIdFor(Xclass::class);
+            $table->foreignIdFor(Student::class);
+            $table->foreignIdFor(Xclass::class);
             $table->timestamps();
         });
     }
