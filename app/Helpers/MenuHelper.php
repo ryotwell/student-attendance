@@ -13,17 +13,7 @@ class MenuHelper
                 'path' => '/',
             ],
             [
-                'name' => 'Guru BK',
-                'icon' => 'calendar',
-                'path' => '#!'
-            ],
-            [
-                'name' => 'PPDB',
-                'icon' => 'calendar',
-                'path' => '#!'
-            ],
-            [
-                'name' => 'CBT',
+                'name' => 'Jurnal Guru',
                 'icon' => 'calendar',
                 'path' => '#!'
             ],
@@ -37,6 +27,11 @@ class MenuHelper
                 'icon' => 'calendar',
                 'path' => '#!'
             ],
+            [
+                'name' => 'Guru BK',
+                'icon' => 'calendar',
+                'path' => '#!'
+            ],
         ];
     }
 
@@ -44,7 +39,7 @@ class MenuHelper
     {
         return [
             [
-                'name' => 'Kehadiran',
+                'name' => 'Absensi',
                 'icon' => 'calendar',
                 'path' => '#!'
             ],
@@ -88,18 +83,43 @@ class MenuHelper
                     ['name' => 'Tambah Jadwal', 'path' => '/schedules/create'],
                 ],
             ],
-            [
-                'name' => 'Pengumuman',
-                'icon' => 'calendar',
-                'subItems' => [
-                    ['name' => 'Daftar', 'path' => '/schedules'],
-                    ['name' => 'Tambah Pengumuman', 'path' => '/schedules/create'],
-                ],
-            ],
+            // [
+            //     'name' => 'Pengumuman',
+            //     'icon' => 'calendar',
+            //     'subItems' => [
+            //         ['name' => 'Daftar', 'path' => '#!'],
+            //         ['name' => 'Tambah Pengumuman', 'path' => '#!'],
+            //     ],
+            // ],
         ];
     }
 
     public static function getOthersItems()
+    {
+        return [
+            [
+                'name' => 'PPDB',
+                'icon' => 'calendar',
+                'path' => '#!'
+            ],
+            [
+                'name' => 'CBT',
+                'icon' => 'calendar',
+                'path' => '#!'
+            ],
+            [
+                'name' => 'Pengumuman',
+                'icon' => 'calendar',
+                'subItems' => [
+                    ['name' => 'Daftar', 'path' => '#!'],
+                    ['name' => 'Tambah Pengumuman', 'path' => '#!'],
+                ],
+            ],
+        ];
+    }
+    
+    
+    public static function getTemplateOthersItems()
     {
         return [
             [
@@ -177,7 +197,7 @@ class MenuHelper
                 'items' => self::getMastertems()
             ],
             [
-                'title' => 'Others',
+                'title' => 'Lainnya',
                 'items' => self::getOthersItems()
             ],
         ];
