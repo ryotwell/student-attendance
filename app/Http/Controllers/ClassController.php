@@ -97,4 +97,10 @@ class ClassController extends Controller
             'class' => $class,
         ]);
     }
+public function students(Xclass $class)
+    {
+        $students = $class->students()->select('id', 'nis', 'name')->orderBy('name')->get();
+
+        return response()->json($students);
+    }
 }

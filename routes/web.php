@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AcademicYearController;
+use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudentController;
@@ -22,9 +24,25 @@ Route::resource('students', StudentController::class)->middleware('auth');
 
 Route::resource('classes', ClassController::class)->middleware('auth');
 Route::get('/classes/{class}/schedules', [ClassController::class, 'schedules'])->name('classes.schedule')->middleware('auth');
+Route::get('/classes/{class}/students', [ClassController::class, 'students'])->name('classes.students')->middleware('auth');
 Route::resource('academic-years', AcademicYearController::class)->middleware('auth');
 Route::resource('subjects', SubjectController::class)->middleware('auth');
 Route::resource('schedules', ScheduleController::class)->middleware('auth');
+Route::resource('announcements', AnnouncementController::class)->middleware('auth');
+
+// attendance
+Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index')->middleware('auth');
+Route::get('attendance/show', [AttendanceController::class, 'show'])->name('attendance.show')->middleware('auth');
+Route::post('attendance', [AttendanceController::class, 'store'])->name('attendance.store')->middleware('auth');
+Route::get('attendance/schedules/{class}', [AttendanceController::class, 'getSchedules'])->name('attendance.schedules')->middleware('auth');
+
+// attendance report
+Route::get('attendance/report', [AttendanceController::class, 'report'])->name('attendance.report')->middleware('auth');
+Route::get('attendance/report/show', [AttendanceController::class, 'reportShow'])->name('attendance.report.show')->middleware('auth');
+
+// attendance recap
+Route::get('attendance/recap', [AttendanceController::class, 'recap'])->name('attendance.recap')->middleware('auth');
+Route::get('attendance/recap/show', [AttendanceController::class, 'recapShow'])->name('attendance.recap.show')->middleware('auth');
 
 // 
 

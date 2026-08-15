@@ -41,7 +41,11 @@ class MenuHelper
             [
                 'name' => 'Absensi',
                 'icon' => 'calendar',
-                'path' => '#!'
+                'subItems' => [
+                    ['name' => 'Input Absensi', 'path' => '/attendance'],
+                    ['name' => 'Laporan Absensi', 'path' => '/attendance/report'],
+                    ['name' => 'Rekap Absensi', 'path' => '/attendance/recap'],
+                ],
             ],
             [
                 'name' => 'Siswa',
@@ -83,14 +87,14 @@ class MenuHelper
                     ['name' => 'Tambah Jadwal', 'path' => '/schedules/create'],
                 ],
             ],
-            // [
-            //     'name' => 'Pengumuman',
-            //     'icon' => 'calendar',
-            //     'subItems' => [
-            //         ['name' => 'Daftar', 'path' => '#!'],
-            //         ['name' => 'Tambah Pengumuman', 'path' => '#!'],
-            //     ],
-            // ],
+            [
+                'name' => 'Pengumuman',
+                'icon' => 'calendar',
+                'subItems' => [
+                    ['name' => 'Daftar', 'path' => '/announcements'],
+                    ['name' => 'Tambah Pengumuman', 'path' => '/announcements/create'],
+                ],
+            ],
         ];
     }
 
@@ -107,14 +111,14 @@ class MenuHelper
                 'icon' => 'calendar',
                 'path' => '#!'
             ],
-            [
-                'name' => 'Pengumuman',
-                'icon' => 'calendar',
-                'subItems' => [
-                    ['name' => 'Daftar', 'path' => '#!'],
-                    ['name' => 'Tambah Pengumuman', 'path' => '#!'],
-                ],
-            ],
+                // [
+                //     'name' => 'Pengumuman',
+                //     'icon' => 'calendar',
+                //     'subItems' => [
+                //         ['name' => 'Daftar', 'path' => '#!'],
+                //         ['name' => 'Tambah Pengumuman', 'path' => '#!'],
+                //     ],
+                // ],
         ];
     }
     
@@ -243,5 +247,20 @@ class MenuHelper
         ];
 
         return $icons[$iconName] ?? '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor"/></svg>';
+    }
+
+    public static function getDayName($day)
+    {
+        $days = [
+            'MONDAY' => 'Senin',
+            'TUESDAY' => 'Selasa',
+            'WEDNESDAY' => 'Rabu',
+            'THURSDAY' => 'Kamis',
+            'FRIDAY' => 'Jumat',
+            'SATURDAY' => 'Sabtu',
+            'SUNDAY' => 'Minggu',
+        ];
+
+        return $days[$day] ?? $day;
     }
 }
