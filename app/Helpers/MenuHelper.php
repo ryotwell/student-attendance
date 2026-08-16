@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use Illuminate\Support\Facades\Auth;
+
 class MenuHelper
 {
     public static function getMainNavItems()
@@ -191,20 +193,39 @@ class MenuHelper
 
     public static function getMenuGroups()
     {
-        return [
+        // menu role guru
+        $menuGroups = [
             [
                 'title' => 'Menu',
-                'items' => self::getMainNavItems()
-            ],
-            [
-                'title' => 'Data Master',
-                'items' => self::getMastertems()
-            ],
-            [
-                'title' => 'Lainnya',
-                'items' => self::getOthersItems()
+                'items' => [
+                    [
+                        'icon' => 'calendar',
+                        'name' => 'Absensi',
+                        'path' => '#!',
+                    ],
+                ],
             ],
         ];
+
+        // menu role admin
+        if(Auth::user()->isAdmin()) {
+            $menuGroups = [
+                [
+                    'title' => 'Menu',
+                    'items' => self::getMainNavItems()
+                ],
+                [
+                    'title' => 'Data Master',
+                    'items' => self::getMastertems()
+                ],
+                [
+                    'title' => 'Lainnya',
+                    'items' => self::getOthersItems()
+                ],
+            ];
+        }
+
+        return $menuGroups;
     }
 
     public static function isActive($path)
