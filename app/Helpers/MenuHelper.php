@@ -193,23 +193,51 @@ class MenuHelper
 
     public static function getMenuGroups()
     {
-        // menu role guru
-        $menuGroups = [
-            [
-                'title' => 'Menu',
-                'items' => [
-                    [
-                        'icon' => 'calendar',
-                        'name' => 'Absensi',
-                        'path' => '#!',
+        $user = Auth::user();
+        
+        if (!$user) {
+            return [];
+        }
+
+        // menu role guru & guru BK
+        if ($user->role === 'GURU' || $user->role === 'GURU_BK') {
+            return [
+                [
+                    'title' => 'Menu',
+                    'items' => [
+                        [
+                            'icon' => 'dashboard',
+                            'name' => 'Dashboard',
+                            'path' => '/',
+                        ],
+                        [
+                            'icon' => 'calendar',
+                            'name' => 'Absensi',
+                            'path' => '#!',
+                            'subItems' => [
+                                ['name' => 'Input Absensi', 'path' => '/attendance'],
+                                ['name' => 'Laporan Absensi', 'path' => '/attendance/report'],
+                                ['name' => 'Rekap Absensi', 'path' => '/attendance/recap'],
+                            ],
+                        ],
+                        [
+                            'icon' => 'calendar',
+                            'name' => 'Jadwal Mengajar',
+                            'path' => '/schedules',
+                        ],
+                        [
+                            'icon' => 'calendar',
+                            'name' => 'Pengumuman',
+                            'path' => '/announcements',
+                        ],
                     ],
                 ],
-            ],
-        ];
+            ];
+        }
 
         // menu role admin
-        if(Auth::user()->isAdmin()) {
-            $menuGroups = [
+        if ($user->isAdmin()) {
+            return [
                 [
                     'title' => 'Menu',
                     'items' => self::getMainNavItems()
@@ -225,7 +253,7 @@ class MenuHelper
             ];
         }
 
-        return $menuGroups;
+        return [];
     }
 
     public static function isActive($path)

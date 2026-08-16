@@ -14,12 +14,18 @@ class ScheduleController extends Controller
      */
     public function index()
     {
-        return view('admin.schedule.index', [
-            'schedules' => Schedule::with(['subject', 'xclass'])
-                ->orderByRaw("FIELD(day, 'MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY')")
-                ->orderBy('start_time')
-                ->get(),
-        ]);
+        $query = Schedule::with(['subject', 'xclass']);
+
+        if (auth()->user()->role === 'GURU' || auth()->user()->role === 'GURU_BK') {
+            $query->where('user_id', auth()->id());
+        }
+
+        $schedules = $query
+            ->orderByRaw("FIELD(day, 'MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY')")
+            ->orderBy('start_time')
+            ->get();
+
+        return view('admin.schedule.index', compact('schedules'));
     }
 
     /**
