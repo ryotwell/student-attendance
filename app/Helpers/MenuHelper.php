@@ -230,11 +230,11 @@ class MenuHelper
                             'name' => 'Pengumuman',
                             'path' => '/announcements',
                         ],
-                        [
-                            'icon' => 'tables',
-                            'name' => 'Daftar Absensi',
-                            'path' => '/attendance/list',
-                        ],
+                        // [
+                        //     'icon' => 'tables',
+                        //     'name' => 'Daftar Absensi',
+                        //     'path' => '/attendance/list',
+                        // ],
                     ],
                 ],
             ];
