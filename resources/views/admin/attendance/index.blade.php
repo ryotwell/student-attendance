@@ -12,6 +12,7 @@
     <x-common.component-card title="Pilih Kelas, Jadwal, dan Tanggal">
         <form action="{{ route('attendance.show') }}" method="GET" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
                 <div>
                     <label for="class_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kelas <span class="text-error-500">*</span></label>
                     <select name="class_id" id="class_id" required

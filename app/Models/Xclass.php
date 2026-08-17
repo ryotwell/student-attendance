@@ -8,6 +8,8 @@ class Xclass extends Model
 {
     protected $guarded = [];
 
+    protected $appends = ['students_count'];
+
     public function students()
     {
         return $this->hasMany(Student::class);
@@ -21,5 +23,10 @@ class Xclass extends Model
     public function academicYear()
     {
         return $this->belongsTo(AcademicYear::class);
+    }
+
+    public function getStudentsCountAttribute()
+    {
+        return $this->students()->count();
     }
 }

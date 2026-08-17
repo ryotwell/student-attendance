@@ -16,7 +16,7 @@ class ScheduleController extends Controller
     {
         $query = Schedule::with(['subject', 'xclass']);
 
-        if (auth()->user()->role === 'GURU' || auth()->user()->role === 'GURU_BK') {
+        if (auth()->user()->role === 'GURU') {
             $query->where('user_id', auth()->id());
         }
 

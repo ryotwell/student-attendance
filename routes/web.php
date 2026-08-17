@@ -44,6 +44,12 @@ Route::get('attendance/report/show', [AttendanceController::class, 'reportShow']
 Route::get('attendance/recap', [AttendanceController::class, 'recap'])->name('attendance.recap')->middleware('auth');
 Route::get('attendance/recap/show', [AttendanceController::class, 'recapShow'])->name('attendance.recap.show')->middleware('auth');
 
+// attendance list (daftar absensi per kelas)
+Route::get('attendance/list', [AttendanceController::class, 'list'])->name('attendance.list')->middleware('auth');
+Route::get('attendance/list/{class}', [AttendanceController::class, 'listShow'])->name('attendance.list.show')->middleware('auth');
+Route::get('attendance/list/{class}/{schedule}/{date}/edit', [AttendanceController::class, 'listEdit'])->name('attendance.list.edit')->middleware('auth');
+Route::put('attendance/list/{class}/{schedule}/{date}', [AttendanceController::class, 'listUpdate'])->name('attendance.list.update')->middleware('auth');
+
 // 
 
 // calender pages
