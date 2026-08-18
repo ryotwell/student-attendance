@@ -227,12 +227,12 @@ class MenuHelper
                         ],
                         [
                             'icon' => 'calendar',
-                            'name' => 'Jadwal Mengajar',
+                            'name' => 'Jadwal Mengajar Saya',
                             'path' => '/schedules',
                         ],
                         [
                             'icon' => 'calendar',
-                            'name' => 'Pengumuman',
+                            'name' => 'Pengumuman Sekolah',
                             'path' => '/announcements',
                         ],
                         // [

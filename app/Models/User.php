@@ -60,4 +60,13 @@ class User extends Authenticatable
     {
         return $this->hasMany(Schedule::class);
     }
+
+    public function mySchedules()
+    {
+        return $this->schedules()
+            ->with(['subject', 'xclass'])
+            ->where('user_id', auth()->id())
+            ->orderByRaw("FIELD(day, 'MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY')")
+            ->orderBy('start_time');
+    }
 }

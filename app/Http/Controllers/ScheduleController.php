@@ -6,6 +6,7 @@ use App\Models\Schedule;
 use App\Models\Subject;
 use App\Models\Xclass;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ScheduleController extends Controller
 {
@@ -24,6 +25,12 @@ class ScheduleController extends Controller
             ->orderByRaw("FIELD(day, 'MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY')")
             ->orderBy('start_time')
             ->get();
+
+        // return $schedules;
+
+        if(Auth::user()->isTeacher()) {
+            return view('teacher.schedule.index', compact('schedules'));
+        }
 
         return view('admin.schedule.index', compact('schedules'));
     }
