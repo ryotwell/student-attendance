@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Announcement;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AnnouncementController extends Controller
 {
@@ -12,6 +13,11 @@ class AnnouncementController extends Controller
      */
     public function index()
     {
+        if(Auth::user()->isTeacher()) {
+            return view('teacher.announcement.index', [
+                'announcements' => Announcement::latest()->get(),
+            ]);
+        }
         return view('admin.announcement.index', [
             'announcements' => Announcement::latest()->get(),
         ]);
@@ -42,7 +48,15 @@ class AnnouncementController extends Controller
      */
     public function show(Announcement $announcement)
     {
-        return redirect()->route('announcements.index');
+        if (Auth::user()->isTeacher()) {
+            return view('teacher.announcement.show', [
+                'announcement' => $announcement,
+            ]);
+        }
+
+        return view('admin.announcement.show', [
+            'announcement' => $announcement,
+        ]);
     }
 
     /**

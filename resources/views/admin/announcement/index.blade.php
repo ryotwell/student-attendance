@@ -56,6 +56,10 @@
                             </td>
                             <td class="px-5 py-4 sm:px-6">
                                 <div class="flex items-center justify-end gap-3">
+                                    <a href="{{ route('announcements.show', $announcement) }}"
+                                        class="font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400 text-theme-sm">
+                                        Lihat
+                                    </a>
                                     <a href="{{ route('announcements.edit', $announcement) }}"
                                         class="font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400 text-theme-sm">
                                         Edit

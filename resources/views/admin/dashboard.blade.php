@@ -18,9 +18,9 @@
     </div> --}}
     @endif
 
-    <div class="col-span-12">
+    {{-- <div class="col-span-12">
       <x-ecommerce.statistics-chart />
-    </div>
+    </div> --}}
 
     {{-- <div class="col-span-12 xl:col-span-5">
       <x-ecommerce.customer-demographic />
