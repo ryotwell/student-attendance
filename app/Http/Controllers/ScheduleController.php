@@ -44,7 +44,7 @@ class ScheduleController extends Controller
         return view('admin.schedule.create', [
             'subjects' => Subject::orderBy('name')->get(),
             'classes' => Xclass::orderBy('name')->get(),
-            'users' => User::orderBy('name')->get(),
+            'users' => User::where('role', 'GURU')->orderBy('name')->get(),
             'days' => $this->days(),
         ]);
     }
@@ -78,7 +78,7 @@ class ScheduleController extends Controller
             'schedule' => $schedule,
             'subjects' => Subject::orderBy('name')->get(),
             'classes' => Xclass::orderBy('name')->get(),
-            'users' => User::orderBy('name')->get(),
+            'users' => User::where('role', 'GURU')->orderBy('name')->get(),
             'days' => $this->days(),
         ]);
     }

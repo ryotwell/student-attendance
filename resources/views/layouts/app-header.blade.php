@@ -50,8 +50,8 @@
 
             <!-- Logo (mobile only) -->
             {{-- <a href="/" class="xl:hidden">
-                <img class="dark:hidden" src="/logo.png" alt="Logo" width="80" height="80" />
-                <img class="hidden dark:block" src="/logo.png" alt="Logo" />
+                <img class="dark:hidden" src="/logo-sekolah.png" alt="Logo" width="80" height="80" />
+                <img class="hidden dark:block" src="/logo-sekolah.png" alt="Logo" />
             </a> --}}
 
             <!-- Application Menu Toggle (mobile only) -->
