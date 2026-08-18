@@ -55,4 +55,9 @@ class User extends Authenticatable
     {
         return $this->role === 'GURU';
     }
+
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
 }

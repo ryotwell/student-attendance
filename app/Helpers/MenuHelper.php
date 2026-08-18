@@ -210,15 +210,20 @@ class MenuHelper
                             'name' => 'Dashboard',
                             'path' => '/',
                         ],
+                        // [
+                        //     'icon' => 'calendar',
+                        //     'name' => 'Absensi',
+                        //     'path' => '#!',
+                        //     'subItems' => [
+                        //         ['name' => 'Input Absensi', 'path' => '/attendance'],
+                        //         ['name' => 'Laporan Absensi', 'path' => '/attendance/report'],
+                        //         ['name' => 'Rekap Absensi', 'path' => '/attendance/recap'],
+                        //     ],
+                        // ],
                         [
                             'icon' => 'calendar',
                             'name' => 'Absensi',
-                            'path' => '#!',
-                            'subItems' => [
-                                ['name' => 'Input Absensi', 'path' => '/attendance'],
-                                ['name' => 'Laporan Absensi', 'path' => '/attendance/report'],
-                                ['name' => 'Rekap Absensi', 'path' => '/attendance/recap'],
-                            ],
+                            'path' => '/absensi',
                         ],
                         [
                             'icon' => 'calendar',

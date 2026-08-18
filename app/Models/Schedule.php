@@ -17,4 +17,9 @@ class Schedule extends Model
     {
         return $this->belongsTo(Xclass::class);
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

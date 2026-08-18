@@ -9,12 +9,12 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Teacher\AbsensiController;
 use App\Models\Xclass;
+use Illuminate\Support\Facades\Auth;
 
 // dashboard
 Route::get('/', function () {
-    // return Xclass::find(1);
-
     return view('admin.dashboard', ['title' => 'E-commerce Dashboard']);
 })->name('dashboard')->middleware('auth');
 
@@ -49,6 +49,9 @@ Route::get('attendance/list', [AttendanceController::class, 'list'])->name('atte
 Route::get('attendance/list/{class}', [AttendanceController::class, 'listShow'])->name('attendance.list.show')->middleware('auth');
 Route::get('attendance/list/{class}/{schedule}/{date}/edit', [AttendanceController::class, 'listEdit'])->name('attendance.list.edit')->middleware('auth');
 Route::put('attendance/list/{class}/{schedule}/{date}', [AttendanceController::class, 'listUpdate'])->name('attendance.list.update')->middleware('auth');
+
+// absensi
+Route::get('/absensi', [AbsensiController::class, 'schedules'])->name('absensi.schedules');
 
 // 
 

@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\Xclass;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AttendanceController extends Controller
 {
@@ -45,6 +46,16 @@ class AttendanceController extends Controller
             ->whereDate('date', $date)
             ->get()
             ->keyBy('student_id');
+
+        if(Auth::user()->role === 'GURU') {
+            return view('teacher.absensi.absensi', [
+                'title' => 'Absensi: ' . $class->name . ' - ' . $schedule->subject->name,
+                'class' => $class,
+                'schedule' => $schedule,
+                'date' => $date,
+                'existingAttendances' => $existingAttendances,
+            ]);
+        }
 
         return view('admin.attendance.table', [
             'title' => 'Absensi: ' . $class->name . ' - ' . $schedule->subject->name,
