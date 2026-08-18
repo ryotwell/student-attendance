@@ -8,6 +8,11 @@ class Schedule extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        'start_time' => 'datetime:H:i',
+        'end_time' => 'datetime:H:i',
+    ];
+
     public function subject()
     {
         return $this->belongsTo(Subject::class);

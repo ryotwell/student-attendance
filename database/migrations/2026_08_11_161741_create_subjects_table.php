@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('subjects', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->enum('grade', ['7', '8', '9']);
+            $table->enum('grade', ['X', 'XI', 'XII']);
             $table->timestamps();
         });
     }

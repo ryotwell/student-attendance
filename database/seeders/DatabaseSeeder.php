@@ -26,18 +26,47 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         User::create([
-            'name' => 'Zulzario Zaeri',
+            'name' => 'Akun Admin',
             'email' => 'admin@gmail.com',
-            'password' => bcrypt('12345678')
+            'password' => bcrypt('12345678'),
+            'role' => 'ADMIN'
         ]);
 
-        $classes = ['7 A', '7 B', '7 C',];
+        User::create([
+            'name' => 'Akhyar Rosidi',
+            'email' => 'rosidi@gmail.com',
+            'password' => bcrypt('12345678'),
+            'role' => 'GURU'
+        ]);
+
+        // $classes = ['7 A', '7 B', '7 C',];
 
         $academicYear = AcademicYear::create(['name' => 'Tahun Ajaran 2026/2027', 'is_active' => true]);
 
-        foreach($classes as $x) {
+        foreach([
+            'IPA 12 - 1',
+            'IPA 12 - 2',
+            'IPA 12 - 3',
+
+            'IPS 12 - 1',
+
+            'Agama 12 - 1',
+            'Agama 12 - 2',
+            'Agama 12 - 3',
+            'Agama 12 - 4',
+        ] as $x) {
             Xclass::create(['name' => $x, 'academic_year_id' => $academicYear->id]);
         }
+
+        // Seed subjects for grade 7
+        $subjects7 = collect([
+            'Matematika', 'Informatika'
+        ])->mapWithKeys(fn ($name) => [$name => Subject::firstOrCreate(['name' => $name, 'grade' => 'XII'])]);
+
+
+        // foreach($classes as $x) {
+        //     Xclass::create(['name' => $x, 'academic_year_id' => $academicYear->id]);
+        // }
 
         // Student::factory(100)->create();
 
