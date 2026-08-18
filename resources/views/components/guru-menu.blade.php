@@ -1,15 +1,9 @@
-{{--
-    Komponen: <x-dashboard-menu />
-    Lokasi:
-    resources/views/components/dashboard-menu.blade.php
---}}
-
 @php
     $menuItems = [
         [
             'title'       => 'Input Absensi',
             'description' => 'Input dan kelola data kehadiran siswa',
-            'url'         => route('attendance.index'),
+            'url'         => route('absensi.schedules'),
             'icon'        => 'clipboard-plus',
         ],
         [

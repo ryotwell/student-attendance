@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Pilih Jadwal Mengajar" />
+    <x-common.page-breadcrumb pageTitle="Pilih Absensi" />
 
     <div class="max-w-6xl mx-auto">
         @if($schedules->isEmpty())

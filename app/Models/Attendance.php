@@ -7,6 +7,33 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Attendance extends Model
 {
+    /**
+     * Opsi status kehadiran beserta tampilannya pada UI.
+     * 'checkedClass' berisi class Tailwind untuk kondisi radio terpilih (peer-checked).
+     */
+    public const STATUS_OPTIONS = [
+        'HADIR' => [
+            'label' => 'Hadir',
+            'icon' => '✓',
+            'checkedClass' => 'peer-checked:bg-green-500',
+        ],
+        'IZIN' => [
+            'label' => 'Izin',
+            'icon' => '📘',
+            'checkedClass' => 'peer-checked:bg-blue-500',
+        ],
+        'SAKIT' => [
+            'label' => 'Sakit',
+            'icon' => '🤒',
+            'checkedClass' => 'peer-checked:bg-yellow-500',
+        ],
+        'ALPHA' => [
+            'label' => 'Alpha',
+            'icon' => '✕',
+            'checkedClass' => 'peer-checked:bg-red-500',
+        ],
+    ];
+
     protected $guarded = [];
 
     protected $casts = [
