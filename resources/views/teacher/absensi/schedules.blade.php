@@ -55,12 +55,12 @@
 
                         {{-- SUBJECT --}}
                         <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-1 group-hover:text-{{$color}}-600 dark:group-hover:text-{{$color}}-400 transition-colors">
-                            {{ $schedule->subject?->name ?? 'Mata Pelajaran' }}
+                            Mata Pelajaran {{ $schedule->subject?->name ?? 'Mata Pelajaran' }}
                         </h4>
 
                         {{-- CLASS --}}
                         <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                            <span class="font-medium text-gray-700 dark:text-gray-300">{{ $schedule->xclass?->name ?? 'Kelas' }}</span>
+                            <span class="font-medium text-gray-700 dark:text-gray-300">Kelas {{ $schedule->xclass?->name ?? 'Kelas' }}</span>
                         </p>
 
                         {{-- TIME --}}

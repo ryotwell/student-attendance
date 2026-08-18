@@ -4,14 +4,9 @@
     <x-common.page-breadcrumb pageTitle="Detail Pengumuman" />
 
     <div class="mx-auto max-w-3xl space-y-6">
-        <a href="{{ route('announcements.index') }}"
-            class="mb-4 inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 12H5" />
-                <path d="M12 19l-7-7 7-7" />
-            </svg>
-            Kembali ke Daftar Pengumuman
-        </a>
+        <x-back-to link="{{ route('announcements.index') }}">
+            Kembali ke Pengumuman
+        </x-back-to>
 
         <x-common.component-card title="Detail Pengumuman">
             {{-- HEADER --}}

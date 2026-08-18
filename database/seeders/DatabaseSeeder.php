@@ -20,14 +20,14 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // User::factory()->create([
+        //     'name' => 'Test User',
+        //     'email' => 'test@example.com',
+        // ]);
 
         User::create([
             'name' => 'Zulzario Zaeri',
-            'email' => 'ryotwell@gmail.com',
+            'email' => 'admin@gmail.com',
             'password' => bcrypt('12345678')
         ]);
 
@@ -39,70 +39,70 @@ class DatabaseSeeder extends Seeder
             Xclass::create(['name' => $x, 'academic_year_id' => $academicYear->id]);
         }
 
-        Student::factory(100)->create();
+        // Student::factory(100)->create();
 
-        // Seed subjects for grade 7
-        $subjects7 = collect([
-            'Bahasa Inggris', 'PJOK', 'Ekonomi', 'Bahasa Inggris TKL',
-            'Sosiologi', 'Bahasa Indonesia', 'Matematika', 'Seni Budaya',
-            'PPKN', 'Geografi', 'Sejarah', 'PAI', 'Prakarya & Kewirausahaan',
-        ])->mapWithKeys(fn ($name) => [$name => Subject::firstOrCreate(['name' => $name, 'grade' => '7'])]);
+        // // Seed subjects for grade 7
+        // $subjects7 = collect([
+        //     'Bahasa Inggris', 'PJOK', 'Ekonomi', 'Bahasa Inggris TKL',
+        //     'Sosiologi', 'Bahasa Indonesia', 'Matematika', 'Seni Budaya',
+        //     'PPKN', 'Geografi', 'Sejarah', 'PAI', 'Prakarya & Kewirausahaan',
+        // ])->mapWithKeys(fn ($name) => [$name => Subject::firstOrCreate(['name' => $name, 'grade' => '7'])]);
 
-        // Seed teachers (GURU role) for each subject
-        $teachers = collect([
-            'Bahasa Inggris' => ['name' => 'Budi Santoso', 'email' => 'budi.santoso@sekolah.id'],
-            'PJOK' => ['name' => 'Dewi Anggraini', 'email' => 'dewi.anggraini@sekolah.id'],
-            'Ekonomi' => ['name' => 'Ahmad Wijaya', 'email' => 'ahmad.wijaya@sekolah.id'],
-            'Bahasa Inggris TKL' => ['name' => 'Siti Rahayu', 'email' => 'siti.rahayu@sekolah.id'],
-            'Sosiologi' => ['name' => 'Rina Sari', 'email' => 'rina.sari@sekolah.id'],
-            'Bahasa Indonesia' => ['name' => 'Hendra Gunawan', 'email' => 'hendra.gunawan@sekolah.id'],
-            'Matematika' => ['name' => 'Lestari Putri', 'email' => 'lestari.putri@sekolah.id'],
-            'Seni Budaya' => ['name' => 'Yoga Pratama', 'email' => 'yoga.pratama@sekolah.id'],
-            'PPKN' => ['name' => 'Maya Indah', 'email' => 'maya.indah@sekolah.id'],
-            'Geografi' => ['name' => 'Fajar Nugroho', 'email' => 'fajar.nugroho@sekolah.id'],
-            'Sejarah' => ['name' => 'Nina Kartika', 'email' => 'nina.kartika@sekolah.id'],
-            'PAI' => ['name' => 'Ustadz Rahman', 'email' => 'rahman@sekolah.id'],
-            'Prakarya & Kewirausahaan' => ['name' => 'Doni Setiawan', 'email' => 'doni.setiawan@sekolah.id'],
-        ])->mapWithKeys(fn ($t, $subject) => [$subject => User::firstOrCreate(
-            ['email' => $t['email']],
-            ['name' => $t['name'], 'password' => bcrypt('12345678'), 'role' => 'GURU']
-        )]);
+        // // Seed teachers (GURU role) for each subject
+        // $teachers = collect([
+        //     'Bahasa Inggris' => ['name' => 'Budi Santoso', 'email' => 'budi.santoso@sekolah.id'],
+        //     'PJOK' => ['name' => 'Dewi Anggraini', 'email' => 'dewi.anggraini@sekolah.id'],
+        //     'Ekonomi' => ['name' => 'Ahmad Wijaya', 'email' => 'ahmad.wijaya@sekolah.id'],
+        //     'Bahasa Inggris TKL' => ['name' => 'Siti Rahayu', 'email' => 'siti.rahayu@sekolah.id'],
+        //     'Sosiologi' => ['name' => 'Rina Sari', 'email' => 'rina.sari@sekolah.id'],
+        //     'Bahasa Indonesia' => ['name' => 'Hendra Gunawan', 'email' => 'hendra.gunawan@sekolah.id'],
+        //     'Matematika' => ['name' => 'Lestari Putri', 'email' => 'lestari.putri@sekolah.id'],
+        //     'Seni Budaya' => ['name' => 'Yoga Pratama', 'email' => 'yoga.pratama@sekolah.id'],
+        //     'PPKN' => ['name' => 'Maya Indah', 'email' => 'maya.indah@sekolah.id'],
+        //     'Geografi' => ['name' => 'Fajar Nugroho', 'email' => 'fajar.nugroho@sekolah.id'],
+        //     'Sejarah' => ['name' => 'Nina Kartika', 'email' => 'nina.kartika@sekolah.id'],
+        //     'PAI' => ['name' => 'Ustadz Rahman', 'email' => 'rahman@sekolah.id'],
+        //     'Prakarya & Kewirausahaan' => ['name' => 'Doni Setiawan', 'email' => 'doni.setiawan@sekolah.id'],
+        // ])->mapWithKeys(fn ($t, $subject) => [$subject => User::firstOrCreate(
+        //     ['email' => $t['email']],
+        //     ['name' => $t['name'], 'password' => bcrypt('12345678'), 'role' => 'GURU']
+        // )]);
 
-        // Seed jadwal kelas 7A
-        $xclass7A = Xclass::where('name', '7 A')->first();
-        if ($xclass7A) {
-            $schedules = [
-                ['day' => 'MONDAY',    'start' => '07:00', 'end' => '08:00', 'subject' => 'Bahasa Inggris'],
-                ['day' => 'MONDAY',    'start' => '08:00', 'end' => '09:00', 'subject' => 'PJOK'],
-                ['day' => 'MONDAY',    'start' => '09:00', 'end' => '10:00', 'subject' => 'Ekonomi'],
-                ['day' => 'TUESDAY',   'start' => '07:00', 'end' => '08:00', 'subject' => 'Bahasa Inggris TKL'],
-                ['day' => 'TUESDAY',   'start' => '08:00', 'end' => '09:00', 'subject' => 'Sosiologi'],
-                ['day' => 'TUESDAY',   'start' => '09:00', 'end' => '10:00', 'subject' => 'Bahasa Indonesia'],
-                ['day' => 'WEDNESDAY', 'start' => '07:00', 'end' => '08:00', 'subject' => 'Matematika'],
-                ['day' => 'WEDNESDAY', 'start' => '08:00', 'end' => '09:00', 'subject' => 'Seni Budaya'],
-                ['day' => 'WEDNESDAY', 'start' => '09:00', 'end' => '10:00', 'subject' => 'Sosiologi'],
-                ['day' => 'WEDNESDAY', 'start' => '10:00', 'end' => '11:00', 'subject' => 'PPKN'],
-                ['day' => 'THURSDAY',  'start' => '07:00', 'end' => '08:00', 'subject' => 'Geografi'],
-                ['day' => 'THURSDAY',  'start' => '08:00', 'end' => '09:00', 'subject' => 'Sejarah'],
-                ['day' => 'THURSDAY',  'start' => '09:00', 'end' => '10:00', 'subject' => 'PAI'],
-                ['day' => 'THURSDAY',  'start' => '10:00', 'end' => '11:00', 'subject' => 'Ekonomi'],
-                ['day' => 'FRIDAY',    'start' => '07:00', 'end' => '08:00', 'subject' => 'Matematika'],
-                ['day' => 'FRIDAY',    'start' => '08:00', 'end' => '09:00', 'subject' => 'Geografi'],
-                ['day' => 'SATURDAY',  'start' => '07:00', 'end' => '08:00', 'subject' => 'Prakarya & Kewirausahaan'],
-                ['day' => 'SATURDAY',  'start' => '08:00', 'end' => '09:00', 'subject' => 'Bahasa Indonesia'],
-                ['day' => 'SATURDAY',  'start' => '09:00', 'end' => '10:00', 'subject' => 'Bahasa Inggris TKL'],
-            ];
+        // // Seed jadwal kelas 7A
+        // $xclass7A = Xclass::where('name', '7 A')->first();
+        // if ($xclass7A) {
+        //     $schedules = [
+        //         ['day' => 'MONDAY',    'start' => '07:00', 'end' => '08:00', 'subject' => 'Bahasa Inggris'],
+        //         ['day' => 'MONDAY',    'start' => '08:00', 'end' => '09:00', 'subject' => 'PJOK'],
+        //         ['day' => 'MONDAY',    'start' => '09:00', 'end' => '10:00', 'subject' => 'Ekonomi'],
+        //         ['day' => 'TUESDAY',   'start' => '07:00', 'end' => '08:00', 'subject' => 'Bahasa Inggris TKL'],
+        //         ['day' => 'TUESDAY',   'start' => '08:00', 'end' => '09:00', 'subject' => 'Sosiologi'],
+        //         ['day' => 'TUESDAY',   'start' => '09:00', 'end' => '10:00', 'subject' => 'Bahasa Indonesia'],
+        //         ['day' => 'WEDNESDAY', 'start' => '07:00', 'end' => '08:00', 'subject' => 'Matematika'],
+        //         ['day' => 'WEDNESDAY', 'start' => '08:00', 'end' => '09:00', 'subject' => 'Seni Budaya'],
+        //         ['day' => 'WEDNESDAY', 'start' => '09:00', 'end' => '10:00', 'subject' => 'Sosiologi'],
+        //         ['day' => 'WEDNESDAY', 'start' => '10:00', 'end' => '11:00', 'subject' => 'PPKN'],
+        //         ['day' => 'THURSDAY',  'start' => '07:00', 'end' => '08:00', 'subject' => 'Geografi'],
+        //         ['day' => 'THURSDAY',  'start' => '08:00', 'end' => '09:00', 'subject' => 'Sejarah'],
+        //         ['day' => 'THURSDAY',  'start' => '09:00', 'end' => '10:00', 'subject' => 'PAI'],
+        //         ['day' => 'THURSDAY',  'start' => '10:00', 'end' => '11:00', 'subject' => 'Ekonomi'],
+        //         ['day' => 'FRIDAY',    'start' => '07:00', 'end' => '08:00', 'subject' => 'Matematika'],
+        //         ['day' => 'FRIDAY',    'start' => '08:00', 'end' => '09:00', 'subject' => 'Geografi'],
+        //         ['day' => 'SATURDAY',  'start' => '07:00', 'end' => '08:00', 'subject' => 'Prakarya & Kewirausahaan'],
+        //         ['day' => 'SATURDAY',  'start' => '08:00', 'end' => '09:00', 'subject' => 'Bahasa Indonesia'],
+        //         ['day' => 'SATURDAY',  'start' => '09:00', 'end' => '10:00', 'subject' => 'Bahasa Inggris TKL'],
+        //     ];
 
-            foreach ($schedules as $s) {
-                Schedule::create([
-                    'day'        => $s['day'],
-                    'start_time' => $s['start'],
-                    'end_time'   => $s['end'],
-                    'subject_id' => $subjects7[$s['subject']]->id,
-                    'user_id'    => $teachers[$s['subject']]->id,
-                    'xclass_id'  => $xclass7A->id,
-                ]);
-            }
-        }
+        //     foreach ($schedules as $s) {
+        //         Schedule::create([
+        //             'day'        => $s['day'],
+        //             'start_time' => $s['start'],
+        //             'end_time'   => $s['end'],
+        //             'subject_id' => $subjects7[$s['subject']]->id,
+        //             'user_id'    => $teachers[$s['subject']]->id,
+        //             'xclass_id'  => $xclass7A->id,
+        //         ]);
+        //     }
+        // }
     }
 }
