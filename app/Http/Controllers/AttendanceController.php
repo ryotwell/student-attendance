@@ -173,8 +173,8 @@ class AttendanceController extends Controller
                 return [
                     'id' => $schedule->id,
                     'day' => $schedule->day,
-                    'start_time' => $schedule->start_time,
-                    'end_time' => $schedule->end_time,
+                    'start_time' => $schedule->start_time->format('H:i'),
+                    'end_time' => $schedule->end_time->format('H:i'),
                     'subject' => [
                         'id' => $schedule->subject->id,
                         'name' => $schedule->subject->name,
