@@ -11,7 +11,7 @@ use App\Models\Xclass;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class PreviewSeeder
+class StagingSeeder
 {
     public static function run()
     {
