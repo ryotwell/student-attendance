@@ -2,9 +2,9 @@
 
 @section('content')
 
-    <x-common.page-breadcrumb pageTitle="Jadwal Mengajar Saya" />
+    <x-common.page-breadcrumb pageTitle="Jadwal Mengajar" />
 
-    <x-common.component-card title="Jadwal Mengajar Saya">
+    <x-common.component-card title="Jadwal Mengajar">
 
         @if($schedules->count())
 

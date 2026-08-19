@@ -229,7 +229,7 @@ class MenuHelper
 
                         [
                             'icon' => 'calendar',
-                            'name' => 'Jadwal Mengajar Saya',
+                            'name' => 'Jadwal Mengajar',
                             'path' => '/schedules',
                         ],
                         [
