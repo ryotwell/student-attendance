@@ -16,22 +16,22 @@ class MenuHelper
             ],
             [
                 'name' => 'Jurnal Guru',
-                'icon' => 'calendar',
+                'icon' => 'pages',
                 'path' => '#!'
             ],
             [
                 'name' => 'Riwayat Absen',
-                'icon' => 'calendar',
+                'icon' => 'tables',
                 'path' => '#!'
             ],
             [
                 'name' => 'Tugas Guru',
-                'icon' => 'calendar',
+                'icon' => 'task',
                 'path' => '#!'
             ],
             [
                 'name' => 'Guru BK',
-                'icon' => 'calendar',
+                'icon' => 'support-ticket',
                 'path' => '#!'
             ],
         ];
@@ -51,7 +51,7 @@ class MenuHelper
             ],
             [
                 'name' => 'Siswa',
-                'icon' => 'forms',
+                'icon' => 'user-profile',
                 'subItems' => [
                     ['name' => 'Daftar', 'path' => '/students'],
                     ['name' => 'Tambah Siswa Baru', 'path' => '/students/create'],
@@ -59,7 +59,7 @@ class MenuHelper
             ],
             [
                 'name' => 'Kelas',
-                'icon' => 'forms',
+                'icon' => 'tables',
                 'subItems' => [
                     ['name' => 'Daftar', 'path' => '/classes'],
                     ['name' => 'Tambah Kelas Baru', 'path' => '/classes/create'],
@@ -75,7 +75,7 @@ class MenuHelper
             ],
             [
                 'name' => 'Mata Pelajaran',
-                'icon' => 'forms',
+                'icon' => 'pages',
                 'subItems' => [
                     ['name' => 'Daftar', 'path' => '/subjects'],
                     ['name' => 'Tambah Mata Pelajaran', 'path' => '/subjects/create'],
@@ -91,7 +91,7 @@ class MenuHelper
             ],
             [
                 'name' => 'Pengumuman',
-                'icon' => 'calendar',
+                'icon' => 'email',
                 'subItems' => [
                     ['name' => 'Daftar', 'path' => '/announcements'],
                     ['name' => 'Tambah Pengumuman', 'path' => '/announcements/create'],
@@ -105,12 +105,12 @@ class MenuHelper
         return [
             [
                 'name' => 'PPDB',
-                'icon' => 'calendar',
+                'icon' => 'user-profile',
                 'path' => '#!'
             ],
             [
                 'name' => 'CBT',
-                'icon' => 'calendar',
+                'icon' => 'pages',
                 'path' => '#!'
             ],
                 // [
@@ -210,28 +210,30 @@ class MenuHelper
                             'name' => 'Dashboard',
                             'path' => '/',
                         ],
-                        // [
-                        //     'icon' => 'calendar',
-                        //     'name' => 'Absensi',
-                        //     'path' => '#!',
-                        //     'subItems' => [
-                        //         ['name' => 'Input Absensi', 'path' => '/attendance'],
-                        //         ['name' => 'Laporan Absensi', 'path' => '/attendance/report'],
-                        //         ['name' => 'Rekap Absensi', 'path' => '/attendance/recap'],
-                        //     ],
-                        // ],
                         [
                             'icon' => 'calendar',
                             'name' => 'Absensi',
                             'path' => '/absensi',
                         ],
+
+                        [
+                            'icon' => 'charts',
+                            'name' => 'Laporan Absensi',
+                            'path' => '/attendance/report',
+                        ],
+                        [
+                            'icon' => 'tables',
+                            'name' => 'Rekap Absensi',
+                            'path' => '/attendance/recap',
+                        ],
+
                         [
                             'icon' => 'calendar',
                             'name' => 'Jadwal Mengajar Saya',
                             'path' => '/schedules',
                         ],
                         [
-                            'icon' => 'calendar',
+                            'icon' => 'email',
                             'name' => 'Pengumuman Sekolah',
                             'path' => '/announcements',
                         ],
