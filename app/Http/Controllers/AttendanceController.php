@@ -28,42 +28,86 @@ class AttendanceController extends Controller
     /**
      * Show attendance table for selected class, schedule, and date.
      */
+    // public function show(Request $request)
+    // {
+    //     $request->validate([
+    //         'class_id' => 'required|exists:xclasses,id',
+    //         'schedule_id' => 'required|exists:schedules,id',
+    //         'date' => 'required|date',
+    //     ]);
+
+    //     $class = Xclass::with('students')->findOrFail($request->class_id);
+    //     $schedule = Schedule::with('subject')->findOrFail($request->schedule_id);
+    //     $date = Carbon::parse($request->date);
+
+    //     // Get existing attendances for this class, schedule, and date
+    //     $existingAttendances = Attendance::where('xclass_id', $class->id)
+    //         ->where('schedule_id', $schedule->id)
+    //         ->whereDate('date', $date)
+    //         ->get()
+    //         ->keyBy('student_id');
+
+    //     if(Auth::user()->role === 'GURU') {
+    //         return view('teacher.absensi.absensi', [
+    //             'title' => 'Absensi: ' . $class->name . ' - ' . $schedule->subject->name,
+    //             'class' => $class,
+    //             'schedule' => $schedule,
+    //             'date' => $date,
+    //             'existingAttendances' => $existingAttendances,
+    //         ]);
+    //     }
+
+    //     return view('admin.attendance.table', [
+    //         'title' => 'Absensi: ' . $class->name . ' - ' . $schedule->subject->name,
+    //         'class' => $class,
+    //         'schedule' => $schedule,
+    //         'date' => $date,
+    //         'existingAttendances' => $existingAttendances,
+    //     ]);
+    // }
     public function show(Request $request)
     {
-        $request->validate([
-            'class_id' => 'required|exists:xclasses,id',
-            'schedule_id' => 'required|exists:schedules,id',
-            'date' => 'required|date',
+        $validated = $request->validate([
+            'class_id'    => 'required|integer',
+            'schedule_id' => 'required|integer',
+            'date'        => 'required|date',
         ]);
 
-        $class = Xclass::with('students')->findOrFail($request->class_id);
-        $schedule = Schedule::with('subject')->findOrFail($request->schedule_id);
-        $date = Carbon::parse($request->date);
+        $date = Carbon::parse($validated['date'])->startOfDay();
+
+        $class = Xclass::select('id', 'name')
+            ->with(['students' => function ($q) {
+                $q->select('students.id', 'students.xclass_id', 'students.name', 'students.nis')
+                ->orderBy('students.name');
+            }])
+            ->findOrFail($validated['class_id']);
+
+        $schedule = Schedule::select('id', 'subject_id')
+            ->with('subject:id,name')
+            ->findOrFail($validated['schedule_id']);
 
         // Get existing attendances for this class, schedule, and date
-        $existingAttendances = Attendance::where('xclass_id', $class->id)
+        $existingAttendances = Attendance::query()
+            ->where('xclass_id', $class->id)
             ->where('schedule_id', $schedule->id)
-            ->whereDate('date', $date)
-            ->get()
+            ->where('date', $date->toDateString())
+            ->get(['student_id', 'status'])
             ->keyBy('student_id');
 
-        if(Auth::user()->role === 'GURU') {
-            return view('teacher.absensi.absensi', [
-                'title' => 'Absensi: ' . $class->name . ' - ' . $schedule->subject->name,
-                'class' => $class,
-                'schedule' => $schedule,
-                'date' => $date,
-                'existingAttendances' => $existingAttendances,
-            ]);
+        $viewData = [
+            'title'               => 'Absensi: ' . $class->name . ' - ' . $schedule->subject->name,
+            'class'               => $class,
+            'schedule'            => $schedule,
+            'date'                => $date,
+            'existingAttendances' => $existingAttendances,
+            'statusOptions'       => Attendance::STATUS_OPTIONS,
+        ];
+
+        if (Auth::user()->role === 'GURU') {
+            return view('teacher.absensi.absensi', $viewData);
         }
 
-        return view('admin.attendance.table', [
-            'title' => 'Absensi: ' . $class->name . ' - ' . $schedule->subject->name,
-            'class' => $class,
-            'schedule' => $schedule,
-            'date' => $date,
-            'existingAttendances' => $existingAttendances,
-        ]);
+        return view('admin.attendance.table', $viewData);
     }
 
     /**

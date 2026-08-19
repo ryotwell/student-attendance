@@ -46,6 +46,22 @@
                 </div>
             </div>
 
+            {{-- Pencarian siswa --}}
+            <div class="mb-4">
+                <div class="relative">
+                    <svg class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input type="text" id="studentSearch" placeholder="Cari nama atau NIS siswa..."
+                        class="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-4 text-sm text-gray-800 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+                </div>
+                <p id="searchEmptyState" class="mt-3 hidden text-center text-sm text-gray-500 dark:text-gray-400">
+                    Siswa tidak ditemukan.
+                </p>
+            </div>
+
             <form action="{{ route('attendance.store') }}" method="POST">
                 @csrf
 
@@ -60,7 +76,8 @@
                             $currentStatus = $existing->status ?? 'ALPHA';
                         @endphp
 
-                        <div class="group rounded-2xl border border-gray-200 bg-white p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-900">
+                        <div class="group student-card rounded-2xl border border-gray-200 bg-white p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-900"
+                            data-name="{{ Str::lower($student->name) }}" data-nis="{{ Str::lower($student->nis) }}">
                             {{-- Data siswa --}}
                             <div class="mb-5 flex items-center gap-4">
                                 <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
@@ -80,7 +97,7 @@
 
                             {{-- Pilihan status kehadiran --}}
                             <div class="grid grid-cols-4 gap-2">
-                                @foreach (App\Models\Attendance::STATUS_OPTIONS as $key => $option)
+                                @foreach ($statusOptions as $key => $option)
                                     <label class="cursor-pointer">
                                         <input type="radio" name="attendances[{{ $index }}][status]" value="{{ $key }}"
                                             class="sr-only peer" @checked($currentStatus === $key)>
@@ -101,7 +118,7 @@
 
 
                 {{-- Aksi --}}
-                <div class="mt-8 flex justify-end gap-3 border-t border-gray-100 pt-5 dark:border-gray-800">
+                <div class="my-8 flex justify-end gap-3 border-t border-gray-100 pt-5 dark:border-gray-800">
                     <a href="{{ route('absensi.schedules') }}"
                         class="rounded-xl border border-gray-200 px-5 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
                         ← Kembali
@@ -126,14 +143,32 @@
     document.addEventListener('DOMContentLoaded', function () {
         const dateInput = document.getElementById('attendanceDate');
 
-        if (!dateInput) return;
+        if (dateInput) {
+            dateInput.addEventListener('change', function () {
+                const url = new URL(window.location.href);
+                url.searchParams.set('date', this.value);
+                window.location.href = url.toString();
+            });
+        }
 
-        dateInput.addEventListener('change', function () {
-            const url = new URL(window.location.href);
-            url.searchParams.set('date', this.value);
-            window.location.href = url.toString();
-        });
+        const searchInput = document.getElementById('studentSearch');
+        const emptyState = document.getElementById('searchEmptyState');
+        const cards = document.querySelectorAll('.student-card');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                const term = this.value.trim().toLowerCase();
+                let visibleCount = 0;
+
+                cards.forEach(function (card) {
+                    const matches = card.dataset.name.includes(term) || card.dataset.nis.includes(term);
+                    card.style.display = matches ? '' : 'none';
+                    if (matches) visibleCount++;
+                });
+
+                emptyState.classList.toggle('hidden', visibleCount !== 0 || cards.length === 0);
+            });
+        }
     });
 </script>
 @endpush
-
