@@ -18,6 +18,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        StagingSeeder::run();
+        DevelopmentSeeder::run();
     }
 }

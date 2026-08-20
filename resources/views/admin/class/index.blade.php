@@ -33,6 +33,9 @@
                         <th class="px-5 py-3 text-left sm:px-6">
                             <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Jumlah Siswa</p>
                         </th>
+                        <th class="px-5 py-3 text-left sm:px-6">
+                            <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Wali Kelas</p>
+                        </th>
                         <th class="px-5 py-3 text-right sm:px-6">
                             <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Aksi</p>
                         </th>
@@ -54,6 +57,9 @@
                             </td>
                             <td class="px-5 py-4 sm:px-6">
                                 <p class="text-gray-500 text-theme-sm dark:text-gray-400">{{ $class->students_count }} siswa</p>
+                            </td>
+                            <td class="px-5 py-4 sm:px-6">
+                                <p class="text-gray-500 text-theme-sm dark:text-gray-400">{{ $class->user->name ?? '-' }}</p>
                             </td>
                             <td class="px-5 py-4 sm:px-6">
                                 <div class="flex items-center justify-end gap-3">

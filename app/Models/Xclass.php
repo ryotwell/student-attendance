@@ -25,8 +25,14 @@ class Xclass extends Model
         return $this->belongsTo(AcademicYear::class);
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function getStudentsCountAttribute()
     {
         return $this->students()->count();
     }
+
 }

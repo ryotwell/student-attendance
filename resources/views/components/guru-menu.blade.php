@@ -12,12 +12,12 @@
             'url'         => route('attendance.report'),
             'icon'        => 'file-chart',
         ],
-        [
-            'title'       => 'Recap Absensi',
-            'description' => 'Rekap data absensi berdasarkan periode',
-            'url'         => route('attendance.recap'),
-            'icon'        => 'calendar-check',
-        ],
+        // [
+        //     'title'       => 'Recap Absensi',
+        //     'description' => 'Rekap data absensi berdasarkan periode',
+        //     'url'         => route('attendance.recap'),
+        //     'icon'        => 'calendar-check',
+        // ],
         [
             'title'       => 'Jadwal Mengajar',
             'description' => 'Lihat jadwal kelas dan jam mengajar',

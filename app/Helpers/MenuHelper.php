@@ -215,18 +215,16 @@ class MenuHelper
                             'name' => 'Absensi',
                             'path' => '/absensi',
                         ],
-
                         [
                             'icon' => 'charts',
                             'name' => 'Laporan Absensi',
                             'path' => '/attendance/report',
                         ],
-                        [
-                            'icon' => 'tables',
-                            'name' => 'Rekap Absensi',
-                            'path' => '/attendance/recap',
-                        ],
-
+                        // [
+                        //     'icon' => 'tables',
+                        //     'name' => 'Rekap Absensi',
+                        //     'path' => '/attendance/recap',
+                        // ],
                         [
                             'icon' => 'calendar',
                             'name' => 'Jadwal Mengajar',
@@ -242,6 +240,16 @@ class MenuHelper
                         //     'name' => 'Daftar Absensi',
                         //     'path' => '/attendance/list',
                         // ],
+                    ],
+                ],
+                [
+                    'title' => 'Menu Wali Kelas',
+                    'items' => [
+                        [
+                            'icon' => 'dashboard',
+                            'name' => 'Dashboard',
+                            'path' => '/',
+                        ],
                     ],
                 ],
             ];
