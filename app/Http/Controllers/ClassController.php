@@ -147,31 +147,31 @@ class ClassController extends Controller
          * Cek wali kelas duplikat
          * kecuali kelas yang sedang diedit
          */
-        // if (!empty($data['user_id'])) {
-        //     $exists = Xclass::where(
-        //             'academic_year_id',
-        //             $data['academic_year_id']
-        //         )
-        //         ->where(
-        //             'user_id',
-        //             $data['user_id']
-        //         )
-        //         ->where(
-        //             'id',
-        //             '!=',
-        //             $class->id
-        //         )
-        //         ->exists();
+        if (!empty($data['user_id'])) {
+            $exists = Xclass::where(
+                    'academic_year_id',
+                    $data['academic_year_id']
+                )
+                ->where(
+                    'user_id',
+                    $data['user_id']
+                )
+                ->where(
+                    'id',
+                    '!=',
+                    $class->id
+                )
+                ->exists();
             
-        //     if ($exists) {
-        //         return back()
-        //             ->withInput()
-        //             ->withErrors([
-        //                 'user_id' =>
-        //                 'Guru tersebut sudah menjadi wali kelas pada tahun ajaran ini.'
-        //             ]);
-        //     }
-        // }
+            if ($exists) {
+                return back()
+                    ->withInput()
+                    ->withErrors([
+                        'user_id' =>
+                        'Guru tersebut sudah menjadi wali kelas pada tahun ajaran ini.'
+                    ]);
+            }
+        }
 
         $class->update($data);
 

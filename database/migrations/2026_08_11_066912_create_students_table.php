@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('nisn');
             $table->enum('gender', ['MALE', 'FEMALE']);
             $table->foreignIdFor(Xclass::class)->constrained()->cascadeOnDelete();
+            $table->string('parent_name')->nullable();
+            $table->string('parent_phone')->nullable();
             $table->timestamps();
         });
     }

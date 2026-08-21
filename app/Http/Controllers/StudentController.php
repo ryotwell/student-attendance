@@ -92,6 +92,8 @@ class StudentController extends Controller
             'nisn' => ['required', 'string', 'max:20', "unique:students,nisn{$ignoreNisn}"],
             'gender' => ['required', 'in:MALE,FEMALE'],
             'xclass_id' => ['required', 'exists:xclasses,id'],
+            'parent_name' => ['nullable', 'string', 'max:255'],
+            'parent_phone' => ['nullable', 'string', 'max:20'],
         ]);
     }
 }
