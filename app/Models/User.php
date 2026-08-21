@@ -71,6 +71,11 @@ class User extends Authenticatable
         return $this->hasMany(Xclass::class);
     }
 
+    public function counselingCases()
+    {
+        return $this->hasMany(CounselingCase::class);
+    }
+
     public function mySchedules()
     {
         return $this->schedules()

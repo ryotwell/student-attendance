@@ -119,5 +119,13 @@ class DevelopmentSeeder
                 ]);
             }
         }
+
+
+        User::create([
+            'name' => 'Guru BK',
+            'email' => 'bk@gmail.com',
+            'password' => bcrypt('12345678'),
+            'role' => 'GURU_BK'
+        ]);
     }
 }

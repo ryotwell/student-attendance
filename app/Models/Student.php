@@ -15,4 +15,9 @@ class Student extends Model
     {
         return $this->belongsTo(Xclass::class);
     }
+
+    public function counselingCases()
+    {
+        return $this->hasMany(CounselingCase::class);
+    }
 }

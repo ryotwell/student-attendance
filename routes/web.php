@@ -9,6 +9,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GuruBk\CounselingCaseController;
 use App\Http\Controllers\Teacher\AbsensiController;
 use App\Http\Controllers\Teacher\WalikelasController;
 use App\Models\Xclass;
@@ -73,6 +74,19 @@ Route::middleware(['auth'])->prefix('walikelas')->name('walikelas.')->group(func
     Route::get('/{xclass}/dashboard', [WalikelasController::class, 'dashboard'])->name('dashboard');
     Route::get('/{xclass}/rekap', [WalikelasController::class, 'rekap'])->name('rekap');
     Route::get('/{xclass}/rekap/export', [WalikelasController::class, 'rekapExport'])->name('rekap.export');
+});
+
+Route::middleware(['auth'])->prefix('bk')->name('bk.')->group(function () {
+    Route::get('/kasus', [CounselingCaseController::class, 'index'])->name('cases.index');
+    Route::get('/kasus/tambah', [CounselingCaseController::class, 'create'])->name('cases.create');
+    Route::post('/kasus', [CounselingCaseController::class, 'store'])->name('cases.store');
+    Route::get('/kasus/{counselingCase}/edit', [CounselingCaseController::class, 'edit'])->name('cases.edit');
+    Route::put('/kasus/{counselingCase}', [CounselingCaseController::class, 'update'])->name('cases.update');
+    Route::delete('/kasus/{counselingCase}', [CounselingCaseController::class, 'destroy'])->name('cases.destroy');
+
+    Route::get('/siswa/{student}/kasus', [CounselingCaseController::class, 'byStudent'])->name('cases.by-student');
+
+    Route::get('/siswa/search', [CounselingCaseController::class, 'searchStudents'])->name('students.search');
 });
 
 // 
