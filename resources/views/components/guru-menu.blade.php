@@ -32,7 +32,7 @@
         ],
     ];
 
-    if ($isWaliKelas ?? false) {
+    if (Auth::user()->isWaliKelas() ?? false) {
         $menuItems[] = [
             'title'       => 'Menu Wali Kelas',
             'description' => 'Kelola dan pantau kelas yang Anda wali-i',
