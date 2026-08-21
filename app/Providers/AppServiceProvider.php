@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,5 +24,7 @@ class AppServiceProvider extends ServiceProvider
         // if (Auth::user()->role === 'GURU' && !request()->is('teacher-area*')) {
             
         // }
+
+        Carbon::setLocale('id');
     }
 }

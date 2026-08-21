@@ -135,6 +135,7 @@ class AttendanceController extends Controller
                     'xclass_id' => $classId,
                     'schedule_id' => $scheduleId,
                     'date' => $date,
+                    'user_id' => Auth::user()->id,
                 ],
                 [
                     'status' => $attendanceData['status'],

@@ -16,15 +16,7 @@
                                 Jam
                             </th>
 
-                            @foreach([
-                                'MONDAY'    => 'Senin',
-                                'TUESDAY'   => 'Selasa',
-                                'WEDNESDAY' => 'Rabu',
-                                'THURSDAY'  => 'Kamis',
-                                'FRIDAY'    => 'Jumat',
-                                'SATURDAY'  => 'Sabtu',
-                                'SUNDAY'    => 'Minggu',
-                            ] as $dayKey => $dayLabel)
+                            @foreach(\App\Helpers\MenuHelper::days() as $dayKey => $dayLabel)
                                 <th class="px-4 py-3 text-center font-medium text-gray-500 text-sm dark:text-gray-400">
                                     {{ $dayLabel }}
                                 </th>

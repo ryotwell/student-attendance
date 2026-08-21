@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\MenuHelper;
 use App\Models\Schedule;
 use App\Models\Subject;
 use App\Models\User;
@@ -45,7 +46,7 @@ class ScheduleController extends Controller
             'subjects' => Subject::orderBy('name')->get(),
             'classes' => Xclass::orderBy('name')->get(),
             'users' => User::where('role', 'GURU')->orderBy('name')->get(),
-            'days' => $this->days(),
+            'days' => MenuHelper::days(),
         ]);
     }
 
@@ -79,7 +80,7 @@ class ScheduleController extends Controller
             'subjects' => Subject::orderBy('name')->get(),
             'classes' => Xclass::orderBy('name')->get(),
             'users' => User::where('role', 'GURU')->orderBy('name')->get(),
-            'days' => $this->days(),
+            'days' => MenuHelper::days(),
         ]);
     }
 
@@ -115,18 +116,5 @@ class ScheduleController extends Controller
             'xclass_id' => ['required', 'exists:xclasses,id'],
             'user_id' => ['required', 'exists:users,id'],
         ]);
-    }
-
-    private function days(): array
-    {
-        return [
-            'MONDAY' => 'Senin',
-            'TUESDAY' => 'Selasa',
-            'WEDNESDAY' => 'Rabu',
-            'THURSDAY' => 'Kamis',
-            'FRIDAY' => 'Jumat',
-            'SATURDAY' => 'Sabtu',
-            'SUNDAY' => 'Minggu',
-        ];
     }
 }

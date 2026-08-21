@@ -52,6 +52,17 @@ Route::put('attendance/list/{class}/{schedule}/{date}', [AttendanceController::c
 
 // absensi
 Route::get('/absensi', [AbsensiController::class, 'schedules'])->name('absensi.schedules');
+Route::get('/absensi/history', [AbsensiController::class, 'history'])->name('absensi.history');
+Route::get('/absensi/history/{date}/{class}/{schedule}', [AbsensiController::class, 'showHistory'])->name('absensi.history.show');
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/absensi/recap', [AbsensiController::class, 'recapIndex'])
+        ->name('absensi.recap');
+
+    Route::get('/absensi/recap/{schedule}', [AbsensiController::class, 'recapShow'])
+        ->name('absensi.recap.show');
+});
 
 // 
 

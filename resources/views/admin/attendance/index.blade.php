@@ -84,15 +84,8 @@
         });
 
         function getDayName(day) {
-            const days = {
-                'MONDAY': 'Senin',
-                'TUESDAY': 'Selasa',
-                'WEDNESDAY': 'Rabu',
-                'THURSDAY': 'Kamis',
-                'FRIDAY': 'Jumat',
-                'SATURDAY': 'Sabtu',
-                'SUNDAY': 'Minggu',
-            };
+            const days = @json(App\Helpers\MenuHelper::days())
+
             return days[day] || day;
         }
     </script>

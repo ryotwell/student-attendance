@@ -2,6 +2,7 @@
 
 use App\Models\Schedule;
 use App\Models\Student;
+use App\Models\User;
 use App\Models\Xclass;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -26,6 +27,7 @@ return new class extends Migration
             $table->foreignIdFor(Student::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Xclass::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Schedule::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }

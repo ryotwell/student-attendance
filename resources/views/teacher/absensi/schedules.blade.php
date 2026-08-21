@@ -23,10 +23,6 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 @foreach ($schedules as $schedule)
                     @php
-                        $dayLabels = [
-                            'MONDAY' => 'Senin', 'TUESDAY' => 'Selasa', 'WEDNESDAY' => 'Rabu',
-                            'THURSDAY' => 'Kamis', 'FRIDAY' => 'Jumat', 'SATURDAY' => 'Sabtu', 'SUNDAY' => 'Minggu',
-                        ];
                         $dayColors = [
                             'MONDAY' => 'blue', 'TUESDAY' => 'green', 'WEDNESDAY' => 'yellow',
                             'THURSDAY' => 'orange', 'FRIDAY' => 'red', 'SATURDAY' => 'purple', 'SUNDAY' => 'pink',
@@ -49,7 +45,7 @@
                                 </svg>
                             </div>
                             <span class="px-3 py-1 text-xs font-semibold text-{{$color}}-700 dark:text-{{$color}}-300 bg-{{$color}}-100 dark:bg-{{$color}}-900/30 rounded-full">
-                                {{ $dayLabels[$day] }}
+                                {{ \App\Helpers\MenuHelper::getDayName($day) }}
                             </span>
                         </div>
 
