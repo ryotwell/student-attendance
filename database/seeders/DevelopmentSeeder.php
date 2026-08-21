@@ -31,21 +31,38 @@ class DevelopmentSeeder
 
         $academicYear = AcademicYear::create(['name' => 'Tahun Ajaran 2026/2027', 'is_active' => true]);
 
-        $classes = ['7 A', '7 B', '7 C',];
-        foreach($classes as $x) {
-            Xclass::create(['name' => $x, 'academic_year_id' => $academicYear->id, 'user_id' => 3]);
+        $classes = [
+            [
+                'name' => 'XII A',
+                'user_id' => 2 // Akhyar Rosidi
+            ],
+            [
+                'name' => 'XII B',
+                'user_id' => 3 // Wali Kelas XII B
+            ],
+            [
+                'name' => 'XII C',
+                'user_id' => 4 // Wali Kelas XII C
+            ],
+        ];
+        foreach ($classes as $x) {
+            Xclass::create([
+                'name' => $x['name'],
+                'academic_year_id' => $academicYear->id,
+                'user_id' => $x['user_id']
+            ]);
         }
 
         Student::factory(100)->create();
 
-        // Seed subjects for grade 7
-        $subjects7 = collect([
+        // Seed subjects untuk kelas XII
+        $subjectsXII = collect([
             'Bahasa Inggris', 'PJOK', 'Ekonomi', 'Bahasa Inggris TKL',
             'Sosiologi', 'Bahasa Indonesia', 'Matematika', 'Seni Budaya',
             'PPKN', 'Geografi', 'Sejarah', 'PAI', 'Prakarya & Kewirausahaan',
         ])->mapWithKeys(fn ($name) => [$name => Subject::firstOrCreate(['name' => $name, 'grade' => 'XII'])]);
 
-        // Seed teachers (GURU role) for each subject
+        // Seed guru (role GURU) untuk tiap mata pelajaran
         $teachers = collect([
             'Bahasa Inggris' => ['name' => 'Budi Santoso', 'email' => 'budi.santoso@sekolah.id'],
             'PJOK' => ['name' => 'Dewi Anggraini', 'email' => 'dewi.anggraini@sekolah.id'],
@@ -65,9 +82,10 @@ class DevelopmentSeeder
             ['name' => $t['name'], 'password' => bcrypt('12345678'), 'role' => 'GURU']
         )]);
 
-        // Seed jadwal kelas 7A
-        $xclass7A = Xclass::where('name', '7 A')->first();
-        if ($xclass7A) {
+        // Seed jadwal kelas XII A
+        $xclassXIIA = Xclass::where('name', 'XII A')->first();
+
+        if ($xclassXIIA) {
             $schedules = [
                 ['day' => 'MONDAY',    'start' => '07:00', 'end' => '08:00', 'subject' => 'Bahasa Inggris'],
                 ['day' => 'MONDAY',    'start' => '08:00', 'end' => '09:00', 'subject' => 'PJOK'],
@@ -95,9 +113,9 @@ class DevelopmentSeeder
                     'day'        => $s['day'],
                     'start_time' => $s['start'],
                     'end_time'   => $s['end'],
-                    'subject_id' => $subjects7[$s['subject']]->id,
+                    'subject_id' => $subjectsXII[$s['subject']]->id,
                     'user_id'    => $teachers[$s['subject']]->id,
-                    'xclass_id'  => $xclass7A->id,
+                    'xclass_id'  => $xclassXIIA->id,
                 ]);
             }
         }

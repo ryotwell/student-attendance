@@ -66,6 +66,11 @@ class User extends Authenticatable
         return $this->hasMany(Attendance::class);
     }
 
+    public function classes()
+    {
+        return $this->hasMany(Xclass::class);
+    }
+
     public function mySchedules()
     {
         return $this->schedules()
@@ -73,5 +78,10 @@ class User extends Authenticatable
             // ->where('user_id', auth()->id())
             ->orderByRaw("FIELD(day, 'MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY')")
             ->orderBy('start_time');
+    }
+
+    public function isWaliKelas(): bool
+    {
+        return $this->classes()->exists();
     }
 }

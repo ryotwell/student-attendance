@@ -1,20 +1,20 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Rekap Absensi" />
+    <x-common.page-breadcrumb pageTitle="Rekap Absensi Kelas" />
 
     <div class="mx-auto max-w-6xl">
         {{-- Header info --}}
         <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white">{{ $schedule->subject->name }}</h2>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">Kelas {{ $xclass->name }}</h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Kelas {{ $schedule->xclass->name }} &middot; {{ App\Helpers\MenuHelper::getDayName($schedule->day) }}, {{ $schedule->start_time->format('H:i') }}–{{ $schedule->end_time->format('H:i') }}
+                    Tahun Ajaran {{ $xclass->academicYear->name }} &middot; {{ $xclass->academicYear->semester }} &middot; Rekap lintas semua mata pelajaran
                 </p>
             </div>
 
             <div class="flex flex-wrap gap-3">
-                <a href="{{ route('absensi.recap.export', [$schedule, 'month' => $selectedMonth]) }}"
+                <a href="{{ route('walikelas.rekap.export', [$xclass, 'month' => $selectedMonth]) }}"
                     class="flex w-fit items-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-600">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
@@ -23,9 +23,9 @@
                     Export PDF
                 </a>
 
-                <a href="{{ route('absensi.recap') }}"
+                <a href="{{ route('walikelas.dashboard', $xclass) }}"
                     class="flex w-fit items-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
-                    ← Pilih Jadwal Lain
+                    ← Kembali ke Dashboard
                 </a>
             </div>
         </div>
@@ -33,7 +33,7 @@
         {{-- Pilihan bulan --}}
         <div class="mb-6 flex flex-wrap gap-2">
             @foreach ($monthOptions as $option)
-                <a href="{{ route('absensi.recap.show', [$schedule, 'month' => $option['value']]) }}"
+                <a href="{{ route('walikelas.rekap', [$xclass, 'month' => $option['value']]) }}"
                     class="rounded-xl px-4 py-3 text-sm font-semibold transition
                         {{ $selectedMonth === $option['value']
                             ? 'bg-brand-500 text-white'
@@ -53,6 +53,7 @@
                         <th class="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">Izin</th>
                         <th class="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-yellow-600 dark:text-yellow-400">Sakit</th>
                         <th class="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-red-600 dark:text-red-400">Alpha</th>
+                        <th class="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">% Hadir</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 bg-white dark:divide-gray-800 dark:bg-gray-900">
@@ -79,10 +80,13 @@
                                     {{ $row['ALPHA'] }}
                                 </span>
                             </td>
+                            <td class="px-5 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                {{ $row['rate'] }}%
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                            <td colspan="6" class="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
                                 Belum ada data siswa di kelas ini.
                             </td>
                         </tr>

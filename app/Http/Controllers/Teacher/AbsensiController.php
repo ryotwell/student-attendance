@@ -8,6 +8,8 @@ use App\Models\Schedule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AbsensiController extends Controller
 {
@@ -133,5 +135,85 @@ class AbsensiController extends Controller
             'selectedMonth' => $selectedMonth,
             'recap' => $recap,
         ]);
+    }
+
+    public function recapExport(Request $request, Schedule $schedule)
+    {
+        $data = $this->buildRecap($request, $schedule);
+
+        $pdf = Pdf::loadView('teacher.absensi.recap-pdf', $data)
+            ->setPaper('a4', 'portrait');
+
+        $fileName = sprintf(
+            'rekap-absensi-%s-%s-%s.pdf',
+            Str::slug($schedule->subject->name),
+            Str::slug($schedule->xclass->name),
+            $data['selectedMonth']
+        );
+
+        return $pdf->download($fileName);
+    }
+
+    /**
+     * Logika inti pengambilan data rekap, dipakai bersama oleh
+     * recapShow (tampilan web) dan recapExport (PDF).
+     */
+    private function buildRecap(Request $request, Schedule $schedule): array
+    {
+        // Pastikan jadwal ini memang milik guru yang login.
+        abort_unless($schedule->user_id === $request->user()->id, 403);
+
+        $schedule->load(['subject', 'xclass.students']);
+
+        // Bangun daftar 6 bulan kalender terakhir (termasuk bulan ini).
+        $monthOptions = collect(range(0, 5))->map(function ($i) {
+            $date = Carbon::now()->subMonths($i)->startOfMonth();
+
+            return [
+                'value' => $date->format('Y-m'),
+                'label' => $date->translatedFormat('F Y'),
+            ];
+        });
+
+        // Bulan yang dipilih, default bulan berjalan.
+        $selectedMonth = $request->query('month', $monthOptions->first()['value']);
+
+        // Validasi: hanya boleh salah satu dari opsi bulan yang tersedia.
+        if (! $monthOptions->pluck('value')->contains($selectedMonth)) {
+            $selectedMonth = $monthOptions->first()['value'];
+        }
+
+        $periodStart = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
+        $periodEnd = $periodStart->copy()->endOfMonth();
+
+        // Ambil rekap: total per status, dikelompokkan per siswa.
+        $counts = Attendance::query()
+            ->where('schedule_id', $schedule->id)
+            ->whereBetween('date', [$periodStart, $periodEnd])
+            ->selectRaw('student_id, status, COUNT(*) as total')
+            ->groupBy('student_id', 'status')
+            ->get()
+            ->groupBy('student_id');
+
+        $recap = $schedule->xclass->students->map(function ($student) use ($counts) {
+            $statusCounts = $counts->get($student->id, collect())
+                ->pluck('total', 'status');
+
+            return [
+                'student' => $student,
+                'HADIR' => $statusCounts->get('HADIR', 0),
+                'IZIN' => $statusCounts->get('IZIN', 0),
+                'SAKIT' => $statusCounts->get('SAKIT', 0),
+                'ALPHA' => $statusCounts->get('ALPHA', 0),
+            ];
+        })->sortBy(fn ($row) => $row['student']->name)->values();
+
+        return [
+            'schedule' => $schedule,
+            'monthOptions' => $monthOptions,
+            'selectedMonth' => $selectedMonth,
+            'monthLabel' => $monthOptions->firstWhere('value', $selectedMonth)['label'],
+            'recap' => $recap,
+        ];
     }
 }

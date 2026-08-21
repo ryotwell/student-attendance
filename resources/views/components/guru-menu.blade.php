@@ -7,17 +7,17 @@
             'icon'        => 'clipboard-plus',
         ],
         [
-            'title'       => 'Laporan Absensi',
-            'description' => 'Lihat dan cetak laporan kehadiran siswa',
-            'url'         => route('attendance.report'),
+            'title'       => 'Rekap Absensi',
+            'description' => 'Lihat dan cetak rekap kehadiran siswa',
+            'url'         => route('absensi.recap'),
             'icon'        => 'file-chart',
         ],
-        // [
-        //     'title'       => 'Recap Absensi',
-        //     'description' => 'Rekap data absensi berdasarkan periode',
-        //     'url'         => route('attendance.recap'),
-        //     'icon'        => 'calendar-check',
-        // ],
+        [
+            'title'       => 'Riwayat Absensi',
+            'description' => 'Lihat riwayat absensi berdasarkan jadwal & tanggal',
+            'url'         => route('absensi.history'),
+            'icon'        => 'calendar-check',
+        ],
         [
             'title'       => 'Jadwal Mengajar',
             'description' => 'Lihat jadwal kelas dan jam mengajar',
@@ -31,6 +31,15 @@
             'icon'        => 'megaphone',
         ],
     ];
+
+    if ($isWaliKelas ?? false) {
+        $menuItems[] = [
+            'title'       => 'Menu Wali Kelas',
+            'description' => 'Kelola dan pantau kelas yang Anda wali-i',
+            'url'         => route('walikelas.index'),
+            'icon'        => 'users-group',
+        ];
+    }
 @endphp
 
 
@@ -66,7 +75,7 @@
                     @break
 
 
-                    {{-- LAPORAN ABSENSI --}}
+                    {{-- REKAP ABSENSI --}}
                     @case('file-chart')
                         <svg width="28" height="28" viewBox="0 0 24 24"
                             fill="none"
@@ -83,7 +92,7 @@
                     @break
 
 
-                    {{-- RECAP ABSENSI --}}
+                    {{-- RIWAYAT ABSENSI --}}
                     @case('calendar-check')
                         <svg width="28" height="28" viewBox="0 0 24 24"
                             fill="none"
@@ -132,6 +141,24 @@
                             <path d="M9 7L18 3v18l-9-4"></path>
                             <path d="M9 7H5.5a2.5 2.5 0 000 5H9v5H7l-1.5-3"></path>
                             <path d="M20 9a3 3 0 010 6"></path>
+
+                        </svg>
+                    @break
+
+
+                    {{-- MENU WALI KELAS --}}
+                    @case('users-group')
+                        <svg width="28" height="28" viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.7"
+                            stroke-linecap="round"
+                            stroke-linejoin="round">
+
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
 
                         </svg>
                     @break

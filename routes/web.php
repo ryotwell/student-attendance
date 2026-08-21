@@ -10,6 +10,7 @@ use App\Http\Controllers\SubjectController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Teacher\AbsensiController;
+use App\Http\Controllers\Teacher\WalikelasController;
 use App\Models\Xclass;
 use Illuminate\Support\Facades\Auth;
 
@@ -62,6 +63,16 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/absensi/recap/{schedule}', [AbsensiController::class, 'recapShow'])
         ->name('absensi.recap.show');
+
+    Route::get('/absensi/recap/{schedule}/export', [AbsensiController::class, 'recapExport'])
+        ->name('absensi.recap.export');
+});
+
+Route::middleware(['auth'])->prefix('walikelas')->name('walikelas.')->group(function () {
+    Route::get('/', [WalikelasController::class, 'index'])->name('index');
+    Route::get('/{xclass}/dashboard', [WalikelasController::class, 'dashboard'])->name('dashboard');
+    Route::get('/{xclass}/rekap', [WalikelasController::class, 'rekap'])->name('rekap');
+    Route::get('/{xclass}/rekap/export', [WalikelasController::class, 'rekapExport'])->name('rekap.export');
 });
 
 // 
