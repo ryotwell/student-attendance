@@ -77,6 +77,8 @@ Route::middleware(['auth'])->prefix('walikelas')->name('walikelas.')->group(func
 });
 
 Route::middleware(['auth'])->prefix('bk')->name('bk.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\GuruBK\DashboardController::class, 'index'])->name('dashboard');
+
     Route::get('/kasus', [CounselingCaseController::class, 'index'])->name('cases.index');
     Route::get('/kasus/tambah', [CounselingCaseController::class, 'create'])->name('cases.create');
     Route::post('/kasus', [CounselingCaseController::class, 'store'])->name('cases.store');

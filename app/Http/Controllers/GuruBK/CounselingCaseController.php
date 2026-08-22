@@ -76,9 +76,10 @@ class CounselingCaseController extends Controller
 
     public function edit(CounselingCase $counselingCase)
     {
+        $counselingCase->load('student.xclass');
+
         return view('teacher.bk.cases.edit', [
             'counselingCase' => $counselingCase,
-            'students' => Student::with('xclass')->orderBy('name')->get(),
             'categoryOptions' => CounselingCase::CATEGORY_OPTIONS,
         ]);
     }

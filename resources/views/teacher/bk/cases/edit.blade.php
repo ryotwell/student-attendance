@@ -6,9 +6,7 @@
     <div class="mx-auto max-w-2xl space-y-6">
         @include('teacher.bk.cases._form', [
             'counselingCase' => $counselingCase,
-            'students' => $students,
             'categoryOptions' => $categoryOptions,
-            'selectedStudentId' => null,
         ])
     </div>
 @endsection
