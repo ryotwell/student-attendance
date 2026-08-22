@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\GuruBk;
+namespace App\Http\Controllers\GuruBK;
 
 use App\Http\Controllers\Controller;
 use App\Models\CounselingCase;
