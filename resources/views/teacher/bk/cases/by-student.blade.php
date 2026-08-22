@@ -39,8 +39,8 @@
 
                     <div class="mt-3 flex items-center justify-between border-t border-gray-100 pt-3 dark:border-gray-800">
                         <span class="text-xs text-gray-400 dark:text-gray-500">Dicatat oleh {{ $case->user->name }}</span>
-                        <a href="{{ route('bk.cases.edit', $case) }}"
-                            class="text-xs font-semibold text-brand-600 hover:underline dark:text-brand-400">Edit</a>
+                        <x-ui.button-link href="{{ route('bk.cases.edit', $case) }}"
+                            class="text-xs font-semibold text-brand-600 hover:underline dark:text-brand-400">Edit</x-ui.button-link>
                     </div>
                 </div>
             @empty
