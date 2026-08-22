@@ -48,13 +48,7 @@ class AnnouncementController extends Controller
      */
     public function show(Announcement $announcement)
     {
-        if (Auth::user()->isTeacher()) {
-            return view('teacher.announcement.show', [
-                'announcement' => $announcement,
-            ]);
-        }
-
-        return view('admin.announcement.show', [
+        return view('teacher.announcement.show', [
             'announcement' => $announcement,
         ]);
     }

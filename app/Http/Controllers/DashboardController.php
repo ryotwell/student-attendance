@@ -14,11 +14,11 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        if(Auth::user()->isTeacher()) {
-            return view('pages.dashboard', [
-                'title' => 'Dashboard',
-            ]);
-        }
+        // if(Auth::user()->isTeacher()) {
+        //     return view('pages.dashboard', [
+        //         'title' => 'Dashboard',
+        //     ]);
+        // }
 
         // $today = Carbon::today();
 
@@ -50,7 +50,7 @@ class DashboardController extends Controller
         //     ->limit(5)
         //     ->get();
 
-        return view('pages.dashboard', [
+        return view('admin.dashboard', [
             'title' => 'Dashboard',
             'totalStudents' => $totalStudents,
             'totalClasses' => $totalClasses,

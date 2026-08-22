@@ -12,7 +12,7 @@ class MenuHelper
             [
                 'icon' => 'dashboard',
                 'name' => 'Dashboard',
-                'path' => '/',
+                'path' => route('dashboard'),
             ],
             [
                 'name' => 'Jurnal Guru',
@@ -44,57 +44,57 @@ class MenuHelper
                 'name' => 'Absensi',
                 'icon' => 'calendar',
                 'subItems' => [
-                    ['name' => 'Input Absensi', 'path' => '/attendance'],
-                    ['name' => 'Laporan Absensi', 'path' => '/attendance/report'],
-                    ['name' => 'Rekap Absensi', 'path' => '/attendance/recap'],
+                    ['name' => 'Input Absensi', 'path' => route('attendance.index')],
+                    ['name' => 'Laporan Absensi', 'path' => route('attendance.report')],
+                    ['name' => 'Rekap Absensi', 'path' => route('attendance.recap')],
                 ],
             ],
             [
                 'name' => 'Siswa',
                 'icon' => 'user-profile',
                 'subItems' => [
-                    ['name' => 'Daftar', 'path' => '/students'],
-                    ['name' => 'Tambah Siswa Baru', 'path' => '/students/create'],
+                    ['name' => 'Daftar', 'path' => route('students.index')],
+                    ['name' => 'Tambah Siswa Baru', 'path' => route('students.create')],
                 ],
             ],
             [
                 'name' => 'Kelas',
                 'icon' => 'tables',
                 'subItems' => [
-                    ['name' => 'Daftar', 'path' => '/classes'],
-                    ['name' => 'Tambah Kelas Baru', 'path' => '/classes/create'],
+                    ['name' => 'Daftar', 'path' => route('classes.index')],
+                    ['name' => 'Tambah Kelas Baru', 'path' => route('classes.create')],
                 ],
             ],
             [
                 'name' => 'Tahun Ajaran',
                 'icon' => 'calendar',
                 'subItems' => [
-                    ['name' => 'Daftar', 'path' => '/academic-years'],
-                    ['name' => 'Tambah Tahun Ajaran', 'path' => '/academic-years/create'],
+                    ['name' => 'Daftar', 'path' => route('academic-years.index')],
+                    ['name' => 'Tambah Tahun Ajaran', 'path' => route('academic-years.create')],
                 ],
             ],
             [
                 'name' => 'Mata Pelajaran',
                 'icon' => 'pages',
                 'subItems' => [
-                    ['name' => 'Daftar', 'path' => '/subjects'],
-                    ['name' => 'Tambah Mata Pelajaran', 'path' => '/subjects/create'],
+                    ['name' => 'Daftar', 'path' => route('subjects.index')],
+                    ['name' => 'Tambah Mata Pelajaran', 'path' => route('subjects.create')],
                 ],
             ],
             [
                 'name' => 'Jadwal',
                 'icon' => 'calendar',
                 'subItems' => [
-                    ['name' => 'Daftar', 'path' => '/schedules'],
-                    ['name' => 'Tambah Jadwal', 'path' => '/schedules/create'],
+                    ['name' => 'Daftar', 'path' => route('schedules.index')],
+                    ['name' => 'Tambah Jadwal', 'path' => route('schedules.create')],
                 ],
             ],
             [
                 'name' => 'Pengumuman',
                 'icon' => 'email',
                 'subItems' => [
-                    ['name' => 'Daftar', 'path' => '/announcements'],
-                    ['name' => 'Tambah Pengumuman', 'path' => '/announcements/create'],
+                    ['name' => 'Daftar', 'path' => route('announcements.index')],
+                    ['name' => 'Tambah Pengumuman', 'path' => route('announcements.create')],
                 ],
             ],
         ];
@@ -201,7 +201,7 @@ class MenuHelper
 
         $isWaliKelas = Auth::user()->isWaliKelas();
         // menu role guru & guru BK
-        if ($user->role === 'GURU' || $user->role === 'GURU_BK') {
+        if ($user->role === 'GURU') {
             $menu = [
                 [
                     'title' => 'Menu',
@@ -209,41 +209,36 @@ class MenuHelper
                         [
                             'icon' => 'dashboard',
                             'name' => 'Dashboard',
-                            'path' => '/',
+                            'path' => route('guru.dashboard'),
                         ],
                         [
                             'icon' => 'calendar',
                             'name' => 'Absensi',
-                            'path' => '/absensi',
+                            'path' => route('absensi.schedules'),
                         ],
                         [
                             'icon' => 'report',
                             'name' => 'Rekap Absensi',
-                            'path' => '/absensi/recap',
+                            'path' => route('absensi.recap'),
                         ],
                         [
                             'icon' => 'history',
                             'name' => 'Riwayat Absensi',
-                            'path' => '/absensi/history',
+                            'path' => route('absensi.history'),
                         ],
-                        // [
-                        //     'icon' => 'tables',
-                        //     'name' => 'Rekap Absensi',
-                        //     'path' => '/attendance/recap',
-                        // ],
                         [
                             'icon' => 'calendar',
                             'name' => 'Jadwal Mengajar',
-                            'path' => '/schedules',
+                            'path' => route('schedules.index'),
                         ],
                         [
                             'icon' => 'email',
                             'name' => 'Pengumuman Sekolah',
-                            'path' => '/announcements',
+                            'path' => route('announcements.index'),
                         ],
                         [
                             'icon' => 'class-group',
-                            'name' => 'Menu Wali Kelas',
+                            'name' => 'Dashboard Wali Kelas',
                             'path' => '/walikelas',
                             'show' => $isWaliKelas,
                         ],
@@ -271,6 +266,26 @@ class MenuHelper
             }));
 
             return $menu;
+        }
+
+        if ($user->role === 'GURU_BK') {
+            return [
+                [
+                    'title' => 'Menu',
+                    'items' => [
+                        [
+                            'icon' => 'dashboard',
+                            'name' => 'Dashboard',
+                            'path' => route('bk.dashboard'),
+                        ],
+                        [
+                            'icon' => 'calendar',
+                            'name' => 'Konseling',
+                            'path' => route('bk.cases.index'),
+                        ],
+                    ],
+                ],
+            ];
         }
 
         // menu role admin
