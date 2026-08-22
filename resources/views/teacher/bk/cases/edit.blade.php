@@ -1,4 +1,3 @@
-{{-- teacher/bk/cases/edit.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
@@ -7,6 +6,7 @@
         @include('teacher.bk.cases._form', [
             'counselingCase' => $counselingCase,
             'categoryOptions' => $categoryOptions,
+            'selectedStudent' => null,
         ])
     </div>
 @endsection

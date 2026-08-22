@@ -55,12 +55,22 @@ class CounselingCaseController extends Controller
         ]);
     }
 
+    /**
+     * Form tambah kasus baru. Jika datang dengan ?student_id=..,
+     * siswa tersebut langsung di-preload (nama + telepon ortu)
+     * supaya form tidak perlu di-search ulang.
+     */
     public function create(Request $request)
     {
+        $selectedStudent = null;
+
+        if ($request->filled('student_id')) {
+            $selectedStudent = Student::with('xclass')->find($request->query('student_id'));
+        }
+
         return view('teacher.bk.cases.create', [
-            'students' => Student::with('xclass')->orderBy('name')->get(),
             'categoryOptions' => CounselingCase::CATEGORY_OPTIONS,
-            'selectedStudentId' => $request->query('student_id'),
+            'selectedStudent' => $selectedStudent,
         ]);
     }
 
@@ -111,6 +121,10 @@ class CounselingCaseController extends Controller
         ]);
     }
 
+    /**
+     * Endpoint pencarian siswa untuk dropdown search (Alpine.js).
+     * Menyertakan parent_phone supaya fitur "Kirim WhatsApp" di form berfungsi.
+     */
     public function searchStudents(Request $request)
     {
         $search = $request->query('q', '');
@@ -127,6 +141,7 @@ class CounselingCaseController extends Controller
             ->map(fn ($student) => [
                 'id' => $student->id,
                 'text' => "{$student->name} — {$student->xclass->name} (NIS: {$student->nis})",
+                'parent_phone' => $student->parent_phone,
             ]);
 
         return response()->json($students);

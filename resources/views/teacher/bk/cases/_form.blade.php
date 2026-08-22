@@ -1,8 +1,7 @@
 @props([
     'counselingCase' => null,
-    'students' => [],
     'categoryOptions' => [],
-    'selectedStudentId' => null,
+    'selectedStudent' => null,
 ])
 
 <form method="POST"
@@ -24,7 +23,7 @@
                     <input type="text" x-model="query" @input.debounce.300ms="search()" @focus="showDropdown=true"
                         @keydown="handleKeydown($event)" placeholder="Ketik nama atau NIS siswa..."
                         class="h-11 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm">
-                    <div x-show="showDropdown"
+                    <div x-show="showDropdown" @click.away="showDropdown=false"
                         class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border bg-white shadow">
                         <template x-if="loading">
                             <div class="px-4 py-2 text-sm">
@@ -36,7 +35,7 @@
                                 class="block w-full px-4 py-2 text-left hover:bg-gray-100" x-text="s.text">
                             </button>
                         </template>
-                        <template x-if="results.length===0 && !loading">
+                        <template x-if="results.length===0 && !loading && query.length > 0">
                             <div class="px-4 py-2 text-sm text-gray-500">
                                 Siswa tidak ditemukan
                             </div>
@@ -65,6 +64,11 @@
                         </option>
                     @endforeach
                 </select>
+                @error('category')
+                    <p class="mt-1 text-sm text-error-500">
+                        {{ $message }}
+                    </p>
+                @enderror
             </div>
         </div>
 
@@ -76,6 +80,11 @@
             <input type="date" name="date"
                 value="{{ old('date', $counselingCase ? $counselingCase->date->format('Y-m-d') : now()->format('Y-m-d')) }}"
                 class="h-11 w-full rounded-lg border px-4">
+            @error('date')
+                <p class="mt-1 text-sm text-error-500">
+                    {{ $message }}
+                </p>
+            @enderror
         </div>
 
         {{-- MASALAH --}}
@@ -84,6 +93,11 @@
                 Deskripsi Masalah
             </label>
             <textarea id="description" name="description" rows="4" class="w-full rounded-lg border px-4 py-2">{{ old('description', $counselingCase->description ?? '') }}</textarea>
+            @error('description')
+                <p class="mt-1 text-sm text-error-500">
+                    {{ $message }}
+                </p>
+            @enderror
         </div>
 
         {{-- TINDAK LANJUT --}}
@@ -91,9 +105,12 @@
             <label class="mb-1.5 block text-sm font-medium">
                 Tindak Lanjut
             </label>
-            <textarea id="action_taken" name="action_taken" rows="4" class="w-full rounded-lg border px-4 py-2">
-                {{ old('action_taken', $counselingCase->action_taken ?? '') }}
-            </textarea>
+            <textarea id="action_taken" name="action_taken" rows="4" class="w-full rounded-lg border px-4 py-2">{{ old('action_taken', $counselingCase->action_taken ?? '') }}</textarea>
+            @error('action_taken')
+                <p class="mt-1 text-sm text-error-500">
+                    {{ $message }}
+                </p>
+            @enderror
         </div>
 
         {{-- BUTTON --}}
@@ -115,17 +132,18 @@
             return {
                 query: '',
                 results: [],
-                selectedId: '{{ old('student_id', $counselingCase->student_id ?? ($selectedStudentId ?? '')) }}',
+                selectedId: '{{ old('student_id', $counselingCase->student_id ?? optional($selectedStudent)->id ?? '') }}',
                 selectedPhone: '',
                 showDropdown: false,
                 loading: false,
                 highlightedIndex: -1,
                 init() {
                     @if ($counselingCase)
-                        this.query =
-                            '{{ $counselingCase->student->name ?? '' }}';
-                        this.selectedPhone =
-                            '{{ $counselingCase->student->parent_phone ?? '' }}';
+                        this.query = '{{ $counselingCase->student->name ?? '' }}';
+                        this.selectedPhone = '{{ $counselingCase->student->parent_phone ?? '' }}';
+                    @elseif ($selectedStudent)
+                        this.query = '{{ $selectedStudent->name }}';
+                        this.selectedPhone = '{{ $selectedStudent->parent_phone ?? '' }}';
                     @endif
                 },
                 async search() {
@@ -147,8 +165,7 @@
                 select(student) {
                     this.selectedId = student.id;
                     this.query = student.text;
-                    this.selectedPhone =
-                        student.parent_phone ?? '';
+                    this.selectedPhone = student.parent_phone ?? '';
                     this.showDropdown = false;
                     this.results = [];
                 },
@@ -156,68 +173,41 @@
                     if (e.key === "Enter") {
                         e.preventDefault();
                         if (this.results.length) {
-                            this.select(
-                                this.results[0]
-                            );
+                            this.select(this.results[0]);
                         }
                     }
                 },
                 sendWhatsapp() {
                     if (!this.selectedId) {
-                        alert(
-                            "Pilih siswa terlebih dahulu"
-                        );
+                        alert("Pilih siswa terlebih dahulu");
                         return;
                     }
                     if (!this.selectedPhone) {
-                        alert(
-                            "Nomor WhatsApp orang tua belum tersedia"
-                        );
+                        alert("Nomor WhatsApp orang tua belum tersedia");
                         return;
                     }
-                    let pesan = `
-
-Assalamu'alaikum Bapak/Ibu.
-
+                    let pesan = `Assalamu'alaikum Bapak/Ibu.
 
 Kami menyampaikan informasi terkait bimbingan siswa:
 
-
-Nama Siswa:
-${this.query}
-
-
-Kategori:
-${document.getElementById('category').value}
-
+Nama Siswa: ${this.query}
+Kategori: ${document.getElementById('category').value}
 
 Permasalahan:
 ${document.getElementById('description').value}
 
-
 Tindak Lanjut:
 ${document.getElementById('action_taken').value}
 
+Terima kasih atas perhatian dan kerja samanya.`;
 
-Terima kasih atas perhatian dan kerja samanya.
-
-
-`;
-                    let nomor =
-                        this.selectedPhone
-                        .replace(/\D/g, '');
+                    let nomor = this.selectedPhone.replace(/\D/g, '');
                     if (nomor.startsWith('08')) {
-                        nomor =
-                            '62' + nomor.substring(1);
+                        nomor = '62' + nomor.substring(1);
                     }
                     window.open(
-
-                        'https://wa.me/' + nomor +
-                        '?text=' +
-                        encodeURIComponent(pesan),
-
+                        'https://wa.me/' + nomor + '?text=' + encodeURIComponent(pesan),
                         '_blank'
-
                     );
                 }
             }
