@@ -87,6 +87,10 @@ class User extends Authenticatable
 
     public function isWaliKelas(): bool
     {
+        if (isset($this->classes_exists)) {
+            return $this->classes_exists;
+        }
+
         return $this->classes()->exists();
     }
 }

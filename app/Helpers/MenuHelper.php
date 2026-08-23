@@ -199,9 +199,10 @@ class MenuHelper
             return [];
         }
 
-        $isWaliKelas = Auth::user()->isWaliKelas();
         // menu role guru & guru BK
         if ($user->role === 'GURU') {
+            $isWaliKelas = Auth::user()->isWaliKelas();
+
             $menu = [
                 [
                     'title' => 'Menu',
