@@ -12,6 +12,7 @@ use App\Http\Controllers\GuruBK\CounselingCaseController;
 use App\Http\Controllers\Teacher\AbsensiController;
 use App\Http\Controllers\Teacher\WalikelasController;
 
+Route::get('/', fn () => redirect()->route('login'))->middleware('guest');
 
 // ADMIN
 Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->group(function() {
