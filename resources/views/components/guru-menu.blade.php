@@ -1,45 +1,56 @@
 @php
-    $menuItems = [
-        [
-            'title'       => 'Input Absensi',
-            'description' => 'Input dan kelola data kehadiran siswa',
-            'url'         => route('absensi.schedules'),
-            'icon'        => 'clipboard-plus',
-        ],
-        [
-            'title'       => 'Rekap Absensi',
-            'description' => 'Lihat dan cetak rekap kehadiran siswa',
-            'url'         => route('absensi.recap'),
-            'icon'        => 'file-chart',
-        ],
-        [
-            'title'       => 'Riwayat Absensi',
-            'description' => 'Lihat riwayat absensi berdasarkan jadwal & tanggal',
-            'url'         => route('absensi.history'),
-            'icon'        => 'calendar-check',
-        ],
-        [
-            'title'       => 'Jadwal Mengajar',
-            'description' => 'Lihat jadwal kelas dan jam mengajar',
-            'url'         => route('schedules.index'),
-            'icon'        => 'calendar',
-        ],
-        [
-            'title'       => 'Pengumuman',
-            'description' => 'Baca informasi dan pengumuman terbaru',
-            'url'         => route('announcements.index'),
-            'icon'        => 'megaphone',
-        ],
-    ];
 
-    if (Auth::user()->isWaliKelas() ?? false) {
-        $menuItems[] = [
-            'title'       => 'Menu Wali Kelas',
-            'description' => 'Kelola dan pantau kelas yang Anda wali-i',
-            'url'         => route('walikelas.index'),
-            'icon'        => 'users-group',
-        ];
-    }
+$user = Auth::user();
+
+$user->loadExists('classes');
+
+$menuItems = [
+    [
+        'title'       => 'Input Absensi',
+        'description' => 'Input dan kelola data kehadiran siswa',
+        'url'         => route('absensi.schedules'),
+        'icon'        => 'clipboard-plus',
+    ],
+    [
+        'title'       => 'Rekap Absensi',
+        'description' => 'Lihat dan cetak rekap kehadiran siswa',
+        'url'         => route('absensi.recap'),
+        'icon'        => 'file-chart',
+    ],
+    [
+        'title'       => 'Riwayat Absensi',
+        'description' => 'Lihat riwayat absensi berdasarkan jadwal & tanggal',
+        'url'         => route('absensi.history'),
+        'icon'        => 'calendar-check',
+    ],
+    [
+        'title'       => 'Jadwal Mengajar',
+        'description' => 'Lihat jadwal kelas dan jam mengajar',
+        'url'         => route('schedules.index'),
+        'icon'        => 'calendar',
+    ],
+    [
+        'title'       => 'Pengumuman',
+        'description' => 'Baca informasi dan pengumuman terbaru',
+        'url'         => route('announcements.index'),
+        'icon'        => 'megaphone',
+    ],
+    [
+        'title'       => 'Menu Wali Kelas',
+        'description' => 'Kelola dan pantau kelas yang Anda wali-i',
+        'url'         => route('walikelas.index'),
+        'icon'        => 'users-group',
+    ]
+];
+
+if ($user->role === 'GURU' && $user->isWaliKelas()) {
+    $menuItems[] = [
+        'title'       => 'Menu Wali Kelas',
+        'description' => 'Kelola dan pantau kelas yang Anda wali-i',
+        'url'         => route('walikelas.index'),
+        'icon'        => 'users-group',
+    ];
+}
 @endphp
 
 
