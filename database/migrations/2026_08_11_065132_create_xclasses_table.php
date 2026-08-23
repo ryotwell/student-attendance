@@ -14,6 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('xclasses', function (Blueprint $table) {
+            $table->index('user_id');
             $table->id();
             $table->string("name");
             $table->foreignIdFor(AcademicYear::class)->constrained()->cascadeOnDelete();

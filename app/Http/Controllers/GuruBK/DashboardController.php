@@ -12,71 +12,130 @@ class DashboardController extends Controller
     public function index()
     {
         $today = Carbon::today();
+
         $monthStart = Carbon::now()->startOfMonth();
         $monthEnd = Carbon::now()->endOfMonth();
 
-        // Ringkasan hari ini, sekolah-wide.
+
+        /*
+        |--------------------------------------------------------------------------
+        | Kehadiran hari ini
+        |--------------------------------------------------------------------------
+        */
+
         $todayCounts = Attendance::query()
             ->whereDate('date', $today)
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        // Ringkasan bulan berjalan, sekolah-wide.
+
+        /*
+        |--------------------------------------------------------------------------
+        | Kehadiran bulan ini
+        |--------------------------------------------------------------------------
+        */
+
         $monthCounts = Attendance::query()
             ->whereBetween('date', [$monthStart, $monthEnd])
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
 
+
         $monthTotal = $monthCounts->sum();
-        $attendanceRate = $monthTotal > 0
+
+        $attendanceRate = $monthTotal
             ? round(($monthCounts->get('HADIR', 0) / $monthTotal) * 100, 1)
             : 0;
 
-        // Breakdown per kelas: skor rata-rata kehadiran bulan ini.
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Breakdown kelas (NO N+1)
+        |--------------------------------------------------------------------------
+        */
+
+        $attendanceByClass = Attendance::query()
+            ->whereBetween('date', [$monthStart, $monthEnd])
+            ->selectRaw("
+                xclass_id,
+                SUM(status = 'HADIR') as hadir,
+                SUM(status = 'ALPHA') as alpha,
+                COUNT(*) as total
+            ")
+            ->groupBy('xclass_id')
+            ->get()
+            ->keyBy('xclass_id');
+
+
         $classBreakdown = Xclass::query()
             ->withCount('students')
-            ->with('academicYear')
             ->get()
-            ->map(function ($xclass) use ($monthStart, $monthEnd) {
-                $counts = Attendance::query()
-                    ->where('xclass_id', $xclass->id)
-                    ->whereBetween('date', [$monthStart, $monthEnd])
-                    ->selectRaw('status, COUNT(*) as total')
-                    ->groupBy('status')
-                    ->pluck('total', 'status');
+            ->map(function ($xclass) use ($attendanceByClass) {
 
-                $total = $counts->sum();
-                $rate = $total > 0 ? round(($counts->get('HADIR', 0) / $total) * 100, 1) : null;
+                $attendance = $attendanceByClass
+                    ->get($xclass->id);
+
+
+                $total = $attendance->total ?? 0;
 
                 return [
                     'xclass' => $xclass,
-                    'rate' => $rate,
-                    'alpha' => $counts->get('ALPHA', 0),
+
+                    'rate' => $total
+                        ? round(
+                            (($attendance->hadir ?? 0) / $total) * 100,
+                            1
+                        )
+                        : null,
+
+                    'alpha' => $attendance->alpha ?? 0,
                 ];
+
             })
-            ->sortBy('rate') // kelas dengan kehadiran terendah muncul duluan
+            ->sortBy('rate')
             ->values();
 
-        // Top siswa dengan Alpha terbanyak, sekolah-wide, bulan ini.
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Top Alpha
+        |--------------------------------------------------------------------------
+        */
+
         $topAlpha = Attendance::query()
             ->whereBetween('date', [$monthStart, $monthEnd])
             ->where('status', 'ALPHA')
             ->selectRaw('student_id, COUNT(*) as total')
             ->groupBy('student_id')
             ->orderByDesc('total')
-            ->take(10)
-            ->with('student.xclass')
+            ->limit(10)
+            ->with([
+                'student:id,name,xclass_id',
+                'student.xclass:id,name'
+            ])
             ->get();
 
+
+
         return view('teacher.bk.dashboard', [
+
             'todayCounts' => $todayCounts,
+
             'monthCounts' => $monthCounts,
+
             'attendanceRate' => $attendanceRate,
+
             'classBreakdown' => $classBreakdown,
+
             'topAlpha' => $topAlpha,
-            'monthLabel' => Carbon::now()->translatedFormat('F Y'),
+
+            'monthLabel' => Carbon::now()
+                ->translatedFormat('F Y'),
+
         ]);
     }
 }
