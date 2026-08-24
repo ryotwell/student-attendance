@@ -2,63 +2,86 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\Attendance;
+use App\Models\CounselingCase;
 use App\Models\Student;
 use App\Models\Subject;
+use App\Models\User;
 use App\Models\Xclass;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // if(Auth::user()->isTeacher()) {
-        //     return view('pages.dashboard', [
-        //         'title' => 'Dashboard',
-        //     ]);
-        // }
+        $today = Carbon::today();
+        $monthStart = Carbon::now()->startOfMonth();
+        $monthEnd = Carbon::now()->endOfMonth();
 
-        // $today = Carbon::today();
+        // Ringkasan jumlah entitas utama.
+        $totals = [
+            'students' => Student::count(),
+            'classes' => Xclass::count(),
+            'subjects' => Subject::count(),
+            'teachers' => User::where('role', 'GURU')->count(),
+            'counselors' => User::where('role', 'GURU_BK')->count(),
+            'admins' => User::where('role', 'ADMIN')->count(),
+        ];
 
-        // Total counts
-        $totalStudents = Student::count();
-        $totalClasses = Xclass::count();
-        // $totalSubjects = Subject::count();
+        // Kehadiran hari ini, sekolah-wide.
+        $todayCounts = Attendance::query()
+            ->whereDate('date', $today)
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
 
-        // Today's attendance stats
-        // $todaysAttendances = Attendance::whereDate('date', $today)->get();
-        
-        // $attendanceStats = [
-        //     'hadir' => $todaysAttendances->where('status', 'HADIR')->count(),
-        //     'izin' => $todaysAttendances->where('status', 'IZIN')->count(),
-        //     'sakit' => $todaysAttendances->where('status', 'SAKIT')->count(),
-        //     'alpha' => $todaysAttendances->where('status', 'ALPHA')->count(),
-        //     'total' => $todaysAttendances->count(),
-        // ];
+        // Kehadiran bulan berjalan, sekolah-wide.
+        $monthCounts = Attendance::query()
+            ->whereBetween('date', [$monthStart, $monthEnd])
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
 
-        // // Attendance rate (percentage of students present today)
-        // $attendanceRate = $totalStudents > 0 
-        //     ? round(($attendanceStats['hadir'] / $totalStudents) * 100, 1)
-        //     : 0;
+        $monthTotal = $monthCounts->sum();
+        $attendanceRate = $monthTotal > 0
+            ? round(($monthCounts->get('HADIR', 0) / $monthTotal) * 100, 1)
+            : 0;
 
-        // // Recent attendance records (last 5)
-        // $recentAttendances = Attendance::with(['student', 'schedule.subject', 'xclass'])
-        //     ->orderBy('date', 'desc')
-        //     ->orderBy('created_at', 'desc')
-        //     ->limit(5)
-        //     ->get();
+        // Aktivitas terbaru: user baru daftar + kasus BK baru, digabung & diurutkan.
+        $recentUsers = User::query()
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(fn ($user) => [
+                'type' => 'user',
+                'title' => "{$user->name} bergabung sebagai " . strtolower(str_replace('_', ' ', $user->role)),
+                'timestamp' => $user->created_at,
+            ]);
+
+        $recentCases = CounselingCase::query()
+            ->with(['student', 'user'])
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(fn ($case) => [
+                'type' => 'counseling_case',
+                'title' => "{$case->user->name} mencatat kasus {$case->category_label} untuk {$case->student->name}",
+                'timestamp' => $case->created_at,
+            ]);
+
+        $recentActivities = $recentUsers->concat($recentCases)
+            ->sortByDesc('timestamp')
+            ->take(8)
+            ->values();
 
         return view('admin.dashboard', [
-            'title' => 'Dashboard',
-            'totalStudents' => $totalStudents,
-            'totalClasses' => $totalClasses,
-            // 'totalSubjects' => $totalSubjects,
-            // 'attendanceStats' => $attendanceStats,
-            // 'attendanceRate' => $attendanceRate,
-            // 'recentAttendances' => $recentAttendances,
-            // 'today' => $today,
+            'totals' => $totals,
+            'todayCounts' => $todayCounts,
+            'monthCounts' => $monthCounts,
+            'attendanceRate' => $attendanceRate,
+            'monthLabel' => Carbon::now()->translatedFormat('F Y'),
+            'recentActivities' => $recentActivities,
         ]);
     }
 }
