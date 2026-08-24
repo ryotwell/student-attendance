@@ -76,6 +76,13 @@ class User extends Authenticatable
         return $this->hasMany(CounselingCase::class);
     }
 
+    public function teacherDocument()
+    {
+        return $this->hasOne(
+            TeacherDocument::class
+        );
+    }
+
     public function mySchedules()
     {
         return $this->schedules()

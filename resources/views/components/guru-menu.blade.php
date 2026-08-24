@@ -35,12 +35,6 @@ $menuItems = [
         'url'         => route('announcements.index'),
         'icon'        => 'megaphone',
     ],
-    // [
-    //     'title'       => 'Menu Wali Kelas',
-    //     'description' => 'Kelola dan pantau kelas yang Anda wali-i',
-    //     'url'         => route('walikelas.index'),
-    //     'icon'        => 'users-group',
-    // ]
 ];
 
 if ($user->role === 'GURU' && $user->isWaliKelas()) {

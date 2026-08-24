@@ -233,6 +233,11 @@ class MenuHelper
                             'path' => route('schedules.index'),
                         ],
                         [
+                            'icon' => 'calendar',
+                            'name' => 'Jurnal Guru',
+                            'path' => route('teacher.documents.index'),
+                        ],
+                        [
                             'icon' => 'email',
                             'name' => 'Pengumuman Sekolah',
                             'path' => route('announcements.index'),

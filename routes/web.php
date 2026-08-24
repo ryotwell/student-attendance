@@ -9,6 +9,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\GuruBK\CounselingCaseController;
 use App\Http\Controllers\Teacher\AbsensiController;
+use App\Http\Controllers\Teacher\TeacherDocumentController;
 use App\Http\Controllers\Teacher\WalikelasController;
 use Illuminate\Support\Facades\Route;
 
@@ -63,6 +64,17 @@ Route::middleware(['auth', 'role:GURU'])->prefix('guru')->group(function() {
         ->name('absensi.recap.show');
     Route::get('/absensi/recap/{schedule}/export', [AbsensiController::class, 'recapExport'])
         ->name('absensi.recap.export');
+
+    Route::get('/documents', [TeacherDocumentController::class, 'index'])
+        ->name('teacher.documents.index');
+    Route::get('/documents/create', [TeacherDocumentController::class, 'create'])
+        ->name('teacher.documents.create');
+    Route::post('/documents', [TeacherDocumentController::class, 'store'])
+        ->name('teacher.documents.store');
+    Route::get('/documents/edit', [TeacherDocumentController::class, 'edit'])
+        ->name('teacher.documents.edit');
+    Route::put('/documents', [TeacherDocumentController::class, 'update'])
+        ->name('teacher.documents.update');
 });
 
 // Wali Kelas
