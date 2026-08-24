@@ -2,6 +2,9 @@ services:
   app:
     build: .
     restart: unless-stopped
+    networks:
+      - dokploy-network
+      - default
     environment:
       APP_NAME: ${APP_NAME}
       APP_DEBUG: ${APP_DEBUG}
@@ -33,6 +36,9 @@ services:
     build: .
     restart: unless-stopped
     command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
+    networks:
+      - dokploy-network
+      - default
     environment:
       APP_NAME: ${APP_NAME}
       APP_DEBUG: ${APP_DEBUG}
