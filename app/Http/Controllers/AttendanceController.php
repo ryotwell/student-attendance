@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendAlphaWhatsAppNotification;
 use App\Models\Attendance;
 use App\Models\Schedule;
 use App\Models\Student;
@@ -28,43 +29,6 @@ class AttendanceController extends Controller
     /**
      * Show attendance table for selected class, schedule, and date.
      */
-    // public function show(Request $request)
-    // {
-    //     $request->validate([
-    //         'class_id' => 'required|exists:xclasses,id',
-    //         'schedule_id' => 'required|exists:schedules,id',
-    //         'date' => 'required|date',
-    //     ]);
-
-    //     $class = Xclass::with('students')->findOrFail($request->class_id);
-    //     $schedule = Schedule::with('subject')->findOrFail($request->schedule_id);
-    //     $date = Carbon::parse($request->date);
-
-    //     // Get existing attendances for this class, schedule, and date
-    //     $existingAttendances = Attendance::where('xclass_id', $class->id)
-    //         ->where('schedule_id', $schedule->id)
-    //         ->whereDate('date', $date)
-    //         ->get()
-    //         ->keyBy('student_id');
-
-    //     if(Auth::user()->role === 'GURU') {
-    //         return view('teacher.absensi.absensi', [
-    //             'title' => 'Absensi: ' . $class->name . ' - ' . $schedule->subject->name,
-    //             'class' => $class,
-    //             'schedule' => $schedule,
-    //             'date' => $date,
-    //             'existingAttendances' => $existingAttendances,
-    //         ]);
-    //     }
-
-    //     return view('admin.attendance.table', [
-    //         'title' => 'Absensi: ' . $class->name . ' - ' . $schedule->subject->name,
-    //         'class' => $class,
-    //         'schedule' => $schedule,
-    //         'date' => $date,
-    //         'existingAttendances' => $existingAttendances,
-    //     ]);
-    // }
     public function show(Request $request)
     {
         $validated = $request->validate([
@@ -129,7 +93,7 @@ class AttendanceController extends Controller
         $date = Carbon::parse($request->date);
 
         foreach ($request->attendances as $attendanceData) {
-            Attendance::updateOrCreate(
+            $attendance = Attendance::updateOrCreate(
                 [
                     'student_id' => $attendanceData['student_id'],
                     'xclass_id' => $classId,
@@ -141,6 +105,10 @@ class AttendanceController extends Controller
                     'status' => $attendanceData['status'],
                 ]
             );
+
+            if ($attendance->status === 'ALPHA') {
+                SendAlphaWhatsAppNotification::dispatch($attendance);
+            }
         }
 
         return redirect()

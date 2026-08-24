@@ -73,7 +73,7 @@
                     @forelse ($class->students as $index => $student)
                         @php
                             $existing = $existingAttendances->get($student->id);
-                            $currentStatus = $existing->status ?? 'ALPHA';
+                            $currentStatus = $existing->status ?? 'HADIR';
                         @endphp
 
                         <div class="group student-card rounded-2xl border border-gray-200 bg-white p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-900"

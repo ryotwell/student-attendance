@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\AcademicYear;
-use App\Models\Student;
 use App\Models\Xclass;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -12,11 +11,6 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class StudentFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         $xclass = Xclass::inRandomOrder()->first() ?? Xclass::create([
@@ -32,8 +26,14 @@ class StudentFactory extends Factory
             'name' => fake()->name(),
             'nis' => (string) fake()->unique()->numberBetween(100000, 999999),
             'nisn' => (string) fake()->unique()->numberBetween(1000000000, 9999999999),
-            'gender' => fake()->randomElement(['MALE', 'FEMALE']),
+            'gender' => fake()->randomElement([
+                'MALE',
+                'FEMALE'
+            ]),
             'xclass_id' => $xclass->id,
+            'parent_name' => fake()->name(),
+            // 'parent_phone' => '62' . fake()->unique()->numerify('8##########'),
+            'parent_phone' => '6285737074723',
         ];
     }
 }
