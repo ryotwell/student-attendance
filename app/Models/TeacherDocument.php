@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Override;
 
 class TeacherDocument extends Model
 {
@@ -16,6 +17,14 @@ class TeacherDocument extends Model
     public function verifier()
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    #[Override]
+    public function casts()
+    {
+        return [
+            'verified_at' => 'datetime',
+        ];
     }
 
 }

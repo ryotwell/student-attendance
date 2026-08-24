@@ -7,10 +7,7 @@ use App\Http\Controllers\ClassController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
-use App\Http\Controllers\GuruBK\CounselingCaseController;
-use App\Http\Controllers\Teacher\AbsensiController;
-use App\Http\Controllers\Teacher\TeacherDocumentController;
-use App\Http\Controllers\Teacher\WalikelasController;
+use App\Http\Controllers\TeacherDocumentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('login'))->middleware('guest');
@@ -46,46 +43,56 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->group(function() {
     Route::get('attendance/list/{class}', [AttendanceController::class, 'listShow'])->name('attendance.list.show');
     Route::get('attendance/list/{class}/{schedule}/{date}/edit', [AttendanceController::class, 'listEdit'])->name('attendance.list.edit');
     Route::put('attendance/list/{class}/{schedule}/{date}', [AttendanceController::class, 'listUpdate'])->name('attendance.list.update');
+
+    // 
+    Route::get('/teacher-documents', [TeacherDocumentController::class, 'index'])
+        ->name('admin.teacher-documents.index');
+    Route::get('/teacher-documents/{teacherDocument}', [TeacherDocumentController::class, 'show'])
+        ->name('admin.teacher-documents.show');
+    Route::post('/teacher-documents/{teacherDocument}/verify', [TeacherDocumentController::class, 'verify'])
+        ->name('admin.teacher-documents.verify');
+    Route::post('/teacher-documents/{teacherDocument}/reject', [TeacherDocumentController::class, 'reject'])
+        ->name('admin.teacher-documents.reject');
 });
 
 // GURU
 Route::middleware(['auth', 'role:GURU'])->prefix('guru')->group(function() {
     Route::get('/', App\Http\Controllers\Teacher\DashboardController::class)->name('guru.dashboard');
 
-    Route::get('/absensi', [AbsensiController::class, 'schedules'])
+    Route::get('/absensi', [App\Http\Controllers\Teacher\AbsensiController::class, 'schedules'])
         ->name('absensi.schedules');
-    Route::get('/absensi/history', [AbsensiController::class, 'history'])
+    Route::get('/absensi/history', [App\Http\Controllers\Teacher\AbsensiController::class, 'history'])
         ->name('absensi.history');
-    Route::get('/absensi/history/{date}/{class}/{schedule}', [AbsensiController::class, 'showHistory'])
+    Route::get('/absensi/history/{date}/{class}/{schedule}', [App\Http\Controllers\Teacher\AbsensiController::class, 'showHistory'])
         ->name('absensi.history.show');
-    Route::get('/absensi/recap', [AbsensiController::class, 'recapIndex'])
+    Route::get('/absensi/recap', [App\Http\Controllers\Teacher\AbsensiController::class, 'recapIndex'])
         ->name('absensi.recap');
-    Route::get('/absensi/recap/{schedule}', [AbsensiController::class, 'recapShow'])
+    Route::get('/absensi/recap/{schedule}', [App\Http\Controllers\Teacher\AbsensiController::class, 'recapShow'])
         ->name('absensi.recap.show');
-    Route::get('/absensi/recap/{schedule}/export', [AbsensiController::class, 'recapExport'])
+    Route::get('/absensi/recap/{schedule}/export', [App\Http\Controllers\Teacher\AbsensiController::class, 'recapExport'])
         ->name('absensi.recap.export');
 
-    Route::get('/documents', [TeacherDocumentController::class, 'index'])
+    Route::get('/documents', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'index'])
         ->name('teacher.documents.index');
-    Route::get('/documents/create', [TeacherDocumentController::class, 'create'])
+    Route::get('/documents/create', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'create'])
         ->name('teacher.documents.create');
-    Route::post('/documents', [TeacherDocumentController::class, 'store'])
+    Route::post('/documents', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'store'])
         ->name('teacher.documents.store');
-    Route::get('/documents/edit', [TeacherDocumentController::class, 'edit'])
+    Route::get('/documents/edit', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'edit'])
         ->name('teacher.documents.edit');
-    Route::put('/documents', [TeacherDocumentController::class, 'update'])
+    Route::put('/documents', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'update'])
         ->name('teacher.documents.update');
 });
 
 // Wali Kelas
 Route::middleware(['auth', 'role:GURU'])->prefix('walikelas')->name('walikelas.')->group(function () {
-    Route::get('/', [WalikelasController::class, 'index'])
+    Route::get('/', [App\Http\Controllers\Teacher\WalikelasController::class, 'index'])
         ->name('index');
-    Route::get('/{xclass}/dashboard', [WalikelasController::class, 'dashboard'])
+    Route::get('/{xclass}/dashboard', [App\Http\Controllers\Teacher\WalikelasController::class, 'dashboard'])
         ->name('dashboard');
-    Route::get('/{xclass}/rekap', [WalikelasController::class, 'rekap'])
+    Route::get('/{xclass}/rekap', [App\Http\Controllers\Teacher\WalikelasController::class, 'rekap'])
         ->name('rekap');
-    Route::get('/{xclass}/rekap/export', [WalikelasController::class, 'rekapExport'])
+    Route::get('/{xclass}/rekap/export', [App\Http\Controllers\Teacher\WalikelasController::class, 'rekapExport'])
         ->name('rekap.export');
 });
 
@@ -93,16 +100,16 @@ Route::middleware(['auth', 'role:GURU'])->prefix('walikelas')->name('walikelas.'
 Route::middleware(['auth', 'role:GURU_BK'])->prefix('bk')->name('bk.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\GuruBK\DashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/kasus', [CounselingCaseController::class, 'index'])->name('cases.index');
-    Route::get('/kasus/tambah', [CounselingCaseController::class, 'create'])->name('cases.create');
-    Route::post('/kasus', [CounselingCaseController::class, 'store'])->name('cases.store');
-    Route::get('/kasus/{counselingCase}/edit', [CounselingCaseController::class, 'edit'])->name('cases.edit');
-    Route::put('/kasus/{counselingCase}', [CounselingCaseController::class, 'update'])->name('cases.update');
-    Route::delete('/kasus/{counselingCase}', [CounselingCaseController::class, 'destroy'])->name('cases.destroy');
+    Route::get('/kasus', [App\Http\Controllers\GuruBK\CounselingCaseController::class, 'index'])->name('cases.index');
+    Route::get('/kasus/tambah', [App\Http\Controllers\GuruBK\CounselingCaseController::class, 'create'])->name('cases.create');
+    Route::post('/kasus', [App\Http\Controllers\GuruBK\CounselingCaseController::class, 'store'])->name('cases.store');
+    Route::get('/kasus/{counselingCase}/edit', [App\Http\Controllers\GuruBK\CounselingCaseController::class, 'edit'])->name('cases.edit');
+    Route::put('/kasus/{counselingCase}', [App\Http\Controllers\GuruBK\CounselingCaseController::class, 'update'])->name('cases.update');
+    Route::delete('/kasus/{counselingCase}', [App\Http\Controllers\GuruBK\CounselingCaseController::class, 'destroy'])->name('cases.destroy');
 
-    Route::get('/siswa/{student}/kasus', [CounselingCaseController::class, 'byStudent'])->name('cases.by-student');
+    Route::get('/siswa/{student}/kasus', [App\Http\Controllers\GuruBK\CounselingCaseController::class, 'byStudent'])->name('cases.by-student');
 
-    Route::get('/siswa/search', [CounselingCaseController::class, 'searchStudents'])->name('students.search');
+    Route::get('/siswa/search', [App\Http\Controllers\GuruBK\CounselingCaseController::class, 'searchStudents'])->name('students.search');
 });
 
 Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');

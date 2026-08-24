@@ -17,7 +17,7 @@ class MenuHelper
             [
                 'name' => 'Jurnal Guru',
                 'icon' => 'pages',
-                'path' => '#!'
+                'path' => route('admin.teacher-documents.index')
             ],
             [
                 'name' => 'Riwayat Absen',
