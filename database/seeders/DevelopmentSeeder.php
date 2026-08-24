@@ -22,27 +22,20 @@ class DevelopmentSeeder
             'role' => 'ADMIN'
         ]);
 
-        User::create([
-            'name' => 'Akhyar Rosidi',
-            'email' => 'rosidi@gmail.com',
-            'password' => bcrypt('12345678'),
-            'role' => 'GURU'
-        ]);
-
         $academicYear = AcademicYear::create(['name' => 'Tahun Ajaran 2026/2027', 'is_active' => true]);
 
         $classes = [
             [
                 'name' => 'XII A',
-                'user_id' => 2 // Akhyar Rosidi
+                'user_id' => 2, // wali kelas
             ],
             [
                 'name' => 'XII B',
-                'user_id' => 3 // Wali Kelas XII B
+                'user_id' => 3, // wali kelas
             ],
             [
                 'name' => 'XII C',
-                'user_id' => 4 // Wali Kelas XII C
+                'user_id' => 4, // wali kelas
             ],
         ];
         foreach ($classes as $x) {
