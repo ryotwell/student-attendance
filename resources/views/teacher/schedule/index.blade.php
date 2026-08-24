@@ -4,7 +4,7 @@
 
     <x-common.page-breadcrumb pageTitle="Jadwal Mengajar" />
 
-    {{-- <x-common.component-card title="Jadwal Mengajar"> --}}
+    <x-common.component-card title="Jadwal Mengajar">
 
         @if($schedules->count())
 
@@ -117,6 +117,6 @@
 
         @endif
 
-    {{-- </x-common.component-card> --}}
+    </x-common.component-card>
 
 @endsection
