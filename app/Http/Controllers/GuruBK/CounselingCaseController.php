@@ -127,23 +127,28 @@ class CounselingCaseController extends Controller
      */
     public function searchStudents(Request $request)
     {
-        $search = $request->query('q', '');
-
-        $students = Student::with('xclass')
-            ->when($search, function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('nis', 'like', "%{$search}%")
-                    ->orWhere('nisn', 'like', "%{$search}%");
-            })
-            ->orderBy('name')
+        $students = Student::query()
+            ->where('name','like','%'.$request->q.'%')
+            ->orWhere('nis','like','%'.$request->q.'%')
             ->limit(20)
-            ->get()
-            ->map(fn ($student) => [
-                'id' => $student->id,
-                'text' => "{$student->name} — {$student->xclass->name} (NIS: {$student->nis})",
-                'parent_phone' => $student->parent_phone,
-            ]);
+            ->get();
 
-        return response()->json($students);
+
+        return response()->json(
+            $students->map(function($student){
+
+                return [
+
+                    'id'=>$student->id,
+
+                    'text'=>$student->name.
+                        ' - '.$student->nis,
+
+                    'parent_phone'=>$student->parent_phone
+
+                ];
+
+            })
+        );
     }
 }

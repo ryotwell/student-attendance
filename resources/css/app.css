@@ -880,3 +880,114 @@ pre[class*='language-'] {
     margin-right: -60px !important;
   }
 }
+
+/* select2 */
+/* Select2 Tailwind Style */
+.select2-container {
+    width: 100% !important;
+}
+
+.select2-container .select2-selection--single {
+    height: 44px !important;
+    border-radius: 0.5rem !important;
+    border: 1px solid #d1d5db !important;
+    background-color: white !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.select2-container--default 
+.select2-selection--single 
+.select2-selection__rendered {
+    color: #374151 !important;
+    font-size: 0.875rem !important;
+    line-height: 44px !important;
+    padding-left: 1rem !important;
+}
+
+.select2-container--default 
+.select2-selection--single 
+.select2-selection__arrow {
+    height: 42px !important;
+    right: 10px !important;
+}
+
+
+.select2-container--default.select2-container--focus 
+.select2-selection--single {
+    border-color: #3b82f6 !important;
+    outline: none !important;
+}
+
+
+/* Dropdown */
+.select2-container--default 
+.select2-dropdown {
+    border-radius: 0.5rem !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1) !important;
+}
+
+
+.select2-container--default 
+.select2-search--dropdown 
+.select2-search__field {
+
+    height: 40px !important;
+    border-radius: 0.5rem !important;
+    border: 1px solid #d1d5db !important;
+    padding: 0 12px !important;
+}
+
+
+.select2-results__option {
+
+    padding: 10px 16px !important;
+    font-size: 0.875rem !important;
+
+}
+
+
+.select2-container--default 
+.select2-results__option--highlighted[aria-selected] {
+
+    background-color: #f3f4f6 !important;
+    color: #111827 !important;
+
+}
+
+
+/* Dark mode */
+.dark .select2-container .select2-selection--single {
+
+    background-color: #111827 !important;
+    border-color: #374151 !important;
+
+}
+
+
+.dark 
+.select2-container--default 
+.select2-selection--single 
+.select2-selection__rendered {
+
+    color: #e5e7eb !important;
+
+}
+
+
+.dark 
+.select2-container--default 
+.select2-dropdown {
+
+    background-color: #111827 !important;
+    border-color: #374151 !important;
+
+}
+
+
+.dark .select2-results__option {
+
+    color: #e5e7eb;
+
+}
