@@ -7,10 +7,10 @@ use App\Http\Controllers\ClassController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GuruBK\CounselingCaseController;
 use App\Http\Controllers\Teacher\AbsensiController;
 use App\Http\Controllers\Teacher\WalikelasController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('login'))->middleware('guest');
 

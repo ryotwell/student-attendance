@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Helpers\WhatsAppHelper;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\URL;
@@ -22,14 +23,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // if (Auth::user()->role === 'GURU' && !request()->is('teacher-area*')) {
-            
-        // }
-
         if(config('app.env') !== 'local') {
             URL::forceScheme('https');
         }
 
         Carbon::setLocale('id');
+
+        $this->app->singleton(
+            WhatsAppHelper::class,
+            function(){
+                return new WhatsAppHelper();
+            }
+        );
     }
 }
