@@ -1,88 +1,159 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Riwayat Absensi" />
 
-    <div class="mx-auto max-w-6xl space-y-5 grid grid-cols-2 gap-4">
+<x-common.page-breadcrumb pageTitle="Riwayat Absensi" />
+
+
+<div class="mx-auto max-w-6xl">
+
+
+    {{-- List History --}}
+    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+
 
         @forelse($histories as $history)
+
+
             <a
                 href="{{ route('absensi.history.show', [
                     'date' => \Carbon\Carbon::parse($history->date)->format('Y-m-d'),
                     'class' => $history->xclass_id,
                     'schedule' => $history->schedule_id,
-                ]) }}">
+                ]) }}"
+
+                class="
+                group relative overflow-hidden
+
+                rounded-2xl
+
+                border border-gray-200
+
+                bg-white
+
+                p-5
+
+                shadow-sm
+
+                transition-all duration-300
+
+                hover:-translate-y-1
+
+                hover:border-brand-300
+
+                hover:shadow-xl
 
 
-                <div
-                    class="rounded-2xl border border-gray-200 bg-white p-6 transition hover:-translate-y-1 hover:shadow-lg dark:border-gray-700 dark:bg-gray-900">
+                dark:border-gray-700
+
+                dark:bg-gray-900
+
+                dark:hover:border-brand-500
+                "
+            >
 
 
-                    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                {{-- Border kiri brand --}}
+                <span
+                    class="
+                    absolute left-0 top-0
+                    h-full w-1
 
+                    bg-brand-500
 
-                        <div>
+                    transition-all
 
-
-                            <h3 class="text-lg font-bold text-gray-800 dark:text-white">
-
-                                {{ $history->xclass->name }}
-
-                            </h3>
-
-
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
-
-
-                                {{ $history->schedule->subject->name }}
-
-
-                            </p>
-
-
-                        </div>
+                    group-hover:w-2
+                    "
+                ></span>
 
 
 
 
-                        {{-- <div
-                            class="rounded-xl bg-brand-50 px-4 py-3 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400">
+
+                {{-- Header --}}
+                <div class="mb-5 flex items-center gap-4">
 
 
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
+                    {{-- Icon --}}
 
-                                <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <div
+                        class="
+                        flex h-14 w-14 items-center justify-center
 
-                                <line x1="16" y1="2" x2="16" y2="6" />
+                        rounded-xl
 
-                                <line x1="8" y1="2" x2="8" y2="6" />
+                        bg-brand-50
 
-                            </svg>
+                        text-brand-600
+
+                        transition
+
+                        group-hover:scale-110
 
 
-                        </div> --}}
+                        dark:bg-brand-900/30
+
+                        dark:text-brand-400
+                        "
+                    >
+
+
+                        <svg
+                            width="28"
+                            height="28"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.7"
+                        >
+
+                            <rect x="3" y="4" width="18" height="18" rx="2"/>
+
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+
+                        </svg>
 
 
                     </div>
 
 
 
-                    <div class="mt-5 border-t border-gray-100 pt-4 dark:border-gray-800">
+
+                    {{-- Info --}}
+
+                    <div>
+
+
+                        <h3
+                            class="
+                            text-lg font-bold
+
+                            text-gray-800
+
+                            transition
+
+                            group-hover:text-brand-600
+
+                            dark:text-white
+
+                            dark:group-hover:text-brand-400
+                            "
+                        >
+
+                            {{ $history->xclass->name }}
+
+                        </h3>
+
 
 
                         <p class="text-sm text-gray-500 dark:text-gray-400">
 
-
-                            Tanggal
-
-
-                            <span class="font-semibold text-gray-800 dark:text-white">
-
-                                {{ \Carbon\Carbon::parse($history->date)->translatedFormat('d F Y') }}
-
-                            </span>
-
+                            {{ $history->schedule->subject->name }}
 
                         </p>
 
@@ -93,22 +164,169 @@
                 </div>
 
 
+
+
+
+
+                {{-- Tanggal --}}
+
+                <div
+                    class="
+                    mb-4
+
+                    rounded-xl
+
+                    bg-brand-50
+
+                    px-4 py-3
+
+                    text-sm
+
+                    text-brand-600
+
+
+                    dark:bg-brand-900/30
+
+                    dark:text-brand-400
+                    "
+                >
+
+
+                    <div class="flex items-center gap-2">
+
+
+                        <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+
+                            <rect x="3" y="5" width="18" height="16" rx="2"/>
+
+                            <line x1="8" y1="3" x2="8" y2="7"/>
+
+                            <line x1="16" y1="3" x2="16" y2="7"/>
+
+                        </svg>
+
+
+
+                        <span>
+
+                            {{ \Carbon\Carbon::parse($history->date)->translatedFormat('d F Y') }}
+
+                        </span>
+
+
+                    </div>
+
+
+                </div>
+
+
+
+
+
+                {{-- Button --}}
+
+                <div
+                    class="
+                    flex w-full items-center justify-center
+
+                    rounded-xl
+
+                    bg-brand-500
+
+                    px-4 py-2.5
+
+                    text-sm font-semibold
+
+                    text-white
+
+                    transition-all duration-300
+
+                    group-hover:bg-brand-600
+
+                    group-hover:shadow-md
+                    "
+                >
+
+
+                    Lihat Riwayat
+
+
+                    <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+
+                        class="ml-2 transition-transform group-hover:translate-x-1"
+                    >
+
+                        <path d="M5 12h14"/>
+
+                        <path d="M13 6l6 6-6 6"/>
+
+                    </svg>
+
+
+                </div>
+
+
+
             </a>
+
 
 
         @empty
 
 
-            <div class="rounded-xl border border-dashed p-10 text-center">
 
-                <p class="text-gray-500">
-                    Belum ada riwayat absensi
+            <div
+                class="
+                col-span-full
+
+                rounded-2xl
+
+                border border-dashed
+
+                border-gray-200
+
+                bg-gray-50
+
+                py-12
+
+                text-center
+
+
+                dark:border-gray-700
+
+                dark:bg-gray-900/50
+                "
+            >
+
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Belum ada riwayat absensi.
                 </p>
 
+
             </div>
+
+
+
         @endforelse
 
 
-
     </div>
+
+
+</div>
+
+
 @endsection
