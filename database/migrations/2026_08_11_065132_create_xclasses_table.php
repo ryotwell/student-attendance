@@ -18,7 +18,10 @@ return new class extends Migration
             $table->id();
             $table->string("name");
             $table->foreignIdFor(AcademicYear::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(User::class)->nullable();
+            $table->foreignIdFor(User::class)
+                ->nullable()
+                ->constrained()
+                ->nullOnDelete();
             $table->timestamps();
         });
     }

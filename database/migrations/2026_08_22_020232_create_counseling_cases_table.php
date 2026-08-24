@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Student;
+use App\Models\StudentEnrollment;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -17,6 +18,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Student::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(StudentEnrollment::class)->constrained()->cascadeOnDelete();
             $table->enum('category', ['AKADEMIK', 'PERILAKU', 'KEHADIRAN', 'SOSIAL', 'LAINNYA']);
             $table->date('date');
             $table->text('description');

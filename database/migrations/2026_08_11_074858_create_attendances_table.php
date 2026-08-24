@@ -2,6 +2,7 @@
 
 use App\Models\Schedule;
 use App\Models\Student;
+use App\Models\StudentEnrollment;
 use App\Models\User;
 use App\Models\Xclass;
 use Illuminate\Database\Migrations\Migration;
@@ -29,6 +30,7 @@ return new class extends Migration
                 'ALPHA',
             ]);
             $table->timestamp('date');
+            $table->foreignIdFor(StudentEnrollment::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Student::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Xclass::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Schedule::class)->constrained()->cascadeOnDelete();
