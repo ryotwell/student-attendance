@@ -45,50 +45,139 @@
 
         {{-- Ringkasan --}}
         <div class="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700">
-            <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-800">
-                <thead class="bg-gray-50 dark:bg-gray-800">
-                    <tr>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Nama Siswa</th>
-                        <th class="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-green-600 dark:text-green-400">Hadir</th>
-                        <th class="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">Izin</th>
-                        <th class="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-yellow-600 dark:text-yellow-400">Sakit</th>
-                        <th class="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-red-600 dark:text-red-400">Alpha</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 bg-white dark:divide-gray-800 dark:bg-gray-900">
-                    @forelse ($recap as $row)
-                        <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                            <td class="px-5 py-3 text-sm font-medium text-gray-800 dark:text-white">{{ $row['student']->name }}</td>
-                            <td class="px-5 py-3 text-center">
-                                <span class="inline-flex min-w-8 justify-center rounded-lg bg-green-100 px-2 py-1 text-xs font-bold text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                                    {{ $row['HADIR'] }}
-                                </span>
-                            </td>
-                            <td class="px-5 py-3 text-center">
-                                <span class="inline-flex min-w-8 justify-center rounded-lg bg-blue-100 px-2 py-1 text-xs font-bold text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                                    {{ $row['IZIN'] }}
-                                </span>
-                            </td>
-                            <td class="px-5 py-3 text-center">
-                                <span class="inline-flex min-w-8 justify-center rounded-lg bg-yellow-100 px-2 py-1 text-xs font-bold text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
-                                    {{ $row['SAKIT'] }}
-                                </span>
-                            </td>
-                            <td class="px-5 py-3 text-center">
-                                <span class="inline-flex min-w-8 justify-center rounded-lg bg-red-100 px-2 py-1 text-xs font-bold text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                                    {{ $row['ALPHA'] }}
-                                </span>
-                            </td>
-                        </tr>
-                    @empty
+
+            <div class="overflow-x-auto">
+
+                <table class="min-w-[300px] w-full divide-y divide-gray-100 dark:divide-gray-800">
+
+                    {{-- Header --}}
+                    <thead class="bg-brand-50 dark:bg-brand-900/20">
                         <tr>
-                            <td colspan="5" class="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
-                                Belum ada data siswa di kelas ini.
-                            </td>
+
+                            <th class="sticky left-0 z-10 bg-brand-50 px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-brand-600 dark:bg-brand-900/20 dark:text-brand-400">
+                                Nama Siswa
+                            </th>
+
+                            <th class="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-400">
+                                Hadir
+                            </th>
+
+                            <th class="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-400">
+                                Izin
+                            </th>
+
+                            <th class="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-400">
+                                Sakit
+                            </th>
+
+                            <th class="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-400">
+                                Alpha
+                            </th>
+
                         </tr>
-                    @endforelse
-                </tbody>
-            </table>
+
+                    </thead>
+
+
+                    {{-- Body --}}
+                    <tbody class="divide-y divide-gray-100 bg-white dark:divide-gray-800 dark:bg-gray-900">
+
+
+                        @forelse ($recap as $row)
+
+                            <tr class="transition hover:bg-brand-50/50 dark:hover:bg-gray-800/60">
+
+
+                                {{-- Nama --}}
+                                <td class="sticky left-0 bg-white px-5 py-3 text-sm font-semibold text-gray-800 dark:bg-gray-900 dark:text-white">
+
+                                    {{ $row['student']->name }}
+
+                                </td>
+
+
+
+                                {{-- Hadir --}}
+                                <td class="px-5 py-3 text-center">
+
+                                    <span class="inline-flex min-w-10 justify-center rounded-lg bg-brand-100 px-3 py-1 text-xs font-bold text-brand-700 dark:bg-brand-900/30 dark:text-brand-400">
+
+                                        {{ $row['HADIR'] }}
+
+                                    </span>
+
+                                </td>
+
+
+
+
+                                {{-- Izin --}}
+                                <td class="px-5 py-3 text-center">
+
+                                    <span class="inline-flex min-w-10 justify-center rounded-lg bg-gray-100 px-3 py-1 text-xs font-bold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+
+                                        {{ $row['IZIN'] }}
+
+                                    </span>
+
+                                </td>
+
+
+
+
+                                {{-- Sakit --}}
+                                <td class="px-5 py-3 text-center">
+
+                                    <span class="inline-flex min-w-10 justify-center rounded-lg bg-yellow-100 px-3 py-1 text-xs font-bold text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+
+                                        {{ $row['SAKIT'] }}
+
+                                    </span>
+
+                                </td>
+
+
+
+
+                                {{-- Alpha --}}
+                                <td class="px-5 py-3 text-center">
+
+                                    <span class="inline-flex min-w-10 justify-center rounded-lg bg-red-100 px-3 py-1 text-xs font-bold text-red-700 dark:bg-red-900/30 dark:text-red-400">
+
+                                        {{ $row['ALPHA'] }}
+
+                                    </span>
+
+                                </td>
+
+
+                            </tr>
+
+
+                        @empty
+
+
+                            <tr>
+
+                                <td colspan="5" class="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+
+                                    Belum ada data siswa di kelas ini.
+
+                                </td>
+
+                            </tr>
+
+
+                        @endforelse
+
+
+                    </tbody>
+
+
+                </table>
+
+            </div>
+
         </div>
     </div>
 @endsection
