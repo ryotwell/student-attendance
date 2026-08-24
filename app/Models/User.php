@@ -56,6 +56,11 @@ class User extends Authenticatable
         return $this->role === 'GURU';
     }
 
+    public function isTeacherBK()
+    {
+        return $this->role === 'GURU_BK';
+    }
+
     public function schedules()
     {
         return $this->hasMany(Schedule::class);

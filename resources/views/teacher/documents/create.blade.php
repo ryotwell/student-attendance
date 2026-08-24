@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Tambah Dokumen Dapodik" />
+    <x-common.page-breadcrumb pageTitle="Tambah Dokumen Jurnal" />
 
     <div class="mx-auto max-w-3xl">
 
         <div class="mb-6">
             <h2 class="text-xl font-bold text-gray-800 dark:text-white">
-                Tambah Dokumen Dapodik
+                Tambah Dokumen Jurnal
             </h2>
 
             <p class="text-sm text-gray-500 dark:text-gray-400">

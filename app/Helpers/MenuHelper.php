@@ -289,6 +289,16 @@ class MenuHelper
                             'name' => 'Konseling',
                             'path' => route('bk.cases.index'),
                         ],
+                        [
+                            'icon' => 'calendar',
+                            'name' => 'Jurnal Guru',
+                            'path' => route('teacher.documents.index'),
+                        ],
+                        [
+                            'icon' => 'email',
+                            'name' => 'Pengumuman Sekolah',
+                            'path' => route('announcements.index'),
+                        ],
                     ],
                 ],
             ];

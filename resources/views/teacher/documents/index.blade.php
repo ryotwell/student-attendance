@@ -17,7 +17,7 @@
         <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
                 <h2 class="text-xl font-bold text-gray-800 dark:text-white">
-                    Dokumen Dapodik Guru
+                    Jurnal Guru
                 </h2>
 
                 <p class="text-sm text-gray-500 dark:text-gray-400">

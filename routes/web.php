@@ -56,32 +56,36 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->group(function() {
 });
 
 // GURU
-Route::middleware(['auth', 'role:GURU'])->prefix('guru')->group(function() {
-    Route::get('/', App\Http\Controllers\Teacher\DashboardController::class)->name('guru.dashboard');
+Route::middleware(['auth'])->prefix('guru')->group(function() {
+    Route::middleware('role:GURU')->group(function() {
+        Route::get('/', App\Http\Controllers\Teacher\DashboardController::class)->name('guru.dashboard');
+    
+        Route::get('/absensi', [App\Http\Controllers\Teacher\AbsensiController::class, 'schedules'])
+            ->name('absensi.schedules');
+        Route::get('/absensi/history', [App\Http\Controllers\Teacher\AbsensiController::class, 'history'])
+            ->name('absensi.history');
+        Route::get('/absensi/history/{date}/{class}/{schedule}', [App\Http\Controllers\Teacher\AbsensiController::class, 'showHistory'])
+            ->name('absensi.history.show');
+        Route::get('/absensi/recap', [App\Http\Controllers\Teacher\AbsensiController::class, 'recapIndex'])
+            ->name('absensi.recap');
+        Route::get('/absensi/recap/{schedule}', [App\Http\Controllers\Teacher\AbsensiController::class, 'recapShow'])
+            ->name('absensi.recap.show');
+        Route::get('/absensi/recap/{schedule}/export', [App\Http\Controllers\Teacher\AbsensiController::class, 'recapExport'])
+            ->name('absensi.recap.export');
+    });
 
-    Route::get('/absensi', [App\Http\Controllers\Teacher\AbsensiController::class, 'schedules'])
-        ->name('absensi.schedules');
-    Route::get('/absensi/history', [App\Http\Controllers\Teacher\AbsensiController::class, 'history'])
-        ->name('absensi.history');
-    Route::get('/absensi/history/{date}/{class}/{schedule}', [App\Http\Controllers\Teacher\AbsensiController::class, 'showHistory'])
-        ->name('absensi.history.show');
-    Route::get('/absensi/recap', [App\Http\Controllers\Teacher\AbsensiController::class, 'recapIndex'])
-        ->name('absensi.recap');
-    Route::get('/absensi/recap/{schedule}', [App\Http\Controllers\Teacher\AbsensiController::class, 'recapShow'])
-        ->name('absensi.recap.show');
-    Route::get('/absensi/recap/{schedule}/export', [App\Http\Controllers\Teacher\AbsensiController::class, 'recapExport'])
-        ->name('absensi.recap.export');
-
-    Route::get('/documents', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'index'])
-        ->name('teacher.documents.index');
-    Route::get('/documents/create', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'create'])
-        ->name('teacher.documents.create');
-    Route::post('/documents', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'store'])
-        ->name('teacher.documents.store');
-    Route::get('/documents/edit', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'edit'])
-        ->name('teacher.documents.edit');
-    Route::put('/documents', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'update'])
-        ->name('teacher.documents.update');
+    Route::middleware(['role:GURU,GURU_BK'])->group(function() {
+        Route::get('/documents', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'index'])
+            ->name('teacher.documents.index');
+        Route::get('/documents/create', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'create'])
+            ->name('teacher.documents.create');
+        Route::post('/documents', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'store'])
+            ->name('teacher.documents.store');
+        Route::get('/documents/edit', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'edit'])
+            ->name('teacher.documents.edit');
+        Route::put('/documents', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'update'])
+            ->name('teacher.documents.update');
+    });
 });
 
 // Wali Kelas

@@ -13,7 +13,7 @@ class AnnouncementController extends Controller
      */
     public function index()
     {
-        if(Auth::user()->isTeacher()) {
+        if(Auth::user()->isTeacher() || Auth::user()->isTeacherBK()) {
             return view('teacher.announcement.index', [
                 'announcements' => Announcement::latest()->get(),
             ]);
