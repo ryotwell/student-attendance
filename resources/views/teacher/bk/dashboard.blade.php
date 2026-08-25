@@ -84,8 +84,12 @@
                     @forelse ($topAlpha as $row)
                         <div class="flex items-center justify-between border-b border-gray-100 px-5 py-3 last:border-0 dark:border-gray-800">
                             <div>
+                                {{-- Attendance::getStudentAttribute() sudah mengarah ke
+                                     studentEnrollment->student, jadi $row->student tetap aman.
+                                     Kelas TIDAK bisa lewat $row->student->xclass (Student tidak
+                                     punya relasi xclass) — harus lewat studentEnrollment->xclass. --}}
                                 <div class="text-sm font-medium text-gray-800 dark:text-white">{{ $row->student->name }}</div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">{{ $row->student->xclass->name }}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">{{ $row->studentEnrollment->xclass->name }}</div>
                             </div>
 
                             <div class="flex items-center gap-2">

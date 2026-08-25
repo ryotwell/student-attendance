@@ -162,7 +162,7 @@ class ClassController extends Controller
                     $class->id
                 )
                 ->exists();
-            
+
             if ($exists) {
                 return back()
                     ->withInput()
@@ -218,14 +218,17 @@ class ClassController extends Controller
      */
     public function students(Xclass $class)
     {
+        // students() adalah belongsToMany lewat pivot student_enrollments,
+        // jadi kolom harus di-qualify dengan nama tabel supaya tidak
+        // ambigu / salah ambil dari tabel pivot.
         $students = $class
             ->students()
             ->select(
-                'id',
-                'nis',
-                'name'
+                'students.id',
+                'students.nis',
+                'students.name'
             )
-            ->orderBy('name')
+            ->orderBy('students.name')
             ->get();
 
         return response()->json($students);

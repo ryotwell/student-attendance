@@ -24,7 +24,22 @@ class SendAlphaWhatsAppNotification implements ShouldQueue
 
     public function handle(WhatsAppHelper $whatsapp): void
     {
-        $this->attendance->loadMissing(['student', 'schedule.subject']);
+        $fresh = Attendance::with(['studentEnrollment.student', 'schedule.subject'])
+            ->find($this->attendance->id);
+
+        if (! $fresh) {
+            Log::info('Lewati notifikasi Alpha: attendance sudah terhapus', [
+                'attendance_id' => $this->attendance->id,
+            ]);
+
+            return;
+        }
+
+        $this->attendance = $fresh;
+
+        if ($this->attendance->status !== 'ALPHA') {
+            return;
+        }
 
         $student = $this->attendance->student;
 
@@ -34,11 +49,6 @@ class SendAlphaWhatsAppNotification implements ShouldQueue
                 'student_id' => $student->id ?? null,
             ]);
 
-            return;
-        }
-
-        // Jaga-jaga jika status sudah berubah lagi sebelum job diproses (mis. dikoreksi guru).
-        if ($this->attendance->fresh()->status !== 'ALPHA') {
             return;
         }
 
@@ -59,7 +69,6 @@ class SendAlphaWhatsAppNotification implements ShouldQueue
                 'response' => $result,
             ]);
 
-            // Lempar exception supaya job di-retry oleh queue worker.
             throw new \RuntimeException('WhatsApp API gagal: ' . ($result['data']['message'] ?? 'unknown error'));
         }
     }
@@ -67,8 +76,9 @@ class SendAlphaWhatsAppNotification implements ShouldQueue
     public function failed(\Throwable $exception): void
     {
         Log::error('Job notifikasi WA Alpha gagal permanen', [
-            'attendance_id' => $this->attendance->id,
+            'attendance_id' => $this->attendance->id ?? null,
             'error' => $exception->getMessage(),
+            'trace' => $exception->getTraceAsString(),
         ]);
     }
 }

@@ -18,7 +18,9 @@
                         class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-colors">
                         <option value="">-- Pilih Kelas --</option>
                         @foreach ($classes as $class)
-                            <option value="{{ $class->id }}">{{ $class->name }} ({{ $class->academicYear?->name }})</option>
+                            <option value="{{ $class->id }}" @selected(old('class_id') == $class->id)>
+                                {{ $class->name }} ({{ $class->academicYear?->name }})
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -27,20 +29,22 @@
                     <label for="student_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Siswa (Opsional)</label>
                     <select name="student_id" id="student_id"
                         class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-colors"
-                        disabled>
-                        <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
+                        {{ old('class_id') ? '' : 'disabled' }}>
+                        <option value="">{{ old('class_id') ? '-- Pilih Siswa --' : '-- Pilih Kelas Terlebih Dahulu --' }}</option>
                     </select>
                 </div>
 
                 <div>
                     <label for="date_from" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dari Tanggal</label>
-                    <input type="date" name="date_from" id="date_from" value="{{ now()->startOfMonth()->format('Y-m-d') }}"
+                    <input type="date" name="date_from" id="date_from"
+                        value="{{ old('date_from', now()->startOfMonth()->format('Y-m-d')) }}"
                         class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-colors">
                 </div>
 
                 <div>
                     <label for="date_to" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sampai Tanggal</label>
-                    <input type="date" name="date_to" id="date_to" value="{{ now()->endOfMonth()->format('Y-m-d') }}"
+                    <input type="date" name="date_to" id="date_to"
+                        value="{{ old('date_to', now()->endOfMonth()->format('Y-m-d')) }}"
                         class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-colors">
                 </div>
             </div>
@@ -62,17 +66,14 @@
         document.addEventListener('DOMContentLoaded', function() {
             const classSelect = document.getElementById('class_id');
             const studentSelect = document.getElementById('student_id');
+            const oldStudentId = @json(old('student_id'));
 
-            classSelect.addEventListener('change', function() {
-                const classId = this.value;
-
-                // Reset student select
+            function loadStudents(classId, selectedId = null) {
                 studentSelect.innerHTML = '<option value="">-- Pilih Siswa --</option>';
                 studentSelect.disabled = !classId;
 
                 if (!classId) return;
 
-                // Fetch students via AJAX
                 fetch(`/classes/${classId}/students`)
                     .then(response => response.json())
                     .then(data => {
@@ -80,6 +81,9 @@
                             const option = document.createElement('option');
                             option.value = student.id;
                             option.textContent = `${student.nis} - ${student.name}`;
+                            if (selectedId && String(student.id) === String(selectedId)) {
+                                option.selected = true;
+                            }
                             studentSelect.appendChild(option);
                         });
                         studentSelect.disabled = false;
@@ -87,7 +91,17 @@
                     .catch(error => {
                         console.error('Error loading students:', error);
                     });
+            }
+
+            classSelect.addEventListener('change', function() {
+                loadStudents(this.value);
             });
+
+            // Re-populate dropdown siswa saat halaman reload dengan old input
+            // (misal setelah validasi gagal atau kembali dari hasil laporan)
+            if (classSelect.value) {
+                loadStudents(classSelect.value, oldStudentId);
+            }
         });
     </script>
     @endpush

@@ -11,11 +11,6 @@ class Student extends Model
 
     protected $guarded = [];
 
-    public function xclass()
-    {
-        return $this->belongsTo(Xclass::class);
-    }
-
     public function counselingCases()
     {
         return $this->hasMany(CounselingCase::class);
@@ -24,5 +19,11 @@ class Student extends Model
     public function enrollments()
     {
         return $this->hasMany(StudentEnrollment::class);
+    }
+
+    public function currentEnrollment()
+    {
+        return $this->hasOne(StudentEnrollment::class)
+            ->latestOfMany();
     }
 }

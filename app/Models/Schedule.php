@@ -3,32 +3,70 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Schedule extends Model
 {
     protected $guarded = [];
 
+
+    /**
+     * Casting waktu jadwal
+     */
     protected $casts = [
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
     ];
 
-    public function subject()
-    {
-        return $this->belongsTo(Subject::class);
-    }
 
-    public function xclass()
-    {
-        return $this->belongsTo(Xclass::class);
-    }
-
-    public function user()
+    /**
+     * Guru pengajar
+     *
+     * schedules
+     *      |
+     *      +--- users
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function attendances()
+
+    /**
+     * Mata pelajaran
+     *
+     * schedules
+     *      |
+     *      +--- subjects
+     */
+    public function subject(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class);
+    }
+
+
+    /**
+     * Kelas yang diajar
+     *
+     * schedules
+     *      |
+     *      +--- xclasses
+     */
+    public function xclass(): BelongsTo
+    {
+        return $this->belongsTo(Xclass::class);
+    }
+
+
+    /**
+     * Data absensi berdasarkan jadwal
+     *
+     * schedules
+     *      |
+     *      +--- attendances
+     */
+    public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class);
     }

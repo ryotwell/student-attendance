@@ -237,117 +237,130 @@
     @foreach($menuItems as $item)
 
         <a href="{{ $item['url'] }}"
-            class="group flex flex-col rounded-2xl border border-gray-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-900">
+            class="group relative flex flex-col overflow-hidden rounded-2xl 
+            border border-gray-200 bg-white p-5 shadow-sm 
+            transition-all duration-300
+            hover:-translate-y-1 hover:border-brand-400 hover:shadow-xl
+            dark:border-gray-700 dark:bg-gray-900 dark:hover:border-brand-500">
 
 
-            <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+            {{-- Border notification kiri --}}
+            <span class="absolute left-0 top-0 h-full w-1 bg-brand-500 
+            transition-all duration-300 group-hover:w-2"></span>
+
+
+            {{-- Icon --}}
+            <div class="flex h-14 w-14 items-center justify-center rounded-xl 
+            bg-brand-50 text-brand-600 transition
+            group-hover:scale-110
+            dark:bg-brand-900/30 dark:text-brand-400">
 
 
                 @switch($item['icon'])
 
                     @case('clipboard-plus')
-
                         <svg width="28" height="28" viewBox="0 0 24 24"
                             fill="none" stroke="currentColor" stroke-width="1.7">
                             <rect x="6" y="4" width="12" height="16" rx="2"/>
                             <path d="M12 10v5"/>
                             <path d="M9.5 12.5h5"/>
                         </svg>
-
                     @break
 
 
                     @case('file-chart')
-
                         <svg width="28" height="28" viewBox="0 0 24 24"
                             fill="none" stroke="currentColor" stroke-width="1.7">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                             <path d="M14 2v6h6"/>
                             <path d="M8 17l2-2 2 2 4-5"/>
                         </svg>
-
                     @break
 
 
                     @case('calendar-check')
-
                         <svg width="28" height="28" viewBox="0 0 24 24"
                             fill="none" stroke="currentColor" stroke-width="1.7">
                             <rect x="3" y="5" width="18" height="16" rx="2"/>
                             <path d="M9 15l2 2 4-4"/>
                         </svg>
-
                     @break
 
 
                     @case('calendar')
-
                         <svg width="28" height="28" viewBox="0 0 24 24"
                             fill="none" stroke="currentColor" stroke-width="1.7">
                             <rect x="3" y="5" width="18" height="16" rx="2"/>
                             <path d="M8 3v4"/>
                             <path d="M16 3v4"/>
                         </svg>
-
                     @break
 
 
                     @case('megaphone')
-
                         <svg width="28" height="28" viewBox="0 0 24 24"
                             fill="none" stroke="currentColor" stroke-width="1.7">
                             <path d="M9 7L18 3v18l-9-4"/>
                             <path d="M20 9a3 3 0 010 6"/>
                         </svg>
-
                     @break
 
 
                     @case('users-group')
-
                         <svg width="28" height="28" viewBox="0 0 24 24"
                             fill="none" stroke="currentColor" stroke-width="1.7">
                             <circle cx="9" cy="7" r="4"/>
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                         </svg>
-
                     @break
 
 
                     @case('document')
-
                         <svg width="28" height="28" viewBox="0 0 24 24"
                             fill="none" stroke="currentColor" stroke-width="1.7">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                             <polyline points="14 2 14 8 20 8"/>
                             <line x1="8" y1="13" x2="16" y2="13"/>
                         </svg>
-
                     @break
 
+
                 @endswitch
+
 
             </div>
 
 
-            <h4 class="mt-4 text-xl font-bold text-gray-800 dark:text-white">
+            {{-- Judul --}}
+            <h4 class="mt-4 text-xl font-bold text-gray-800 
+            dark:text-white group-hover:text-brand-600">
                 {{ $item['title'] }}
             </h4>
 
 
+            {{-- Deskripsi --}}
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {{ $item['description'] }}
             </p>
 
 
-            <span class="mt-4 text-sm font-medium text-brand-600">
-                Buka →
-            </span>
+            {{-- Action --}}
+            <div class="mt-5 w-full">
+                <span class="flex w-full items-center justify-center rounded-xl 
+                bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white
+                transition-all duration-300
+                group-hover:bg-brand-700
+                dark:bg-brand-500 dark:group-hover:bg-brand-600">
+                    Buka →
+                </span>
+            </div>
 
 
         </a>
 
+
     @endforeach
+
 
 </div>
 

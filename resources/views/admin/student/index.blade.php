@@ -64,7 +64,9 @@
                                 @endif
                             </td>
                             <td class="px-5 py-4 sm:px-6">
-                                <p class="text-gray-500 text-theme-sm dark:text-gray-400">{{ $student->xclass?->name ?? '-' }}</p>
+                                {{-- Student tidak punya relasi xclass langsung; kelas diambil
+                                     lewat currentEnrollment->xclass (di-eager-load di controller). --}}
+                                <p class="text-gray-500 text-theme-sm dark:text-gray-400">{{ $student->currentEnrollment?->xclass?->name ?? '-' }}</p>
                             </td>
                             <td class="px-5 py-4 sm:px-6">
                                 <div class="flex items-center justify-end gap-3">

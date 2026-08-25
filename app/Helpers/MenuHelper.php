@@ -20,18 +20,8 @@ class MenuHelper
                 'path' => route('admin.teacher-documents.index')
             ],
             [
-                'name' => 'Riwayat Absen',
-                'icon' => 'tables',
-                'path' => '#!'
-            ],
-            [
                 'name' => 'Tugas Guru',
                 'icon' => 'task',
-                'path' => '#!'
-            ],
-            [
-                'name' => 'Guru BK',
-                'icon' => 'support-ticket',
                 'path' => '#!'
             ],
         ];

@@ -3,81 +3,89 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicYear;
 use App\Models\Attendance;
 use App\Models\Xclass;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class WalikelasController extends Controller
 {
     /**
-     * Daftar kelas yang diwalikan oleh guru yang login.
-     * Kalau cuma 1 kelas, langsung redirect ke dashboard kelas itu.
+     * Daftar kelas yang menjadi wali kelas, dibatasi ke tahun ajaran
+     * yang sedang aktif. Xclass terikat tetap ke satu academic_year_id,
+     * jadi tanpa filter ini kelas lama (tahun ajaran sebelumnya) tetap
+     * muncul selama user masih tercatat sebagai wali kelasnya — termasuk
+     * auto-redirect ke kelas lama kalau itu satu-satunya yang cocok.
      */
     public function index(Request $request)
     {
-        $xclasses = $request->user()->classes()
+        $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+
+        $xclasses = $request->user()
+            ->classes()
             ->with('academicYear')
-            ->withCount('students')
+            ->withCount('studentEnrollments')
+            ->when($activeAcademicYear, fn ($q) => $q->where('academic_year_id', $activeAcademicYear->id))
             ->get();
 
-        abort_if($xclasses->isEmpty(), 403, 'Anda bukan wali kelas.');
+        abort_if($xclasses->isEmpty(), 403, 'Anda bukan wali kelas pada tahun ajaran ini.');
 
         if ($xclasses->count() === 1) {
             return redirect()->route('walikelas.dashboard', $xclasses->first());
         }
 
-        return view('teacher.walikelas.index', [
-            'xclasses' => $xclasses,
-        ]);
+        return view('teacher.walikelas.index', compact('xclasses'));
     }
 
     /**
-     * Dashboard ringkasan untuk satu kelas perwalian.
+     * Dashboard kelas
      */
     public function dashboard(Request $request, Xclass $xclass)
     {
         $this->authorizeHomeroom($request, $xclass);
 
-        $xclass->load('academicYear');
-        $studentIds = $xclass->students()->pluck('id');
+        $xclass->load(['academicYear', 'studentEnrollments.student']);
 
-        // Kehadiran hari ini: semua attendance yang DIINPUT hari ini, lintas mapel.
+        $enrollmentIds = $xclass->studentEnrollments->pluck('id');
+
+        // Kehadiran hari ini
         $todayCounts = Attendance::query()
-            ->whereIn('student_id', $studentIds)
+            ->whereIn('student_enrollment_id', $enrollmentIds)
             ->whereDate('date', Carbon::today())
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        // Ringkasan bulan berjalan.
+        // Rekap bulan berjalan
         $monthStart = Carbon::now()->startOfMonth();
         $monthEnd = Carbon::now()->endOfMonth();
 
         $monthCounts = Attendance::query()
-            ->whereIn('student_id', $studentIds)
+            ->whereIn('student_enrollment_id', $enrollmentIds)
             ->whereBetween('date', [$monthStart, $monthEnd])
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
 
         $monthTotal = $monthCounts->sum();
+
         $attendanceRate = $monthTotal > 0
             ? round(($monthCounts->get('HADIR', 0) / $monthTotal) * 100, 1)
             : 0;
 
-        // Siswa dengan Alpha terbanyak bulan ini (top 5).
+        // Siswa alpha terbanyak
         $topAlpha = Attendance::query()
-            ->whereIn('student_id', $studentIds)
+            ->whereIn('student_enrollment_id', $enrollmentIds)
             ->whereBetween('date', [$monthStart, $monthEnd])
             ->where('status', 'ALPHA')
-            ->selectRaw('student_id, COUNT(*) as total')
-            ->groupBy('student_id')
+            ->selectRaw('student_enrollment_id, COUNT(*) as total')
+            ->groupBy('student_enrollment_id')
             ->orderByDesc('total')
-            ->take(5)
-            ->with('student')
+            ->limit(5)
+            ->with('studentEnrollment.student')
             ->get();
 
         return view('teacher.walikelas.dashboard', [
@@ -91,7 +99,7 @@ class WalikelasController extends Controller
     }
 
     /**
-     * Rekap absensi bulanan, lintas semua mapel, untuk satu kelas.
+     * Rekap absensi
      */
     public function rekap(Request $request, Xclass $xclass)
     {
@@ -100,6 +108,9 @@ class WalikelasController extends Controller
         return view('teacher.walikelas.rekap', $data);
     }
 
+    /**
+     * Export PDF
+     */
     public function rekapExport(Request $request, Xclass $xclass)
     {
         $data = $this->buildRekap($request, $xclass);
@@ -107,25 +118,44 @@ class WalikelasController extends Controller
         $pdf = Pdf::loadView('teacher.walikelas.rekap-pdf', $data)
             ->setPaper('a4', 'portrait');
 
-        $fileName = sprintf(
-            'rekap-absensi-kelas-%s-%s.pdf',
-            \Str::slug($xclass->name),
+        return $pdf->download(sprintf(
+            'rekap-absensi-%s-%s.pdf',
+            Str::slug($xclass->name),
             $data['selectedMonth']
-        );
-
-        return $pdf->download($fileName);
+        ));
     }
 
-    private function authorizeHomeroom(Request $request, Xclass $xclass): void
+    /**
+     * Cek wali kelas + kelas harus di tahun ajaran yang sedang aktif.
+     *
+     * Xclass terikat tetap ke satu academic_year_id. Tanpa cek ini,
+     * wali kelas masih bisa mengakses dashboard/rekap kelas dari tahun
+     * ajaran lama lewat URL langsung selama dia tercatat sebagai wali
+     * kelasnya, walau kelas itu sudah tidak aktif.
+     */
+    private function authorizeHomeroom(Request $request, Xclass $xclass)
     {
         abort_unless($xclass->user_id === $request->user()->id, 403);
+
+        $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+
+        abort_unless($activeAcademicYear, 404, 'Tidak ada tahun ajaran aktif yang dikonfigurasi.');
+
+        abort_unless(
+            $xclass->academic_year_id === $activeAcademicYear->id,
+            403,
+            'Kelas ini bukan bagian dari tahun ajaran yang sedang aktif.'
+        );
     }
 
+    /**
+     * Logic rekap
+     */
     private function buildRekap(Request $request, Xclass $xclass): array
     {
         $this->authorizeHomeroom($request, $xclass);
 
-        $xclass->load(['students', 'academicYear']);
+        $xclass->load(['academicYear', 'studentEnrollments.student']);
 
         $monthOptions = collect(range(0, 5))->map(function ($i) {
             $date = Carbon::now()->subMonths($i)->startOfMonth();
@@ -138,40 +168,44 @@ class WalikelasController extends Controller
 
         $selectedMonth = $request->query('month', $monthOptions->first()['value']);
 
-        if (! $monthOptions->pluck('value')->contains($selectedMonth)) {
+        if (!$monthOptions->pluck('value')->contains($selectedMonth)) {
             $selectedMonth = $monthOptions->first()['value'];
         }
 
-        $periodStart = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
-        $periodEnd = $periodStart->copy()->endOfMonth();
+        $start = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
+        $end = $start->copy()->endOfMonth();
 
-        // Rekap lintas SEMUA mapel di kelas ini (tidak difilter schedule_id).
+        $enrollmentIds = $xclass->studentEnrollments->pluck('id');
+
         $counts = Attendance::query()
-            ->where('xclass_id', $xclass->id)
-            ->whereBetween('date', [$periodStart, $periodEnd])
-            ->selectRaw('student_id, status, COUNT(*) as total')
-            ->groupBy('student_id', 'status')
+            ->whereIn('student_enrollment_id', $enrollmentIds)
+            ->whereBetween('date', [$start, $end])
+            ->selectRaw('student_enrollment_id, status, COUNT(*) as total')
+            ->groupBy('student_enrollment_id', 'status')
             ->get()
-            ->groupBy('student_id');
+            ->groupBy('student_enrollment_id');
 
-        $recap = $xclass->students->map(function ($student) use ($counts) {
-            $statusCounts = $counts->get($student->id, collect())->pluck('total', 'status');
+        $recap = $xclass->studentEnrollments
+            ->map(function ($enrollment) use ($counts) {
+                $status = $counts->get($enrollment->id, collect())->pluck('total', 'status');
 
-            $hadir = $statusCounts->get('HADIR', 0);
-            $izin = $statusCounts->get('IZIN', 0);
-            $sakit = $statusCounts->get('SAKIT', 0);
-            $alpha = $statusCounts->get('ALPHA', 0);
-            $total = $hadir + $izin + $sakit + $alpha;
+                $hadir = $status->get('HADIR', 0);
+                $izin = $status->get('IZIN', 0);
+                $sakit = $status->get('SAKIT', 0);
+                $alpha = $status->get('ALPHA', 0);
+                $total = $hadir + $izin + $sakit + $alpha;
 
-            return [
-                'student' => $student,
-                'HADIR' => $hadir,
-                'IZIN' => $izin,
-                'SAKIT' => $sakit,
-                'ALPHA' => $alpha,
-                'rate' => $total > 0 ? round(($hadir / $total) * 100, 1) : 0,
-            ];
-        })->sortBy(fn ($row) => $row['student']->name)->values();
+                return [
+                    'student' => $enrollment->student,
+                    'HADIR' => $hadir,
+                    'IZIN' => $izin,
+                    'SAKIT' => $sakit,
+                    'ALPHA' => $alpha,
+                    'rate' => $total > 0 ? round(($hadir / $total) * 100, 1) : 0,
+                ];
+            })
+            ->sortBy(fn ($row) => $row['student']->name)
+            ->values();
 
         return [
             'xclass' => $xclass,

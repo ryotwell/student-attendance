@@ -5,6 +5,7 @@ namespace App\Http\Controllers\GuruBK;
 use App\Http\Controllers\Controller;
 use App\Models\CounselingCase;
 use App\Models\Student;
+use App\Models\StudentEnrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -15,7 +16,7 @@ class CounselingCaseController extends Controller
      */
     public function index(Request $request)
     {
-        $query = CounselingCase::with(['student.xclass', 'user'])
+        $query = CounselingCase::with(['student.currentEnrollment.xclass', 'user'])
             ->latest('date');
 
         if ($request->filled('category')) {
@@ -65,7 +66,8 @@ class CounselingCaseController extends Controller
         $selectedStudent = null;
 
         if ($request->filled('student_id')) {
-            $selectedStudent = Student::with('xclass')->find($request->query('student_id'));
+            $selectedStudent = Student::with('currentEnrollment.xclass')
+                ->find($request->query('student_id'));
         }
 
         return view('teacher.bk.cases.create', [
@@ -78,6 +80,7 @@ class CounselingCaseController extends Controller
     {
         $data = $this->validateRequest($request);
         $data['user_id'] = Auth::id();
+        $data['student_enrollment_id'] = $this->resolveEnrollmentId($data['student_id']);
 
         CounselingCase::create($data);
 
@@ -86,7 +89,7 @@ class CounselingCaseController extends Controller
 
     public function edit(CounselingCase $counselingCase)
     {
-        $counselingCase->load('student.xclass');
+        $counselingCase->load('student.currentEnrollment.xclass');
 
         return view('teacher.bk.cases.edit', [
             'counselingCase' => $counselingCase,
@@ -97,6 +100,7 @@ class CounselingCaseController extends Controller
     public function update(Request $request, CounselingCase $counselingCase)
     {
         $data = $this->validateRequest($request);
+        $data['student_enrollment_id'] = $this->resolveEnrollmentId($data['student_id']);
 
         $counselingCase->update($data);
 
@@ -122,32 +126,44 @@ class CounselingCaseController extends Controller
     }
 
     /**
+     * Ambil enrollment aktif (tahun ajaran berjalan) milik siswa.
+     * Kasus BK selalu dikaitkan ke enrollment siswa pada tahun ajaran
+     * yang sedang aktif, bukan sekadar enrollment terbaru.
+     */
+    private function resolveEnrollmentId(int $studentId): int
+    {
+        $enrollment = StudentEnrollment::where('student_id', $studentId)
+            ->whereHas('academicYear', fn ($q) => $q->where('is_active', true))
+            ->first();
+
+        abort_if(
+            ! $enrollment,
+            403, 'Siswa ini belum memiliki enrollment pada tahun ajaran aktif.');
+
+        return $enrollment->id;
+    }
+
+    /**
      * Endpoint pencarian siswa untuk dropdown search (Alpine.js).
      * Menyertakan parent_phone supaya fitur "Kirim WhatsApp" di form berfungsi.
      */
     public function searchStudents(Request $request)
     {
         $students = Student::query()
-            ->where('name','like','%'.$request->q.'%')
-            ->orWhere('nis','like','%'.$request->q.'%')
+            ->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->q . '%')
+                  ->orWhere('nis', 'like', '%' . $request->q . '%');
+            })
             ->limit(20)
             ->get();
 
-
         return response()->json(
-            $students->map(function($student){
-
+            $students->map(function ($student) {
                 return [
-
-                    'id'=>$student->id,
-
-                    'text'=>$student->name.
-                        ' - '.$student->nis,
-
-                    'parent_phone'=>$student->parent_phone
-
+                    'id' => $student->id,
+                    'text' => $student->name . ' - ' . $student->nis,
+                    'parent_phone' => $student->parent_phone,
                 ];
-
             })
         );
     }

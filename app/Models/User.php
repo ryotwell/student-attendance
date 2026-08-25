@@ -76,6 +76,18 @@ class User extends Authenticatable
         return $this->hasMany(Xclass::class);
     }
 
+    /**
+     * Kelas yang diwalikan pada tahun ajaran yang sedang aktif saja.
+     * Xclass terikat tetap ke satu academic_year_id, jadi ini dipakai
+     * setiap kali "wali kelas" harus berarti wali kelas SEKARANG,
+     * bukan riwayat wali kelas dari tahun ajaran manapun.
+     */
+    public function currentClasses()
+    {
+        return $this->classes()
+            ->whereHas('academicYear', fn ($q) => $q->where('is_active', true));
+    }
+
     public function counselingCases()
     {
         return $this->hasMany(CounselingCase::class);
@@ -97,12 +109,21 @@ class User extends Authenticatable
             ->orderBy('start_time');
     }
 
+    /**
+     * Cek apakah user adalah wali kelas pada tahun ajaran yang sedang
+     * aktif. Sebelumnya cek classes()->exists() tanpa filter tahun
+     * ajaran, sehingga user yang dulu pernah jadi wali kelas (tapi
+     * sudah tidak lagi di tahun ajaran ini) tetap dianggap wali kelas.
+     *
+     * Catatan: shortcut classes_exists (biasanya hasil withExists()
+     * saat eager loading) TIDAK dipakai lagi di sini karena tidak
+     * mengandung filter tahun ajaran aktif — memakainya di sini akan
+     * memberi hasil yang salah. Kalau butuh versi cepat/eager-loaded,
+     * pakai withExists('currentClasses') pada query pemanggil dan
+     * baca $this->current_classes_exists secara eksplisit di sana.
+     */
     public function isWaliKelas(): bool
     {
-        if (isset($this->classes_exists)) {
-            return $this->classes_exists;
-        }
-
-        return $this->classes()->exists();
+        return $this->currentClasses()->exists();
     }
 }

@@ -7,59 +7,224 @@ use Illuminate\Http\Request;
 
 class TeacherDocumentController extends Controller
 {
+
+
+    /**
+     * Halaman dokumen guru
+     */
     public function index(Request $request)
     {
-        $document = $request->user()->teacherDocument;
 
-        return view('teacher.documents.index', compact('document'));
+        $document = $request
+            ->user()
+            ->teacherDocument;
+
+
+        return view(
+            'teacher.documents.index',
+            compact('document')
+        );
+
     }
 
+
+
+
+    /**
+     * Form upload/link dokumen
+     */
     public function create()
     {
-        return view('teacher.documents.create');
+
+        return view(
+            'teacher.documents.create'
+        );
+
     }
 
+
+
+
+
+    /**
+     * Simpan dokumen baru
+     */
     public function store(Request $request)
     {
+
+        $user = $request->user();
+
+
+
+        /**
+         * Karena user_id unique
+         * satu guru hanya satu dokumen
+         */
+        if($user->teacherDocument){
+
+            return redirect()
+                ->route('teacher.documents.index')
+                ->with(
+                    'error',
+                    'Dokumen sudah pernah dikirim.'
+                );
+
+        }
+
+
+
+
         $data = $request->validate([
-            'file_url' => ['required', 'url'],
+
+            'file_url'=>[
+                'required',
+                'url'
+            ]
+
         ]);
 
-        $request->user()->teacherDocument()->create([
-            'file_url' => $data['file_url'],
-            'status' => 'PENDING',
+
+
+
+
+        $user->teacherDocument()->create([
+
+            'file_url'=>$data['file_url'],
+
+            'status'=>'PENDING',
+
         ]);
+
+
+
+
 
         return redirect()
-            ->route('teacher.documents.index')
-            ->with('success', 'Dokumen berhasil dikirim.');
+
+            ->route(
+                'teacher.documents.index'
+            )
+
+            ->with(
+                'success',
+                'Dokumen berhasil dikirim dan menunggu verifikasi admin.'
+            );
+
     }
 
+
+
+
+
+
+    /**
+     * Edit dokumen
+     */
     public function edit(Request $request)
     {
-        $document = $request->user()->teacherDocument;
 
-        return view('teacher.documents.edit', compact('document'));
+        $document =
+            $request
+            ->user()
+            ->teacherDocument;
+
+
+
+        abort_if(
+            !$document,
+            404
+        );
+
+
+
+        return view(
+            'teacher.documents.edit',
+            compact('document')
+        );
+
     }
 
+
+
+
+
+
+
+    /**
+     * Update dokumen
+     */
     public function update(Request $request)
     {
+
+
+        $document =
+            $request
+            ->user()
+            ->teacherDocument;
+
+
+
+        abort_if(
+            !$document,
+            404
+        );
+
+
+
+
+
         $data = $request->validate([
-            'file_url' => ['required', 'url'],
+
+            'file_url'=>[
+                'required',
+                'url'
+            ]
+
         ]);
 
-        $document = $request->user()->teacherDocument;
+
+
+
+
+
 
         $document->update([
-            'file_url' => $data['file_url'],
-            'status' => 'PENDING',
-            'note' => null,
-            'verified_by' => null,
-            'verified_at' => null,
+
+            'file_url'=>$data['file_url'],
+
+
+            // setiap perubahan harus diverifikasi ulang
+
+            'status'=>'PENDING',
+
+
+            'note'=>null,
+
+
+            'verified_by'=>null,
+
+
+            'verified_at'=>null,
+
         ]);
 
+
+
+
+
+
+
         return redirect()
-            ->route('teacher.documents.index')
-            ->with('success', 'Dokumen berhasil diperbarui.');
+
+            ->route(
+                'teacher.documents.index'
+            )
+
+            ->with(
+                'success',
+                'Dokumen berhasil diperbarui dan dikirim ulang untuk verifikasi.'
+            );
+
     }
+
 }

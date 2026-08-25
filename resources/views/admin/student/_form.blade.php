@@ -65,11 +65,17 @@
                 <label for="xclass_id" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                     Kelas<span class="text-error-500">*</span>
                 </label>
+                {{--
+                    Student tidak punya kolom/relasi xclass langsung.
+                    Kelas siswa didapat lewat currentEnrollment->xclass_id
+                    (relasi student_enrollments). Controller sudah eager-load
+                    'currentEnrollment.xclass' di edit().
+                --}}
                 <select id="xclass_id" name="xclass_id"
                     class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30">
                     <option value="">Pilih Kelas</option>
                     @foreach ($classes as $class)
-                        <option value="{{ $class->id }}" @selected(old('xclass_id', $student->xclass_id ?? '') == $class->id)>
+                        <option value="{{ $class->id }}" @selected(old('xclass_id', $student->currentEnrollment->xclass_id ?? '') == $class->id)>
                             {{ $class->name }}
                         </option>
                     @endforeach

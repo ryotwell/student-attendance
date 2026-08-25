@@ -32,7 +32,7 @@ return new class extends Migration
             $table->timestamp('date');
             $table->foreignIdFor(StudentEnrollment::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Student::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(Xclass::class)->constrained()->cascadeOnDelete();
+            // $table->foreignIdFor(Xclass::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Schedule::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->timestamps();

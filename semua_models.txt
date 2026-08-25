@@ -1,0 +1,637 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class AcademicYear extends Model
+{
+    protected $guarded = [];
+
+
+    /**
+     * Daftar kelas pada tahun ajaran ini
+     *
+     * academic_years
+     *          |
+     *          +--- xclasses
+     */
+    public function xclasses(): HasMany
+    {
+        return $this->hasMany(Xclass::class);
+    }
+
+
+    /**
+     * Daftar enrollment siswa pada tahun ajaran ini
+     *
+     * academic_years
+     *          |
+     *          +--- student_enrollments
+     */
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(StudentEnrollment::class);
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Announcement extends Model
+{
+    protected $fillable = [
+        'title',
+        'content',
+        'status',
+    ];
+
+    protected $casts = [];
+}
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Attendance extends Model
+{
+    public const STATUS_OPTIONS = [
+        'HADIR' => [
+            'label' => 'Hadir',
+            'icon' => '✓',
+            'checkedClass' => 'peer-checked:bg-green-500',
+        ],
+        'IZIN' => [
+            'label' => 'Izin',
+            'icon' => '📘',
+            'checkedClass' => 'peer-checked:bg-blue-500',
+        ],
+        'SAKIT' => [
+            'label' => 'Sakit',
+            'icon' => '🤒',
+            'checkedClass' => 'peer-checked:bg-yellow-500',
+        ],
+        'ALPHA' => [
+            'label' => 'Alpha',
+            'icon' => '✕',
+            'checkedClass' => 'peer-checked:bg-red-500',
+        ],
+    ];
+
+
+    protected $guarded = [];
+
+
+    protected $casts = [
+        'date' => 'date',
+    ];
+
+
+    public function studentEnrollment(): BelongsTo
+    {
+        return $this->belongsTo(StudentEnrollment::class);
+    }
+
+
+    public function schedule(): BelongsTo
+    {
+        return $this->belongsTo(Schedule::class);
+    }
+
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+
+    public function getStudentAttribute()
+    {
+        return $this->studentEnrollment?->student;
+    }
+
+
+    public function getXclassAttribute()
+    {
+        return $this->studentEnrollment?->xclass;
+    }
+
+
+    public function getStatusLabelAttribute(): string
+    {
+        return self::STATUS_OPTIONS[$this->status]['label']
+            ?? $this->status;
+    }
+
+
+    public function getStatusColorAttribute(): string
+    {
+        return match ($this->status) {
+            'HADIR' => 'success',
+            'IZIN' => 'info',
+            'SAKIT' => 'warning',
+            'ALPHA' => 'error',
+            default => 'gray',
+        };
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class CounselingCase extends Model
+{
+    public const CATEGORY_OPTIONS = [
+        'AKADEMIK' => [
+            'label' => 'Akademik',
+            'badgeClass' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+        ],
+
+        'PERILAKU' => [
+            'label' => 'Perilaku',
+            'badgeClass' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+        ],
+
+        'KEHADIRAN' => [
+            'label' => 'Kehadiran',
+            'badgeClass' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+        ],
+
+        'SOSIAL' => [
+            'label' => 'Sosial',
+            'badgeClass' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+        ],
+
+        'LAINNYA' => [
+            'label' => 'Lainnya',
+            'badgeClass' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+        ],
+    ];
+
+
+    protected $guarded = [];
+
+
+    protected $casts = [
+        'date' => 'date',
+    ];
+
+
+    /**
+     * Siswa yang memiliki kasus
+     */
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(Student::class);
+    }
+
+
+    /**
+     * Enrollment siswa
+     *
+     * Mengetahui:
+     * - kelas siswa
+     * - tahun ajaran siswa
+     */
+    public function studentEnrollment(): BelongsTo
+    {
+        return $this->belongsTo(StudentEnrollment::class);
+    }
+
+
+    /**
+     * Guru BK / user yang menangani kasus
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+
+    /**
+     * Label kategori
+     */
+    public function getCategoryLabelAttribute(): string
+    {
+        return self::CATEGORY_OPTIONS[$this->category]['label']
+            ?? $this->category;
+    }
+
+
+    /**
+     * Warna badge kategori
+     */
+    public function getCategoryBadgeClassAttribute(): string
+    {
+        return self::CATEGORY_OPTIONS[$this->category]['badgeClass']
+            ?? self::CATEGORY_OPTIONS['LAINNYA']['badgeClass'];
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Schedule extends Model
+{
+    protected $guarded = [];
+
+
+    /**
+     * Casting waktu jadwal
+     */
+    protected $casts = [
+        'start_time' => 'datetime:H:i',
+        'end_time' => 'datetime:H:i',
+    ];
+
+
+    /**
+     * Guru pengajar
+     *
+     * schedules
+     *      |
+     *      +--- users
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+
+    /**
+     * Mata pelajaran
+     *
+     * schedules
+     *      |
+     *      +--- subjects
+     */
+    public function subject(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class);
+    }
+
+
+    /**
+     * Kelas yang diajar
+     *
+     * schedules
+     *      |
+     *      +--- xclasses
+     */
+    public function xclass(): BelongsTo
+    {
+        return $this->belongsTo(Xclass::class);
+    }
+
+
+    /**
+     * Data absensi berdasarkan jadwal
+     *
+     * schedules
+     *      |
+     *      +--- attendances
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Student extends Model
+{
+    use HasFactory;
+
+    protected $guarded = [];
+
+    public function counselingCases()
+    {
+        return $this->hasMany(CounselingCase::class);
+    }
+
+    public function enrollments()
+    {
+        return $this->hasMany(StudentEnrollment::class);
+    }
+
+    public function currentEnrollment()
+    {
+        return $this->hasOne(StudentEnrollment::class)
+            ->latestOfMany();
+    }
+}
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class StudentEnrollment extends Model
+{
+    protected $guarded = [];
+
+
+    /**
+     * Siswa yang terdaftar
+     */
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(Student::class);
+    }
+
+
+    /**
+     * Kelas siswa pada tahun ajaran tersebut
+     */
+    public function xclass(): BelongsTo
+    {
+        return $this->belongsTo(Xclass::class);
+    }
+
+
+    /**
+     * Tahun ajaran
+     */
+    public function academicYear(): BelongsTo
+    {
+        return $this->belongsTo(AcademicYear::class);
+    }
+
+
+    /**
+     * Data absensi siswa
+     *
+     * Relasi:
+     * student_enrollments
+     *          |
+     *          +--- attendances
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Subject extends Model
+{
+    protected $guarded = [];
+
+
+    /**
+     * Jadwal pelajaran berdasarkan mata pelajaran
+     *
+     * subjects
+     *      |
+     *      +--- schedules
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(Schedule::class);
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Override;
+
+class TeacherDocument extends Model
+{
+    protected $guarded = [];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function verifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    #[Override]
+    public function casts()
+    {
+        return [
+            'verified_at' => 'datetime',
+        ];
+    }
+
+}
+<?php
+
+namespace App\Models;
+
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class User extends Authenticatable
+{
+    /** @use HasFactory<\Database\Factories\UserFactory> */
+    use HasFactory, Notifiable;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+
+    public function isAdmin()
+    {
+        return $this->role === 'ADMIN';
+    }
+
+    public function isTeacher()
+    {
+        return $this->role === 'GURU';
+    }
+
+    public function isTeacherBK()
+    {
+        return $this->role === 'GURU_BK';
+    }
+
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function classes()
+    {
+        return $this->hasMany(Xclass::class);
+    }
+
+    /**
+     * Kelas yang diwalikan pada tahun ajaran yang sedang aktif saja.
+     * Xclass terikat tetap ke satu academic_year_id, jadi ini dipakai
+     * setiap kali "wali kelas" harus berarti wali kelas SEKARANG,
+     * bukan riwayat wali kelas dari tahun ajaran manapun.
+     */
+    public function currentClasses()
+    {
+        return $this->classes()
+            ->whereHas('academicYear', fn ($q) => $q->where('is_active', true));
+    }
+
+    public function counselingCases()
+    {
+        return $this->hasMany(CounselingCase::class);
+    }
+
+    public function teacherDocument()
+    {
+        return $this->hasOne(
+            TeacherDocument::class
+        );
+    }
+
+    public function mySchedules()
+    {
+        return $this->schedules()
+            ->with(['subject', 'xclass'])
+            // ->where('user_id', auth()->id())
+            ->orderByRaw("FIELD(day, 'MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY')")
+            ->orderBy('start_time');
+    }
+
+    /**
+     * Cek apakah user adalah wali kelas pada tahun ajaran yang sedang
+     * aktif. Sebelumnya cek classes()->exists() tanpa filter tahun
+     * ajaran, sehingga user yang dulu pernah jadi wali kelas (tapi
+     * sudah tidak lagi di tahun ajaran ini) tetap dianggap wali kelas.
+     *
+     * Catatan: shortcut classes_exists (biasanya hasil withExists()
+     * saat eager loading) TIDAK dipakai lagi di sini karena tidak
+     * mengandung filter tahun ajaran aktif — memakainya di sini akan
+     * memberi hasil yang salah. Kalau butuh versi cepat/eager-loaded,
+     * pakai withExists('currentClasses') pada query pemanggil dan
+     * baca $this->current_classes_exists secara eksplisit di sana.
+     */
+    public function isWaliKelas(): bool
+    {
+        return $this->currentClasses()->exists();
+    }
+}<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
+class Xclass extends Model
+{
+    protected $guarded = [];
+
+
+    /**
+     * Tahun ajaran kelas
+     */
+    public function academicYear(): BelongsTo
+    {
+        return $this->belongsTo(AcademicYear::class);
+    }
+
+
+    /**
+     * Wali kelas
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+
+    /**
+     * Daftar enrollment siswa
+     *
+     * xclasses
+     *      |
+     *      +--- student_enrollments
+     */
+    public function studentEnrollments(): HasMany
+    {
+        return $this->hasMany(StudentEnrollment::class);
+    }
+
+
+    /**
+     * Daftar siswa dalam kelas
+     *
+     * Relasi melalui tabel pivot:
+     * student_enrollments
+     */
+    public function students(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Student::class,
+            'student_enrollments'
+        )
+        ->withPivot('academic_year_id');
+    }
+
+
+    /**
+     * Jadwal pelajaran kelas
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(Schedule::class);
+    }
+}

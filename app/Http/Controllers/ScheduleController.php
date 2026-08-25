@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\MenuHelper;
+use App\Models\AcademicYear;
 use App\Models\Schedule;
 use App\Models\Subject;
 use App\Models\User;
@@ -14,10 +15,21 @@ class ScheduleController extends Controller
 {
     /**
      * Display a listing of the resource.
+     *
+     * Dibatasi ke jadwal pada kelas yang berada di tahun ajaran yang
+     * sedang aktif. Schedule tidak punya academic_year_id sendiri —
+     * terikat ke xclass, dan xclass yang terikat ke academic_year_id.
+     * Tanpa filter ini, jadwal dari kelas tahun ajaran lama tetap
+     * muncul di daftar.
      */
     public function index()
     {
-        $query = Schedule::with(['subject', 'xclass']);
+        $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+
+        $query = Schedule::with(['subject', 'xclass'])
+            ->when($activeAcademicYear, function ($q) use ($activeAcademicYear) {
+                $q->whereHas('xclass', fn ($q2) => $q2->where('academic_year_id', $activeAcademicYear->id));
+            });
 
         if (auth()->user()->role === 'GURU') {
             $query->where('user_id', auth()->id());

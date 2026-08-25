@@ -8,7 +8,7 @@
             <div>
                 <h2 class="text-xl font-bold text-gray-800 dark:text-white">{{ $student->name }}</h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400">
-                    NIS {{ $student->nis }} &middot; Kelas {{ $student->xclass->name }}
+                    NIS {{ $student->nis }} &middot; Kelas {{ $student->currentEnrollment?->xclass?->name ?? '-' }}
                 </p>
             </div>
 

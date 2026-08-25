@@ -21,7 +21,6 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->group(function() {
     Route::resource('students', StudentController::class);
     Route::resource('classes', ClassController::class);
     Route::get('/classes/{class}/schedules', [ClassController::class, 'schedules'])->name('classes.schedule');
-    Route::get('/classes/{class}/students', [ClassController::class, 'students'])->name('classes.students');
     Route::resource('academic-years', AcademicYearController::class);
     Route::resource('subjects', SubjectController::class);
     Route::resource('schedules', ScheduleController::class)->except('index', 'show');
@@ -115,6 +114,8 @@ Route::middleware(['auth', 'role:GURU_BK'])->prefix('bk')->name('bk.')->group(fu
 
     Route::get('/siswa/search', [App\Http\Controllers\GuruBK\CounselingCaseController::class, 'searchStudents'])->name('students.search');
 });
+
+Route::get('/classes/{class}/students', [ClassController::class, 'students'])->name('classes.students');
 
 Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
 // Route::get('/schedules/{schedule}', [ScheduleController::class, 'show'])->name('schedules.show');

@@ -7,10 +7,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Attendance extends Model
 {
-    /**
-     * Opsi status kehadiran beserta tampilannya pada UI.
-     * 'checkedClass' berisi class Tailwind untuk kondisi radio terpilih (peer-checked).
-     */
     public const STATUS_OPTIONS = [
         'HADIR' => [
             'label' => 'Hadir',
@@ -34,37 +30,51 @@ class Attendance extends Model
         ],
     ];
 
+
     protected $guarded = [];
 
+
     protected $casts = [
-        'date' => 'datetime',
+        'date' => 'date',
     ];
 
-    public function student(): BelongsTo
+
+    public function studentEnrollment(): BelongsTo
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(StudentEnrollment::class);
     }
 
-    public function xclass(): BelongsTo
-    {
-        return $this->belongsTo(Xclass::class);
-    }
 
     public function schedule(): BelongsTo
     {
         return $this->belongsTo(Schedule::class);
     }
 
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+
+    public function getStudentAttribute()
+    {
+        return $this->studentEnrollment?->student;
+    }
+
+
+    public function getXclassAttribute()
+    {
+        return $this->studentEnrollment?->xclass;
+    }
+
+
     public function getStatusLabelAttribute(): string
     {
-        return match ($this->status) {
-            'HADIR' => 'Hadir',
-            'IZIN' => 'Izin',
-            'SAKIT' => 'Sakit',
-            'ALPHA' => 'Alpha',
-            default => $this->status,
-        };
+        return self::STATUS_OPTIONS[$this->status]['label']
+            ?? $this->status;
     }
+
 
     public function getStatusColorAttribute(): string
     {
@@ -74,17 +84,6 @@ class Attendance extends Model
             'SAKIT' => 'warning',
             'ALPHA' => 'error',
             default => 'gray',
-        };
-    }
-
-    public function getStatusBadgeClassAttribute(): string
-    {
-        return match ($this->status) {
-            'HADIR' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-            'IZIN' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-            'SAKIT' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-            'ALPHA' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-            default => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
         };
     }
 }
