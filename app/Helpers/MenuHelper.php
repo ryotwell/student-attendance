@@ -80,6 +80,19 @@ class MenuHelper
                 ],
             ],
             [
+                'name' => 'Kenaikan Kelas',
+                'icon' => 'calendar',
+                'path' => route('admin.promotion.create')
+            ],
+            [
+                'name' => 'Pengguna',
+                'icon' => 'calendar',
+                'subItems' => [
+                    ['name' => 'Daftar', 'path' => route('users.index')],
+                    ['name' => 'Tambah Pengguna', 'path' => route('users.create')],
+                ],
+            ],
+            [
                 'name' => 'Pengumuman',
                 'icon' => 'email',
                 'subItems' => [

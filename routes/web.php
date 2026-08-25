@@ -8,6 +8,7 @@ use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TeacherDocumentController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('login'))->middleware('guest');
@@ -40,6 +41,8 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->group(function() {
     Route::get('/promotion', [App\Http\Controllers\PromotionController::class, 'create'])->name('admin.promotion.create');
     Route::get('/promotion/students/{xclass}', [App\Http\Controllers\PromotionController::class, 'studentsInClass'])->name('admin.promotion.students');
     Route::post('/promotion', [App\Http\Controllers\PromotionController::class, 'store'])->name('admin.promotion.store');
+
+    Route::resource('users', UserController::class);
     
     // attendance list (daftar absensi per kelas)
     Route::get('attendance/list', [AttendanceController::class, 'list'])->name('attendance.list');

@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Tambah Dokumen Jurnal" />
+    <x-common.page-breadcrumb pageTitle="Jurnal Guru" />
 
     <div class="mx-auto max-w-3xl">
 
         <div class="mb-6">
             <h2 class="text-xl font-bold text-gray-800 dark:text-white">
-                Tambah Dokumen Jurnal
+                Jurnal Guru
             </h2>
 
             <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -54,14 +54,14 @@
                 </div>
 
 
-                <div class="mb-6 rounded-xl bg-blue-50 p-4 dark:bg-blue-900/20">
+                <div class="mb-6 rounded-xl bg-brand-50 p-4 dark:bg-brand-900/20">
 
-                    <p class="mb-2 text-sm font-semibold text-blue-700 dark:text-blue-400">
+                    <p class="mb-2 text-sm font-semibold text-brand-700 dark:text-brand-400">
                         Contoh dokumen yang dapat dimasukkan:
                     </p>
 
 
-                    <ul class="list-inside list-disc text-sm text-blue-600 dark:text-blue-300">
+                    <ul class="list-inside list-disc text-sm text-brand-600 dark:text-brand-300">
 
                         <li>KTP</li>
                         <li>Ijazah</li>

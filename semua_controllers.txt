@@ -200,7 +200,6 @@ use Illuminate\Support\Facades\Auth;
 
 class AttendanceController extends Controller
 {
-
     /**
      * Check teacher role.
      */
@@ -212,7 +211,6 @@ class AttendanceController extends Controller
         ]);
     }
 
-
     /**
      * Check class access.
      */
@@ -220,23 +218,34 @@ class AttendanceController extends Controller
     {
         $user = auth()->user();
 
-        // ADMIN bebas akses
         if ($user->role === 'ADMIN') {
             return true;
         }
 
-        // Guru hanya kelas yang diajar
         return Schedule::where('user_id', $user->id)
             ->where('xclass_id', $classId)
             ->exists();
     }
 
+    /**
+     * Pastikan kelas yang diakses adalah kelas dari tahun ajaran yang
+     * sedang aktif. Absensi tidak boleh diinput/diedit untuk kelas dari
+     * tahun ajaran lama (kelas lama tetap ada di DB untuk histori, tapi
+     * read-only lewat report/recap, bukan lewat endpoint ini).
+     */
+    private function ensureActiveAcademicYear(Xclass $class): void
+    {
+        $isActive = $class->academicYear && $class->academicYear->is_active;
+
+        abort_if(
+            ! $isActive,
+            403,
+            'Kelas ini bukan bagian dari tahun ajaran yang sedang aktif. Absensi hanya bisa diinput/diedit untuk tahun ajaran aktif.'
+        );
+    }
 
     /**
      * Base query attendance untuk 1 kelas.
-     *
-     * attendances tidak punya kolom xclass_id, jadi filter kelas
-     * dilakukan lewat relasi studentEnrollment.xclass_id.
      */
     private function attendanceQueryForClass($classId)
     {
@@ -245,24 +254,28 @@ class AttendanceController extends Controller
         });
     }
 
+    /**
+     * Base query kelas, dibatasi ke tahun ajaran aktif.
+     */
+    private function activeClassesQuery()
+    {
+        return Xclass::with('academicYear')
+            ->whereHas('academicYear', fn ($q) => $q->where('is_active', true))
+            ->orderBy('name');
+    }
 
     /**
      * Display attendance selection form.
      */
     public function index()
     {
-        $classes = Xclass::with('academicYear')
-            ->orderBy('name')
-            ->get();
-
+        $classes = $this->activeClassesQuery()->get();
 
         return view('admin.attendance.index', [
             'title' => 'Absensi Siswa',
             'classes' => $classes,
         ]);
     }
-
-
 
     /**
      * Show attendance table.
@@ -275,64 +288,37 @@ class AttendanceController extends Controller
             'date' => 'required|date',
         ]);
 
-
-        $date = Carbon::parse($validated['date'])
-            ->startOfDay();
-
-
+        $date = Carbon::parse($validated['date'])->startOfDay();
 
         if (!$this->canAccessClass($validated['class_id'])) {
             abort(403, 'Anda tidak memiliki akses ke kelas ini.');
         }
 
-        $class = Xclass::select(
-            'id',
-            'name'
-        )
+        $class = Xclass::select('id', 'name', 'academic_year_id')
             ->with([
-                // Siswa didapat lewat pivot student_enrollments, bukan kolom xclass_id
-                // di tabel students (kolom itu tidak ada di schema).
+                'academicYear',
                 'students' => function ($q) {
-                    $q->select(
-                        'students.id',
-                        'students.name',
-                        'students.nis'
-                    )
+                    $q->select('students.id', 'students.name', 'students.nis')
                         ->orderBy('students.name');
                 }
             ])
             ->findOrFail($validated['class_id']);
 
+        $this->ensureActiveAcademicYear($class);
 
-
-        $schedule = Schedule::select(
-            'id',
-            'subject_id'
-        )
+        $schedule = Schedule::select('id', 'subject_id')
             ->with('subject:id,name')
             ->findOrFail($validated['schedule_id']);
 
-
-
-        // Peta student_id => student_enrollment_id untuk kelas ini,
-        // dibutuhkan karena Attendance terhubung ke siswa lewat
-        // student_enrollment_id, bukan xclass_id langsung.
         $enrollmentByStudentId = StudentEnrollment::where('xclass_id', $class->id)
             ->pluck('id', 'student_id');
-
-
 
         $existingAttendances = Attendance::query()
             ->whereIn('student_enrollment_id', $enrollmentByStudentId->values())
             ->where('schedule_id', $schedule->id)
             ->whereDate('date', $date->toDateString())
-            ->get([
-                'student_id',
-                'status'
-            ])
+            ->get(['student_id', 'status'])
             ->keyBy('student_id');
-
-
 
         $viewData = [
             'title' => 'Absensi: ' . $class->name . ' - ' . $schedule->subject->name,
@@ -344,17 +330,10 @@ class AttendanceController extends Controller
         ];
 
         if ($this->isTeacher()) {
-
-            return view(
-                'teacher.absensi.absensi',
-                $viewData
-            );
+            return view('teacher.absensi.absensi', $viewData);
         }
 
-        return view(
-            'admin.attendance.table',
-            $viewData
-        );
+        return view('admin.attendance.table', $viewData);
     }
 
     /**
@@ -362,7 +341,6 @@ class AttendanceController extends Controller
      */
     public function store(Request $request)
     {
-
         $request->validate([
             'class_id' => 'required|exists:xclasses,id',
             'schedule_id' => 'required|exists:schedules,id',
@@ -372,30 +350,21 @@ class AttendanceController extends Controller
             'attendances.*.status' => 'required|in:HADIR,IZIN,SAKIT,ALPHA',
         ]);
 
-
-
         if (!$this->canAccessClass($request->class_id)) {
             abort(403, 'Anda tidak memiliki akses.');
         }
 
+        $class = Xclass::with('academicYear')->findOrFail($request->class_id);
+        $this->ensureActiveAcademicYear($class);
 
+        $date = Carbon::parse($request->date)->startOfDay();
 
-        $date = Carbon::parse($request->date);
-
-
-
-        // Peta student_id => student_enrollment_id untuk kelas ini
         $enrollmentByStudentId = StudentEnrollment::where('xclass_id', $request->class_id)
             ->pluck('id', 'student_id');
 
-
-
         foreach ($request->attendances as $attendanceData) {
-
             $enrollmentId = $enrollmentByStudentId->get($attendanceData['student_id']);
 
-            // Lewati jika siswa tidak terdaftar (enrolled) di kelas ini,
-            // karena student_enrollment_id wajib diisi (foreign key not-nullable).
             if (!$enrollmentId) {
                 continue;
             }
@@ -413,13 +382,8 @@ class AttendanceController extends Controller
                 ]
             );
 
-
-
             if ($attendance->status === 'ALPHA') {
-
-                SendAlphaWhatsAppNotification::dispatch(
-                    $attendance
-                );
+                SendAlphaWhatsAppNotification::dispatch($attendance);
             }
         }
 
@@ -429,10 +393,7 @@ class AttendanceController extends Controller
                 'schedule_id' => $request->schedule_id,
                 'date' => $date->format('Y-m-d'),
             ])
-            ->with(
-                'success',
-                'Absensi berhasil disimpan.'
-            );
+            ->with('success', 'Absensi berhasil disimpan.');
     }
 
     /**
@@ -459,13 +420,12 @@ class AttendanceController extends Controller
         return response()->json($schedules);
     }
 
-
     /**
      * Display attendance report selection form.
      */
     public function report()
     {
-        $classes = Xclass::with('academicYear')->orderBy('name')->get();
+        $classes = $this->activeClassesQuery()->get();
 
         return view('admin.attendance.report', [
             'title' => 'Laporan Absensi',
@@ -475,6 +435,8 @@ class AttendanceController extends Controller
 
     /**
      * Show attendance report for selected class, student, and date range.
+     * Tidak dibatasi ke tahun ajaran aktif — laporan boleh dilihat lintas
+     * tahun ajaran (histori), berbeda dari input/edit absensi.
      */
     public function reportShow(Request $request)
     {
@@ -502,8 +464,6 @@ class AttendanceController extends Controller
 
         $attendances = $query->paginate(50)->withQueryString();
 
-        // Summary statistics (satu query, dikelompokkan per status,
-        // menggantikan 4x query count terpisah)
         $summaryQuery = $this->attendanceQueryForClass($class->id)
             ->whereBetween('date', [$dateFrom, $dateTo])
             ->when($student, fn($q) => $q->where('student_id', $student->id));
@@ -537,7 +497,7 @@ class AttendanceController extends Controller
      */
     public function recap()
     {
-        $classes = Xclass::with('academicYear')->orderBy('name')->get();
+        $classes = $this->activeClassesQuery()->get();
 
         return view('admin.attendance.recap', [
             'title' => 'Rekap Absensi',
@@ -547,6 +507,7 @@ class AttendanceController extends Controller
 
     /**
      * Show attendance recap for selected class and date range.
+     * Sama seperti reportShow, sengaja tidak dibatasi tahun ajaran aktif.
      */
     public function recapShow(Request $request)
     {
@@ -560,7 +521,6 @@ class AttendanceController extends Controller
         $dateFrom = $request->date_from ? Carbon::parse($request->date_from) : Carbon::now()->startOfMonth();
         $dateTo = $request->date_to ? Carbon::parse($request->date_to) : Carbon::now()->endOfMonth();
 
-        // Get all attendances for the class in date range
         $attendances = $this->attendanceQueryForClass($class->id)
             ->with(['schedule.subject', 'studentEnrollment.student'])
             ->whereBetween('date', [$dateFrom, $dateTo])
@@ -568,7 +528,6 @@ class AttendanceController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Group by student for recap
         $studentRecaps = $class->students->map(function ($student) use ($attendances) {
             $studentAttendances = $attendances->where('student_id', $student->id);
             $total = $studentAttendances->count();
@@ -585,7 +544,6 @@ class AttendanceController extends Controller
             ];
         });
 
-        // Overall summary
         $totalAll = $attendances->count();
         $hadirAll = $attendances->where('status', 'HADIR')->count();
         $summary = [
@@ -615,11 +573,10 @@ class AttendanceController extends Controller
         $user = auth()->user();
 
         if ($user->role === 'GURU' || $user->role === 'GURU_BK') {
-            // Guru hanya bisa lihat kelas yang diajarin
             $classIds = Schedule::where('user_id', $user->id)->pluck('xclass_id')->unique();
-            $classes = Xclass::with('academicYear')->whereIn('id', $classIds)->orderBy('name')->get();
+            $classes = $this->activeClassesQuery()->whereIn('id', $classIds)->get();
         } else {
-            $classes = Xclass::with('academicYear')->orderBy('name')->get();
+            $classes = $this->activeClassesQuery()->get();
         }
 
         return view('admin.attendance.list', [
@@ -635,7 +592,6 @@ class AttendanceController extends Controller
     {
         $user = auth()->user();
 
-        // Cek akses guru
         if (($user->role === 'GURU' || $user->role === 'GURU_BK')) {
             $hasAccess = Schedule::where('user_id', $user->id)
                 ->where('xclass_id', $class->id)
@@ -645,13 +601,15 @@ class AttendanceController extends Controller
             }
         }
 
+        $class->loadMissing('academicYear');
+        $this->ensureActiveAcademicYear($class);
+
         $schedules = Schedule::with('subject')
             ->where('xclass_id', $class->id)
             ->orderByRaw("FIELD(day, 'MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY')")
             ->orderBy('start_time')
             ->get();
 
-        // Get recent attendance records for this class
         $attendances = $this->attendanceQueryForClass($class->id)
             ->with(['schedule.subject', 'studentEnrollment.student'])
             ->orderBy('date', 'desc')
@@ -673,7 +631,6 @@ class AttendanceController extends Controller
     {
         $user = auth()->user();
 
-        // Cek akses guru
         if (($user->role === 'GURU' || $user->role === 'GURU_BK')) {
             $hasAccess = Schedule::where('user_id', $user->id)
                 ->where('xclass_id', $class->id)
@@ -684,9 +641,11 @@ class AttendanceController extends Controller
             }
         }
 
+        $class->loadMissing('academicYear');
+        $this->ensureActiveAcademicYear($class);
+
         $date = Carbon::parse($date);
 
-        // Get existing attendances for this class, schedule, and date
         $existingAttendances = $this->attendanceQueryForClass($class->id)
             ->where('schedule_id', $schedule->id)
             ->whereDate('date', $date)
@@ -709,7 +668,6 @@ class AttendanceController extends Controller
     {
         $user = auth()->user();
 
-        // Cek akses guru
         if (($user->role === 'GURU' || $user->role === 'GURU_BK')) {
             $hasAccess = Schedule::where('user_id', $user->id)
                 ->where('xclass_id', $class->id)
@@ -720,6 +678,9 @@ class AttendanceController extends Controller
             }
         }
 
+        $class->loadMissing('academicYear');
+        $this->ensureActiveAcademicYear($class);
+
         $request->validate([
             'attendances' => 'required|array',
             'attendances.*.student_id' => 'required|exists:students,id',
@@ -727,14 +688,12 @@ class AttendanceController extends Controller
         ]);
 
         $scheduleId = $schedule->id;
-        $date = Carbon::parse($date);
+        $date = Carbon::parse($date)->startOfDay();
 
-        // Peta student_id => student_enrollment_id untuk kelas ini
         $enrollmentByStudentId = StudentEnrollment::where('xclass_id', $class->id)
             ->pluck('id', 'student_id');
 
         foreach ($request->attendances as $attendanceData) {
-
             $enrollmentId = $enrollmentByStudentId->get($attendanceData['student_id']);
 
             if (!$enrollmentId) {
@@ -1007,6 +966,7 @@ abstract class Controller
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicYear;
 use App\Models\Attendance;
 use App\Models\CounselingCase;
 use App\Models\Student;
@@ -1023,26 +983,34 @@ class DashboardController extends Controller
         $monthStart = Carbon::now()->startOfMonth();
         $monthEnd = Carbon::now()->endOfMonth();
 
-        // Ringkasan jumlah entitas utama.
+        $activeYear = AcademicYear::where('is_active', true)->first();
+
+        // Ringkasan jumlah entitas utama, dibatasi ke tahun ajaran aktif.
         $totals = [
-            'students' => Student::count(),
-            'classes' => Xclass::count(),
+            'students' => $activeYear
+                ? Student::whereHas('enrollments', fn ($q) => $q->where('academic_year_id', $activeYear->id))->count()
+                : 0,
+            'classes' => $activeYear
+                ? Xclass::where('academic_year_id', $activeYear->id)->count()
+                : 0,
             'subjects' => Subject::count(),
             'teachers' => User::where('role', 'GURU')->count(),
             'counselors' => User::where('role', 'GURU_BK')->count(),
             'admins' => User::where('role', 'ADMIN')->count(),
         ];
 
-        // Kehadiran hari ini, sekolah-wide.
+        // Kehadiran hari ini, dibatasi ke enrollment tahun ajaran aktif.
         $todayCounts = Attendance::query()
             ->whereDate('date', $today)
+            ->whereHas('studentEnrollment', fn ($q) => $q->where('academic_year_id', $activeYear?->id))
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        // Kehadiran bulan berjalan, sekolah-wide.
+        // Kehadiran bulan berjalan, dibatasi ke enrollment tahun ajaran aktif.
         $monthCounts = Attendance::query()
             ->whereBetween('date', [$monthStart, $monthEnd])
+            ->whereHas('studentEnrollment', fn ($q) => $q->where('academic_year_id', $activeYear?->id))
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
@@ -1052,7 +1020,7 @@ class DashboardController extends Controller
             ? round(($monthCounts->get('HADIR', 0) / $monthTotal) * 100, 1)
             : 0;
 
-        // Aktivitas terbaru: user baru daftar + kasus BK baru, digabung & diurutkan.
+        // Aktivitas terbaru: user baru daftar + kasus BK baru (tahun ajaran aktif), digabung & diurutkan.
         $recentUsers = User::query()
             ->latest()
             ->take(5)
@@ -1065,6 +1033,10 @@ class DashboardController extends Controller
 
         $recentCases = CounselingCase::query()
             ->with(['student', 'user'])
+            ->when($activeYear, fn ($q) => $q->whereHas(
+                'studentEnrollment',
+                fn ($q2) => $q2->where('academic_year_id', $activeYear->id)
+            ))
             ->latest()
             ->take(5)
             ->get()
@@ -1080,6 +1052,7 @@ class DashboardController extends Controller
             ->values();
 
         return view('admin.dashboard', [
+            'activeYear' => $activeYear,
             'totals' => $totals,
             'todayCounts' => $todayCounts,
             'monthCounts' => $monthCounts,
@@ -1087,6 +1060,103 @@ class DashboardController extends Controller
             'monthLabel' => Carbon::now()->translatedFormat('F Y'),
             'recentActivities' => $recentActivities,
         ]);
+    }
+}<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use App\Models\Student;
+use App\Models\StudentEnrollment;
+use App\Models\Xclass;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class PromotionController extends Controller
+{
+    /**
+     * Halaman utama kenaikan kelas.
+     *
+     * Kelas asal: dari tahun ajaran yang SUDAH TIDAK aktif (kelas lama,
+     * tempat siswa berada sebelum naik/lulus).
+     * Kelas tujuan: dari tahun ajaran yang SEDANG aktif (kelas baru,
+     * tempat siswa dipindahkan/dinaikkan).
+     */
+    public function create()
+    {
+        return view('admin.promotion.create', [
+            'sourceXclasses' => Xclass::with('academicYear')
+                ->whereHas('academicYear', fn ($q) => $q->where('is_active', false))
+                ->orderBy('name')
+                ->get(),
+            'targetXclasses' => Xclass::with('academicYear')
+                ->whereHas('academicYear', fn ($q) => $q->where('is_active', true))
+                ->orderBy('name')
+                ->get(),
+        ]);
+    }
+
+    /**
+     * Daftar siswa aktif di satu kelas asal (dipakai AJAX saat kelas asal dipilih).
+     */
+    public function studentsInClass(Xclass $xclass)
+    {
+        $students = $xclass->studentEnrollments()
+            ->with('student')
+            ->whereHas('student', fn ($q) => $q->where('status', 'AKTIF'))
+            ->get()
+            ->pluck('student')
+            ->values();
+
+        return response()->json($students);
+    }
+
+    /**
+     * Proses kenaikan kelas untuk siswa-siswa terpilih ke satu kelas tujuan,
+     * ATAU meluluskan siswa-siswa terpilih.
+     */
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'action' => ['required', 'in:NAIK,LULUS'],
+            'student_ids' => ['required', 'array', 'min:1'],
+            'student_ids.*' => ['required', 'exists:students,id'],
+            'target_xclass_id' => ['required_if:action,NAIK', 'nullable', 'exists:xclasses,id'],
+        ]);
+
+        DB::transaction(function () use ($data) {
+            if ($data['action'] === 'LULUS') {
+                Student::whereIn('id', $data['student_ids'])
+                    ->update(['status' => 'LULUS']);
+
+                return;
+            }
+
+            // Ambil academic_year_id dari kelas tujuan itu sendiri,
+            // bukan dari input terpisah, supaya xclass_id dan
+            // academic_year_id yang tersimpan selalu konsisten.
+            $targetXclass = Xclass::whereHas('academicYear', fn ($q) => $q->where('is_active', true))
+                ->findOrFail($data['target_xclass_id']);
+
+            foreach ($data['student_ids'] as $studentId) {
+                StudentEnrollment::updateOrCreate(
+                    [
+                        'student_id' => $studentId,
+                        'academic_year_id' => $targetXclass->academic_year_id,
+                    ],
+                    [
+                        'xclass_id' => $targetXclass->id,
+                    ]
+                );
+            }
+        });
+
+        $count = count($data['student_ids']);
+        $message = $data['action'] === 'LULUS'
+            ? "{$count} siswa berhasil ditandai lulus."
+            : "{$count} siswa berhasil naik/dipindahkan ke kelas tujuan.";
+
+        return redirect()->route('admin.promotion.create')->with('success', $message);
     }
 }<?php
 
@@ -1441,7 +1511,7 @@ class StudentController extends Controller
     public function create()
     {
         return view('admin.student.create', [
-            'classes' => Xclass::orderBy('name')->get(),
+            'classes' => Xclass::with('academicYear')->orderBy('name')->get(),
         ]);
     }
 
@@ -1483,7 +1553,7 @@ class StudentController extends Controller
 
         return view('admin.student.edit', [
             'student' => $student,
-            'classes' => Xclass::orderBy('name')->get(),
+            'classes' => Xclass::with('academicYear')->orderBy('name')->get(),
         ]);
     }
 
@@ -1741,5 +1811,129 @@ class TeacherDocumentController extends Controller
 
         return back()
             ->with('success', 'Dokumen ditolak.');
+    }
+}<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
+
+class UserController extends Controller
+{
+    /**
+     * Tampilkan daftar user
+     */
+    public function index(Request $request)
+    {
+        $users = User::query()
+            ->when($request->search, function ($q, $search) {
+                $q->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->role, function ($q, $role) {
+                $q->where('role', $role);
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('users.index', compact('users'));
+    }
+
+    /**
+     * Tampilkan form tambah user
+     */
+    public function create()
+    {
+        return view('users.create');
+    }
+
+    /**
+     * Simpan user baru
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'confirmed', Password::defaults()],
+            'role' => ['required', Rule::in(['ADMIN', 'GURU', 'GURU_BK'])],
+        ]);
+
+        User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
+        ]);
+
+        return redirect()
+            ->route('users.index')
+            ->with('success', 'User berhasil ditambahkan.');
+    }
+
+    /**
+     * Tampilkan detail user
+     */
+    public function show(User $user)
+    {
+        return view('users.show', compact('user'));
+    }
+
+    /**
+     * Tampilkan form edit user
+     */
+    public function edit(User $user)
+    {
+        return view('users.edit', compact('user'));
+    }
+
+    /**
+     * Update user
+     */
+    public function update(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'password' => ['nullable', 'confirmed', Password::defaults()],
+            'role' => ['required', Rule::in(['ADMIN', 'GURU', 'GURU_BK'])],
+        ]);
+
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->role = $validated['role'];
+
+        if (!empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+        }
+
+        $user->save();
+
+        return redirect()
+            ->route('users.index')
+            ->with('success', 'User berhasil diperbarui.');
+    }
+
+    /**
+     * Hapus user
+     */
+    public function destroy(User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'Anda tidak bisa menghapus akun sendiri.');
+        }
+
+        $user->delete();
+
+        return redirect()
+            ->route('users.index')
+            ->with('success', 'User berhasil dihapus.');
     }
 }

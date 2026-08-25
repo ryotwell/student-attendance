@@ -270,6 +270,8 @@ return new class extends Migration
             $table->string('nis');
             $table->string('nisn');
             $table->enum('gender', ['MALE', 'FEMALE']);
+            $table->enum('status', ['AKTIF', 'LULUS', 'PINDAH', 'KELUAR'])
+                ->default('AKTIF');
             $table->string('parent_name')->nullable();
             $table->string('parent_phone')->nullable();
             $table->timestamps();

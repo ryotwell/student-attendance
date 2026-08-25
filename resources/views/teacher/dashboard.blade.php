@@ -83,7 +83,7 @@
 
                 <div class="flex-1">
                     <h4 class="font-bold text-yellow-800 dark:text-yellow-400">
-                        Dokumen Dapodik Belum Dikirim
+                        Jurnal Guru Belum Dikirim
                     </h4>
 
                     <p class="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
@@ -118,7 +118,7 @@
                 <div class="flex-1">
 
                     <h4 class="font-bold text-red-800 dark:text-red-400">
-                        Dokumen Dapodik Ditolak
+                        Jurnal Guru Ditolak
                     </h4>
 
                     <p class="mt-1 text-sm text-red-700 dark:text-red-300">
@@ -163,7 +163,7 @@
                     </h4>
 
                     <p class="mt-1 text-sm text-blue-700 dark:text-blue-300">
-                        Admin sedang melakukan pemeriksaan dokumen Dapodik Anda.
+                        Admin sedang melakukan pemeriksaan Jurnal Guru Anda.
                     </p>
 
 
@@ -206,7 +206,7 @@
                 <div class="flex-1">
 
                     <h4 class="font-bold text-green-800 dark:text-green-400">
-                        Dokumen Dapodik Terverifikasi
+                        Jurnal Guru Terverifikasi
                     </h4>
 
                     <p class="mt-1 text-sm text-green-700 dark:text-green-300">
