@@ -29,7 +29,7 @@ class StudentController extends Controller
     public function create()
     {
         return view('admin.student.create', [
-            'classes' => Xclass::orderBy('name')->get(),
+            'classes' => Xclass::with('academicYear')->orderBy('name')->get(),
         ]);
     }
 
@@ -71,7 +71,7 @@ class StudentController extends Controller
 
         return view('admin.student.edit', [
             'student' => $student,
-            'classes' => Xclass::orderBy('name')->get(),
+            'classes' => Xclass::with('academicYear')->orderBy('name')->get(),
         ]);
     }
 

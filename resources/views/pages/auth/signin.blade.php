@@ -78,8 +78,8 @@
                         </div> --}}
                         <img src="{{ asset('/logo-sekolah.png') }}" alt="Logo Sekolah" class="h-15 w-15 object-contain">
                         <div class="text-left">
-                            <p class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ config('app.name', 'Nama Sekolah') }}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Portal Aplikasi Sekolah</p>
+                            <p class="text-xl font-semibold text-gray-800 dark:text-white/90">{{ config('app.name', 'Nama Sekolah') }}</p>
+                            <p class="text-gray-500 dark:text-gray-400">Portal Aplikasi Sekolah</p>
                         </div>
                     </div>
 

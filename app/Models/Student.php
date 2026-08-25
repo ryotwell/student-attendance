@@ -24,6 +24,7 @@ class Student extends Model
     public function currentEnrollment()
     {
         return $this->hasOne(StudentEnrollment::class)
+            ->whereHas('academicYear', fn ($q) => $q->where('is_active', true))
             ->latestOfMany();
     }
 }

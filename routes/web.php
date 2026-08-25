@@ -36,6 +36,10 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->group(function() {
     // attendance recap
     Route::get('attendance/recap', [AttendanceController::class, 'recap'])->name('attendance.recap');
     Route::get('attendance/recap/show', [AttendanceController::class, 'recapShow'])->name('attendance.recap.show');
+
+    Route::get('/promotion', [App\Http\Controllers\PromotionController::class, 'create'])->name('admin.promotion.create');
+    Route::get('/promotion/students/{xclass}', [App\Http\Controllers\PromotionController::class, 'studentsInClass'])->name('admin.promotion.students');
+    Route::post('/promotion', [App\Http\Controllers\PromotionController::class, 'store'])->name('admin.promotion.store');
     
     // attendance list (daftar absensi per kelas)
     Route::get('attendance/list', [AttendanceController::class, 'list'])->name('attendance.list');

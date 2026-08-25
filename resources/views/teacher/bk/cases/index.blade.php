@@ -129,7 +129,7 @@
                                     </div>
 
                                     <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ $case->student->xclass->name }}
+                                        {{ $case->student->currentEnrollment?->xclass?->name ?? '-' }}
                                     </div>
 
                                 </td>
@@ -144,30 +144,18 @@
 
                                 </td>
 
-
-
                                 <td class="px-5 py-3 text-sm text-gray-600 dark:text-gray-300">
                                     {{ $case->user->name }}
                                 </td>
 
-
-
                                 <td class="px-5 py-3">
-
                                     <div class="flex justify-end gap-2">
-
-
-                                        <a href="{{ route('bk.cases.by-student', $case->student) }}"
-                                            class="rounded-lg px-3 py-1.5 text-xs font-semibold text-brand-600 transition hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-900/30">
+                                        <x-ui.button-link class="duration-300" href="{{ route('bk.cases.by-student', $case->student) }}">
                                             Riwayat
-                                        </a>
-
-
-                                        <a href="{{ route('bk.cases.edit', $case) }}"
-                                            class="rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-600 transition hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
+                                        </x-ui.button-link>
+                                        <x-ui.button-link class="bg-yellow-500 hover:bg-yellow-600 duration-300" href="{{ route('bk.cases.edit', $case) }}">
                                             Edit
-                                        </a>
-
+                                        </x-ui.button-link>
 
                                         <form action="{{ route('bk.cases.destroy', $case) }}"
                                             method="POST"
@@ -176,23 +164,13 @@
                                             @csrf
                                             @method('DELETE')
 
-
-                                            <button type="submit"
-                                                class="rounded-lg px-3 py-1.5 text-xs font-semibold text-error-600 transition hover:bg-error-50 dark:text-error-400 dark:hover:bg-error-900/30">
+                                            <x-ui.button class="bg-red-500 hover:bg-red-600 duration-300" type="submit">
                                                 Hapus
-                                            </button>
-
+                                            </x-ui.button>
                                         </form>
-
-
                                     </div>
-
                                 </td>
-
-
                             </tr>
-
-
                         @empty
 
                             <tr>

@@ -16,11 +16,7 @@ class AbsensiController extends Controller
 {
     /**
      * Daftar jadwal guru login, dibatasi ke kelas pada tahun ajaran
-     * yang sedang aktif. schedules tidak punya kolom academic_year_id
-     * sendiri — jadwal terikat ke xclass, dan xclass yang terikat ke
-     * academic_year_id. Tanpa filter ini, jadwal dari xclass tahun
-     * ajaran lama tetap muncul selama guru masih tercatat sebagai
-     * pengajarnya.
+     * yang sedang aktif.
      */
     public function schedules()
     {
@@ -41,10 +37,6 @@ class AbsensiController extends Controller
 
     /**
      * Riwayat absensi guru, dibatasi ke tahun ajaran yang sedang aktif.
-     *
-     * Satu "sesi" absensi = kombinasi tanggal + jadwal (satu jadwal
-     * sudah mewakili satu kelas). Attendance tersimpan per siswa, jadi
-     * ambil semua baris lalu kelompokkan di memory memakai unique().
      */
     public function history()
     {
@@ -64,27 +56,38 @@ class AbsensiController extends Controller
     }
 
     /**
-     * Detail history, dibatasi ke tahun ajaran yang sedang aktif.
+     * Detail history. Sekarang abort 422 jika kelas/jadwal yang diminta
+     * bukan bagian dari tahun ajaran aktif, alih-alih diam-diam
+     * menampilkan halaman kosong.
      *
      * Route: /absensi/history/{date}/{class}/{schedule}
-     * Parameter $class dipakai untuk menyaring absensi milik kelas
-     * tersebut (lewat studentEnrollment.xclass_id), karena tabel
-     * attendances tidak punya kolom xclass_id langsung.
      */
     public function showHistory($date, $class, $schedule)
     {
         $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+
+        abort_unless($activeAcademicYear, 404, 'Tidak ada tahun ajaran aktif yang dikonfigurasi.');
+
+        $scheduleModel = Schedule::with('xclass')->findOrFail($schedule);
+
+        abort_unless(
+            (int) $scheduleModel->xclass_id === (int) $class,
+            404
+        );
+
+        abort_unless(
+            $scheduleModel->xclass && (int) $scheduleModel->xclass->academic_year_id === $activeAcademicYear->id,
+            403,
+            'Data absensi ini bukan dari tahun ajaran yang sedang aktif.'
+        );
 
         $attendances = Attendance::with(['studentEnrollment.student', 'studentEnrollment.xclass', 'schedule.subject'])
             ->where('user_id', Auth::id())
             ->whereDate('date', $date)
             ->where('schedule_id', $schedule)
             ->whereHas('studentEnrollment', function ($q) use ($class, $activeAcademicYear) {
-                $q->where('xclass_id', $class);
-
-                if ($activeAcademicYear) {
-                    $q->where('academic_year_id', $activeAcademicYear->id);
-                }
+                $q->where('xclass_id', $class)
+                  ->where('academic_year_id', $activeAcademicYear->id);
             })
             ->get();
 
@@ -92,8 +95,7 @@ class AbsensiController extends Controller
     }
 
     /**
-     * Halaman pilih jadwal untuk rekap, dibatasi ke tahun ajaran aktif
-     * (lihat catatan di schedules()).
+     * Halaman pilih jadwal untuk rekap, dibatasi ke tahun ajaran aktif.
      */
     public function recapIndex(Request $request)
     {
@@ -142,10 +144,8 @@ class AbsensiController extends Controller
     /**
      * Logic rekap utama.
      *
-     * Rekap dibatasi ke tahun ajaran yang sedang aktif (academic_years.is_active):
-     * - siswa yang dihitung hanya enrollment kelas itu pada tahun ajaran aktif
-     * - jika kelas milik jadwal ini bukan bagian dari tahun ajaran aktif,
-     *   rekap dikembalikan kosong (guru tidak sengaja melihat data kelas lama)
+     * Sekarang abort 422 jika kelas milik jadwal ini bukan bagian dari
+     * tahun ajaran aktif, alih-alih diam-diam mengembalikan rekap kosong.
      */
     private function buildRecap(Request $request, Schedule $schedule): array
     {
@@ -159,7 +159,11 @@ class AbsensiController extends Controller
         abort_unless($activeAcademicYear, 404, 'Tidak ada tahun ajaran aktif yang dikonfigurasi.');
 
         // Kelas pada jadwal ini harus berada di tahun ajaran yang sedang aktif
-        $isCurrentYear = $schedule->xclass?->academic_year_id === $activeAcademicYear->id;
+        abort_unless(
+            $schedule->xclass && $schedule->xclass->academic_year_id === $activeAcademicYear->id,
+            422,
+            'Jadwal ini bukan bagian dari tahun ajaran yang sedang aktif.'
+        );
 
         $monthOptions = $this->buildMonthOptions();
 
@@ -171,19 +175,6 @@ class AbsensiController extends Controller
 
         $start = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
         $end = $start->copy()->endOfMonth();
-
-        $emptyResult = [
-            'schedule' => $schedule,
-            'academicYear' => $activeAcademicYear,
-            'monthOptions' => $monthOptions,
-            'selectedMonth' => $selectedMonth,
-            'monthLabel' => $monthOptions->firstWhere('value', $selectedMonth)['label'],
-            'recap' => collect(),
-        ];
-
-        if (!$isCurrentYear) {
-            return $emptyResult;
-        }
 
         // Siswa yang dihitung: hanya enrollment kelas ini di tahun ajaran aktif
         $enrollments = $schedule->xclass
@@ -216,7 +207,14 @@ class AbsensiController extends Controller
             ->sortBy(fn ($row) => $row['student']->name)
             ->values();
 
-        return [...$emptyResult, 'recap' => $recap];
+        return [
+            'schedule' => $schedule,
+            'academicYear' => $activeAcademicYear,
+            'monthOptions' => $monthOptions,
+            'selectedMonth' => $selectedMonth,
+            'monthLabel' => $monthOptions->firstWhere('value', $selectedMonth)['label'],
+            'recap' => $recap,
+        ];
     }
 
     /**

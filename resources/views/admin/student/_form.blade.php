@@ -76,7 +76,7 @@
                     <option value="">Pilih Kelas</option>
                     @foreach ($classes as $class)
                         <option value="{{ $class->id }}" @selected(old('xclass_id', $student->currentEnrollment->xclass_id ?? '') == $class->id)>
-                            {{ $class->name }}
+                            {{ $class->name }} - {{ $class->academicYear->name }}
                         </option>
                     @endforeach
                 </select>

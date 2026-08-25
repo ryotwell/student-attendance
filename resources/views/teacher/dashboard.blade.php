@@ -50,8 +50,8 @@
 
     if ($user->role === 'GURU') {
         $menuItems[] = [
-            'title' => 'Dokumen Dapodik',
-            'description' => 'Kelola dokumen dan status verifikasi Dapodik',
+            'title' => 'Jurnal Guru',
+            'description' => 'Dokumen dan status verifikasi',
             'url' => route('teacher.documents.index'),
             'icon' => 'document',
         ];

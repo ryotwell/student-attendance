@@ -1,41 +1,33 @@
 @extends('layouts.app')
 
 @section('content')
-
-<x-common.page-breadcrumb pageTitle="Rekap Absensi" />
-
-
-<div class="mx-auto max-w-6xl">
+    <x-common.page-breadcrumb pageTitle="Rekap Absensi" />
 
 
-    {{-- Header --}}
-    <div class="mb-6">
-
-        <h2 class="text-xl font-bold text-gray-800 dark:text-white">
-            Pilih Jadwal
-        </h2>
+    <div class="mx-auto max-w-6xl">
 
 
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-            Pilih jadwal mengajar untuk melihat rekap absensi.
-        </p>
+        {{-- Header --}}
+        <div class="mb-6">
 
-    </div>
-
-
-
-
-    {{-- List Jadwal --}}
-    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white">
+                Pilih Jadwal
+            </h2>
 
 
-        @forelse ($schedules as $schedule)
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                Pilih jadwal mengajar untuk melihat rekap absensi.
+            </p>
+
+        </div>
+
+        {{-- List Jadwal --}}
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
 
 
-            <a
-                href="{{ route('absensi.recap.show', $schedule) }}"
-
-                class="
+            @forelse ($schedules as $schedule)
+                <a href="{{ route('absensi.recap.show', $schedule) }}"
+                    class="
                 group relative overflow-hidden
 
                 rounded-2xl
@@ -62,13 +54,12 @@
                 dark:bg-gray-900
 
                 dark:hover:border-brand-500
-                "
-            >
+                ">
 
 
-                {{-- Border kiri --}}
-                <span
-                    class="
+                    {{-- Border kiri --}}
+                    <span
+                        class="
                     absolute left-0 top-0
 
                     h-full w-1
@@ -78,19 +69,18 @@
                     transition-all
 
                     group-hover:w-2
-                    "
-                ></span>
+                    "></span>
 
 
 
 
 
-                {{-- Icon + Detail --}}
-                <div class="mb-5 flex items-center gap-4">
+                    {{-- Icon + Detail --}}
+                    <div class="mb-5 flex items-center gap-4">
 
 
-                    <div
-                        class="
+                        <div
+                            class="
                         flex h-14 w-14 items-center justify-center
 
                         rounded-xl
@@ -107,40 +97,33 @@
                         dark:bg-brand-900/30
 
                         dark:text-brand-400
-                        "
-                    >
+                        ">
 
 
-                        <svg
-                            width="26"
-                            height="26"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.7"
-                        >
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.7">
 
-                            <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                <rect x="3" y="4" width="18" height="18" rx="2" />
 
-                            <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="16" y1="2" x2="16" y2="6" />
 
-                            <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6" />
 
-                            <line x1="3" y1="10" x2="21" y2="10"/>
+                                <line x1="3" y1="10" x2="21" y2="10" />
 
-                        </svg>
+                            </svg>
 
 
-                    </div>
+                        </div>
 
 
 
 
-                    <div>
+                        <div>
 
 
-                        <h4
-                            class="
+                            <h4
+                                class="
                             text-lg font-bold
 
                             text-gray-800
@@ -153,35 +136,34 @@
                             dark:text-white
 
                             dark:group-hover:text-brand-400
-                            "
-                        >
+                            ">
 
-                            {{ $schedule->subject?->name ?? 'Mata Pelajaran' }}
+                                {{ $schedule->subject?->name ?? 'Mata Pelajaran' }}
 
-                        </h4>
-
+                            </h4>
 
 
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
 
-                            Kelas {{ $schedule->xclass?->name ?? 'Kelas' }}
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
 
-                        </p>
+                                Kelas {{ $schedule->xclass?->name ?? 'Kelas' }}
+
+                            </p>
+
+
+                        </div>
 
 
                     </div>
 
 
-                </div>
 
 
 
 
-
-
-                {{-- Jadwal --}}
-                <div
-                    class="
+                    {{-- Jadwal --}}
+                    <div
+                        class="
                     mb-4
 
                     flex items-center gap-2
@@ -200,49 +182,42 @@
                     dark:bg-brand-900/30
 
                     dark:text-brand-400
-                    "
-                >
+                    ">
 
 
-                    <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
 
-                        <circle cx="12" cy="12" r="10"/>
+                            <circle cx="12" cy="12" r="10" />
 
-                        <polyline points="12 6 12 12 16 14"/>
+                            <polyline points="12 6 12 12 16 14" />
 
-                    </svg>
+                        </svg>
 
 
 
-                    <span>
+                        <span>
 
-                        {{ \App\Helpers\MenuHelper::getDayName($schedule->day) }},
+                            {{ \App\Helpers\MenuHelper::getDayName($schedule->day) }},
 
-                        {{ $schedule->start_time->format('H:i') }}
+                            {{ $schedule->start_time->format('H:i') }}
 
-                        -
+                            -
 
-                        {{ $schedule->end_time->format('H:i') }}
+                            {{ $schedule->end_time->format('H:i') }}
 
-                    </span>
+                        </span>
 
 
-                </div>
+                    </div>
 
 
 
 
 
-                {{-- Button --}}
-                <div
-                    class="
+                    {{-- Button --}}
+                    <div
+                        class="
                     flex w-full items-center justify-center
 
                     rounded-xl
@@ -260,43 +235,34 @@
                     group-hover:bg-brand-600
 
                     group-hover:shadow-md
-                    "
-                >
+                    ">
 
-                    Lihat Rekap
-
-
-                    <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-
-                        class="ml-2 transition-transform group-hover:translate-x-1"
-                    >
-
-                        <path d="M5 12h14"/>
-
-                        <path d="M13 6l6 6-6 6"/>
-
-                    </svg>
+                        Lihat Rekap
 
 
-                </div>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" class="ml-2 transition-transform group-hover:translate-x-1">
+
+                            <path d="M5 12h14" />
+
+                            <path d="M13 6l6 6-6 6" />
+
+                        </svg>
+
+
+                    </div>
 
 
 
-            </a>
+                </a>
 
 
 
-        @empty
+            @empty
 
 
-            <div
-                class="
+                <div
+                    class="
                 col-span-full
 
                 rounded-2xl
@@ -315,24 +281,19 @@
                 dark:border-gray-700
 
                 dark:bg-gray-900/50
-                "
-            >
+                ">
 
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Anda belum memiliki jadwal mengajar.
-                </p>
-
-
-            </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                        Anda belum memiliki jadwal mengajar.
+                    </p>
 
 
-        @endforelse
+                </div>
+            @endforelse
+
+
+        </div>
 
 
     </div>
-
-
-</div>
-
-
 @endsection

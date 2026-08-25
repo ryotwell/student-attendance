@@ -50,7 +50,7 @@
         </div>
 
         <!-- Menu Items -->
-        <ul class="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
+        {{-- <ul class="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
             @php
                 $menuItems = [
                     [
@@ -105,7 +105,7 @@
                     </a>
                 </li>
             @endforeach
-        </ul>
+        </ul> --}}
 
         <!-- Sign Out -->
         <form method="POST" action="{{ route('logout') }}">
