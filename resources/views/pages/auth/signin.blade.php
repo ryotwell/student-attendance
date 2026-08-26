@@ -12,19 +12,10 @@
                 <div class="pointer-events-none absolute -right-16 bottom-0 h-96 w-96 rounded-full bg-white/10 blur-3xl"></div>
                 <div class="pointer-events-none absolute top-1/3 right-1/4 h-40 w-40 rounded-full bg-brand-400/20 blur-2xl"></div>
 
-                <!-- Logo & Nama Sekolah -->
-                <div class="relative z-10 flex items-center gap-3">
-                    <img src="{{ asset('/logo-sekolah.png') }}" alt="Logo Sekolah" class="h-8 w-8 object-contain">
-                    <div>
-                        <p class="text-base font-semibold text-white">{{ config('app.name', 'Nama Sekolah') }}</p>
-                        <p class="text-xs text-white/70">Portal Aplikasi Sekolah</p>
-                    </div>
-                </div>
-
                 <!-- Konten tengah: pesan sambutan -->
                 <div class="relative z-10 my-auto max-w-md">
                     <h2 class="mb-4 text-3xl leading-tight font-bold text-white">
-                        Selamat Datang di Portal {{ config('app.name', 'Nama Sekolah') }}
+                        Selamat Datang di Absensi Sekolah
                     </h2>
                     <p class="text-base leading-relaxed text-white/80">
                         Satu portal terpadu untuk Admin, Guru, dan Guru BK dalam mengelola data, akademik, dan layanan bimbingan konseling.
@@ -68,20 +59,6 @@
             <!-- ============ SISI KANAN: Form Login ============ -->
             <div class="flex w-full flex-1 flex-col justify-center px-6 py-10 lg:w-1/2 lg:px-16">
                 <div class="mx-auto w-full max-w-md">
-
-                    <!-- Logo untuk mobile (muncul hanya di layar kecil) -->
-                    <div class="mb-8 flex items-center justify-center gap-3 lg:hidden">
-                        <img src="{{ asset('/logo-sekolah.png') }}" alt="Logo Sekolah" class="h-15 w-15 object-contain">
-                        <div class="text-left">
-                            {{-- Warna teks logo mobile diubah menjadi putih agar kontras dengan background brand --}}
-                            <p class="text-xl font-semibold text-white dark:text-white">
-                                {{ config('app.name', 'Nama Sekolah') }}
-                            </p>
-                            <p class="text-white/70 dark:text-white/70">
-                                Portal Aplikasi Sekolah
-                            </p>
-                        </div>
-                    </div>
 
                     <div class="rounded-2xl bg-white p-8 shadow-theme-sm dark:bg-gray-800 sm:p-10">
                         <div class="mb-7">
@@ -167,6 +144,13 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                                         </svg>
                                     </button>
+                                </div>
+
+                                <div class="text-center text-sm text-gray-500 dark:text-gray-400">
+                                    Belum punya akun?
+                                    <a href="{{ route('register') }}" class="text-brand-500 hover:text-brand-600 font-medium dark:text-brand-400">
+                                        Daftar di sini
+                                    </a>
                                 </div>
                             </div>
                         </form>
