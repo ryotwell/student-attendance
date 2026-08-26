@@ -89,7 +89,8 @@ class User extends Authenticatable
     public function currentClasses()
     {
         return $this->classes()
-            ->whereHas('academicYear', fn ($q) => $q->where('is_active', true));
+            ->whereHas('academicYear', fn ($q) => $q->where('is_active', true))
+            ->where('school_id', $this->school_id);
     }
 
     public function counselingCases()
