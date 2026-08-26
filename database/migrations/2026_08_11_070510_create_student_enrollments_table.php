@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\AcademicYear;
+use App\Models\School;
 use App\Models\Student;
 use App\Models\Xclass;
 use Illuminate\Database\Migrations\Migration;
@@ -16,21 +17,11 @@ return new class extends Migration
     {
         Schema::create('student_enrollments', function (Blueprint $table) {
             $table->id();
-
-            $table->foreignIdFor(Student::class)
-                ->constrained()
-                ->cascadeOnDelete();
-
-            $table->foreignIdFor(AcademicYear::class)
-                ->constrained()
-                ->cascadeOnDelete();
-
-            $table->foreignIdFor(Xclass::class)
-                ->constrained()
-                ->cascadeOnDelete();
-
+            $table->foreignIdFor(Student::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(AcademicYear::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Xclass::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
-
             $table->unique([
                 'student_id',
                 'academic_year_id'

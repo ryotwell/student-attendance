@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\AcademicYear;
 use App\Models\Schedule;
+use App\Models\School;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
 use App\Models\Subject;
@@ -14,24 +15,41 @@ use Illuminate\Support\Facades\Hash;
 
 class Development2Seeder extends Seeder
 {
-    public function run(): void
+    public static function run(): void
     {
-        // 1. Buat Admin
-        User::create([
-            'name'     => 'Akun Admin',
-            'email'    => 'admin@gmail.com',
-            'password' => Hash::make('12345678'),
-            'role'     => 'ADMIN',
-        ]);
+        // 1. Buat sekolah "MA Muallimin NWDI Pancor"
+        $school = School::firstOrCreate(
+            [
+                'name'      => 'MA Muallimin NWDI Pancor',
+                'address'   => 'Jl. Pendidikan No. 1, Pancor, Lombok Timur',
+                'phone'     => '081234567890',
+                'email'     => 'info@mamuallimin.sch.id',
+                'is_active' => true,
+            ]
+        );
 
-        // 2. Tahun Ajaran Aktif
-        $academicYear = AcademicYear::create([
-            'name'      => 'Tahun Ajaran 2026/2027',
-            'semester'  => 'GANJIL',
-            'is_active' => true,
-        ]);
+        // 2. Buat Admin untuk sekolah tersebut
+        User::firstOrCreate(
+            ['email' => 'admin@gmail.com'],
+            [
+                'name'      => 'Akun Admin',
+                'password'  => Hash::make('12345678'),
+                'role'      => 'ADMIN',
+                'school_id' => $school->id,
+            ]
+        );
 
-        // 3. Mata Pelajaran untuk kelas XII
+        // 3. Tahun Ajaran Aktif
+        $academicYear = AcademicYear::firstOrCreate(
+            [
+                'name'      => 'Tahun Ajaran 2026/2027',
+                'semester'  => 'GANJIL',
+                'school_id' => $school->id,
+            ],
+            ['is_active' => true]
+        );
+
+        // 4. Mata Pelajaran untuk kelas XII
         $subjectNames = [
             'Bahasa Inggris', 'PJOK', 'Ekonomi', 'Bahasa Inggris TKL',
             'Sosiologi', 'Bahasa Indonesia', 'Matematika', 'Seni Budaya',
@@ -40,11 +58,15 @@ class Development2Seeder extends Seeder
         $subjects = [];
         foreach ($subjectNames as $name) {
             $subjects[$name] = Subject::firstOrCreate(
-                ['name' => $name, 'grade' => 'XII']
+                [
+                    'name'      => $name,
+                    'grade'     => 'XII',
+                    'school_id' => $school->id,
+                ]
             );
         }
 
-        // 4. Semua Guru (termasuk yang akan menjadi wali kelas)
+        // 5. Semua Guru (termasuk yang akan menjadi wali kelas)
         $teacherData = [
             'Bahasa Inggris'            => ['name' => 'Budi Santoso', 'email' => 'budi.santoso@sekolah.id'],
             'PJOK'                      => ['name' => 'Dewi Anggraini', 'email' => 'dewi.anggraini@sekolah.id'],
@@ -66,46 +88,60 @@ class Development2Seeder extends Seeder
             $teachers[$subject] = User::firstOrCreate(
                 ['email' => $data['email']],
                 [
-                    'name'     => $data['name'],
-                    'password' => Hash::make('12345678'),
-                    'role'     => 'GURU',
+                    'name'      => $data['name'],
+                    'password'  => Hash::make('12345678'),
+                    'role'      => 'GURU',
+                    'school_id' => $school->id,
                 ]
             );
         }
 
-        // 5. Tentukan wali kelas dari guru yang sudah ada (misal: Bahasa Inggris, PJOK, Ekonomi)
+        // 6. Tentukan wali kelas dari guru yang sudah ada (misal: Bahasa Inggris, PJOK, Ekonomi)
         $waliKelas = [
             'XII A' => $teachers['Bahasa Inggris']->id,
             'XII B' => $teachers['PJOK']->id,
             'XII C' => $teachers['Ekonomi']->id,
         ];
 
-        // 6. Buat Kelas dengan wali kelas tersebut
+        // 7. Buat Kelas dengan wali kelas tersebut
         $createdClasses = [];
         foreach ($waliKelas as $className => $userId) {
-            $createdClasses[] = Xclass::create([
-                'name'               => $className,
-                'academic_year_id'   => $academicYear->id,
-                'user_id'            => $userId,
-            ]);
+            $createdClasses[] = Xclass::firstOrCreate(
+                [
+                    'name'              => $className,
+                    'academic_year_id'  => $academicYear->id,
+                    'school_id'         => $school->id,
+                ],
+                [
+                    'user_id'           => $userId,
+                ]
+            );
         }
 
-        // 7. Buat 100 Siswa (pastikan factory StudentFactory ada)
-        Student::factory(100)->create();
+        // 8. Buat 100 Siswa (pastikan factory StudentFactory mendukung school_id)
+        Student::factory(100)->create(['school_id' => $school->id]);
 
-        // 8. Enroll semua siswa ke salah satu kelas secara acak
-        $students = Student::all();
+        // 9. Enroll semua siswa ke salah satu kelas secara acak
+        $students = Student::where('school_id', $school->id)->get();
         foreach ($students as $student) {
             $randomClass = $createdClasses[array_rand($createdClasses)];
-            StudentEnrollment::create([
-                'student_id'        => $student->id,
-                'academic_year_id'  => $academicYear->id,
-                'xclass_id'         => $randomClass->id,
-            ]);
+            StudentEnrollment::firstOrCreate(
+                [
+                    'student_id'       => $student->id,
+                    'academic_year_id' => $academicYear->id,
+                ],
+                [
+                    'xclass_id'        => $randomClass->id,
+                    'school_id'        => $school->id,
+                ]
+            );
         }
 
-        // 9. Jadwal untuk kelas XII A (tidak diubah)
-        $xclassXIIA = Xclass::where('name', 'XII A')->first();
+        // 10. Jadwal untuk kelas XII A
+        $xclassXIIA = Xclass::where('name', 'XII A')
+            ->where('academic_year_id', $academicYear->id)
+            ->where('school_id', $school->id)
+            ->first();
         if ($xclassXIIA) {
             $schedules = [
                 ['day' => 'MONDAY',    'start' => '07:00', 'end' => '08:00', 'subject' => 'Bahasa Inggris'],
@@ -130,23 +166,31 @@ class Development2Seeder extends Seeder
             ];
 
             foreach ($schedules as $s) {
-                Schedule::create([
-                    'day'        => $s['day'],
-                    'start_time' => $s['start'],
-                    'end_time'   => $s['end'],
-                    'subject_id' => $subjects[$s['subject']]->id,
-                    'user_id'    => $teachers[$s['subject']]->id,
-                    'xclass_id'  => $xclassXIIA->id,
-                ]);
+                Schedule::firstOrCreate(
+                    [
+                        'day'        => $s['day'],
+                        'start_time' => $s['start'],
+                        'end_time'   => $s['end'],
+                        'subject_id' => $subjects[$s['subject']]->id,
+                        'xclass_id'  => $xclassXIIA->id,
+                        'school_id'  => $school->id,
+                    ],
+                    [
+                        'user_id'    => $teachers[$s['subject']]->id,
+                    ]
+                );
             }
         }
 
-        // 10. Guru BK
-        User::create([
-            'name'     => 'Guru BK',
-            'email'    => 'bk@gmail.com',
-            'password' => Hash::make('12345678'),
-            'role'     => 'GURU_BK',
-        ]);
+        // 11. Guru BK
+        User::firstOrCreate(
+            ['email' => 'bk@gmail.com'],
+            [
+                'name'      => 'Guru BK',
+                'password'  => Hash::make('12345678'),
+                'role'      => 'GURU_BK',
+                'school_id' => $school->id,
+            ]
+        );
     }
 }

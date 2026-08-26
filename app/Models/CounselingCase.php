@@ -42,6 +42,11 @@ class CounselingCase extends Model
         'date' => 'date',
     ];
 
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
+
 
     /**
      * Siswa yang memiliki kasus

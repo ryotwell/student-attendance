@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\School;
 use App\Models\Subject;
 use App\Models\User;
 use App\Models\Xclass;
@@ -30,6 +31,7 @@ return new class extends Migration
             $table->foreignIdFor(User::class);
             $table->foreignIdFor(Subject::class);
             $table->foreignIdFor(Xclass::class);
+            $table->foreignIdFor(School::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }

@@ -38,6 +38,11 @@ class Attendance extends Model
         'date' => 'date',
     ];
 
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
+
 
     public function studentEnrollment(): BelongsTo
     {

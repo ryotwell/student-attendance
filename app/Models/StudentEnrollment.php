@@ -10,6 +10,10 @@ class StudentEnrollment extends Model
 {
     protected $guarded = [];
 
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
 
     /**
      * Siswa yang terdaftar
@@ -19,7 +23,6 @@ class StudentEnrollment extends Model
         return $this->belongsTo(Student::class);
     }
 
-
     /**
      * Kelas siswa pada tahun ajaran tersebut
      */
@@ -28,7 +31,6 @@ class StudentEnrollment extends Model
         return $this->belongsTo(Xclass::class);
     }
 
-
     /**
      * Tahun ajaran
      */
@@ -36,7 +38,6 @@ class StudentEnrollment extends Model
     {
         return $this->belongsTo(AcademicYear::class);
     }
-
 
     /**
      * Data absensi siswa

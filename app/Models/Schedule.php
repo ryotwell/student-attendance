@@ -10,6 +10,10 @@ class Schedule extends Model
 {
     protected $guarded = [];
 
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
 
     /**
      * Casting waktu jadwal

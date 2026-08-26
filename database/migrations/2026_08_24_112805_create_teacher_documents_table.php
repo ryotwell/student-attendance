@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\School;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -14,40 +15,15 @@ return new class extends Migration
     {
         Schema::create('teacher_documents', function (Blueprint $table) {
             $table->id();
-
-            $table->foreignIdFor(User::class)
-                ->constrained()
-                ->cascadeOnDelete()
-                ->unique();
-
             // Link Google Drive
             $table->text('file_url');
-
-
-            $table->enum('status', [
-                'PENDING',
-                'VERIFIED',
-                'REJECTED'
-            ])
-            ->default('PENDING');
-
-
+            $table->enum('status', ['PENDING','VERIFIED','REJECTED'])->default('PENDING');
             // Catatan admin
-            $table->text('note')
-                ->nullable();
-
-
+            $table->text('note')->nullable();
             // siapa yang memverifikasi
-            $table->foreignId('verified_by')
-                ->nullable()
-                ->constrained('users')
-                ->nullOnDelete();
-
-
-            $table->timestamp('verified_at')
-                ->nullable();
-
-
+            $table->foreignIdFor(User::class)->nullable()->constrained()->nullOnDelete();
+            $table->foreignIdFor(School::class)->constrained()->cascadeOnDelete();
+            $table->timestamp('verified_at')->nullable();
             $table->timestamps();
         });
     }

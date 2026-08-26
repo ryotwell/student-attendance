@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\School;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
 use App\Models\User;
@@ -16,13 +17,14 @@ return new class extends Migration
     {
         Schema::create('counseling_cases', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Student::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(StudentEnrollment::class)->constrained()->cascadeOnDelete();
             $table->enum('category', ['AKADEMIK', 'PERILAKU', 'KEHADIRAN', 'SOSIAL', 'LAINNYA']);
             $table->date('date');
             $table->text('description');
             $table->text('action_taken')->nullable();
+            $table->foreignIdFor(Student::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(StudentEnrollment::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }

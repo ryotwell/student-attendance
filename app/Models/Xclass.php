@@ -11,6 +11,10 @@ class Xclass extends Model
 {
     protected $guarded = [];
 
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
 
     /**
      * Tahun ajaran kelas
@@ -20,7 +24,6 @@ class Xclass extends Model
         return $this->belongsTo(AcademicYear::class);
     }
 
-
     /**
      * Wali kelas
      */
@@ -28,7 +31,6 @@ class Xclass extends Model
     {
         return $this->belongsTo(User::class);
     }
-
 
     /**
      * Daftar enrollment siswa
@@ -41,7 +43,6 @@ class Xclass extends Model
     {
         return $this->hasMany(StudentEnrollment::class);
     }
-
 
     /**
      * Daftar siswa dalam kelas
@@ -57,7 +58,6 @@ class Xclass extends Model
         )
         ->withPivot('academic_year_id');
     }
-
 
     /**
      * Jadwal pelajaran kelas

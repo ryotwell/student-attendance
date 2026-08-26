@@ -3,12 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AcademicYear extends Model
 {
     protected $guarded = [];
 
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
 
     /**
      * Daftar kelas pada tahun ajaran ini
@@ -39,16 +44,18 @@ class AcademicYear extends Model
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Announcement extends Model
 {
-    protected $fillable = [
-        'title',
-        'content',
-        'status',
-    ];
+    protected $guarded = [];
 
     protected $casts = [];
+
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
 }
 <?php
 
@@ -89,6 +96,11 @@ class Attendance extends Model
     protected $casts = [
         'date' => 'date',
     ];
+
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
 
 
     public function studentEnrollment(): BelongsTo
@@ -182,6 +194,11 @@ class CounselingCase extends Model
         'date' => 'date',
     ];
 
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
+
 
     /**
      * Siswa yang memiliki kasus
@@ -244,6 +261,10 @@ class Schedule extends Model
 {
     protected $guarded = [];
 
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
 
     /**
      * Casting waktu jadwal
@@ -308,14 +329,89 @@ class Schedule extends Model
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class School extends Model
+{
+    protected $guarded = [];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
+    }
+
+    public function academicYears(): HasMany
+    {
+        return $this->hasMany(AcademicYear::class);
+    }
+
+    public function subjects(): HasMany
+    {
+        return $this->hasMany(Subject::class);
+    }
+
+    public function students(): HasMany
+    {
+        return $this->hasMany(Student::class);
+    }
+
+    public function xclasses(): HasMany
+    {
+        return $this->hasMany(Xclass::class);
+    }
+
+    public function studentEnrollments(): HasMany
+    {
+        return $this->hasMany(StudentEnrollment::class);
+    }
+
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(Schedule::class);
+    }
+
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function announcements(): HasMany
+    {
+        return $this->hasMany(Announcement::class);
+    }
+
+    public function counselingCases(): HasMany
+    {
+        return $this->hasMany(CounselingCase::class);
+    }
+
+    public function teacherDocuments(): HasMany
+    {
+        return $this->hasMany(TeacherDocument::class);
+    }
+}<?php
+
+namespace App\Models;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Student extends Model
 {
     use HasFactory;
 
     protected $guarded = [];
+
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
 
     public function counselingCases()
     {
@@ -346,6 +442,10 @@ class StudentEnrollment extends Model
 {
     protected $guarded = [];
 
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
 
     /**
      * Siswa yang terdaftar
@@ -355,7 +455,6 @@ class StudentEnrollment extends Model
         return $this->belongsTo(Student::class);
     }
 
-
     /**
      * Kelas siswa pada tahun ajaran tersebut
      */
@@ -364,7 +463,6 @@ class StudentEnrollment extends Model
         return $this->belongsTo(Xclass::class);
     }
 
-
     /**
      * Tahun ajaran
      */
@@ -372,7 +470,6 @@ class StudentEnrollment extends Model
     {
         return $this->belongsTo(AcademicYear::class);
     }
-
 
     /**
      * Data absensi siswa
@@ -391,12 +488,17 @@ class StudentEnrollment extends Model
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Subject extends Model
 {
     protected $guarded = [];
 
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
 
     /**
      * Jadwal pelajaran berdasarkan mata pelajaran
@@ -445,6 +547,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -458,11 +561,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    protected $guarded = [];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -485,6 +584,11 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
     }
 
     public function isAdmin()
@@ -580,6 +684,10 @@ class Xclass extends Model
 {
     protected $guarded = [];
 
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
 
     /**
      * Tahun ajaran kelas
@@ -589,7 +697,6 @@ class Xclass extends Model
         return $this->belongsTo(AcademicYear::class);
     }
 
-
     /**
      * Wali kelas
      */
@@ -597,7 +704,6 @@ class Xclass extends Model
     {
         return $this->belongsTo(User::class);
     }
-
 
     /**
      * Daftar enrollment siswa
@@ -610,7 +716,6 @@ class Xclass extends Model
     {
         return $this->hasMany(StudentEnrollment::class);
     }
-
 
     /**
      * Daftar siswa dalam kelas
@@ -626,7 +731,6 @@ class Xclass extends Model
         )
         ->withPivot('academic_year_id');
     }
-
 
     /**
      * Jadwal pelajaran kelas
