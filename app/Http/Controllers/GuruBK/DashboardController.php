@@ -7,35 +7,45 @@ use App\Models\AcademicYear;
 use App\Models\Attendance;
 use App\Models\Xclass;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $today = Carbon::today();
+        $user = Auth::user();
+        $isSuperAdmin = $user->role === 'SUPERADMIN';
+        $schoolId = $user->school_id;
 
+        $today = Carbon::today();
         $monthStart = Carbon::now()->startOfMonth();
         $monthEnd = Carbon::now()->endOfMonth();
 
-        $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+        // Ambil tahun ajaran aktif, filter berdasarkan sekolah (kecuali SUPERADMIN)
+        $activeAcademicYearQuery = AcademicYear::where('is_active', true);
+        if (!$isSuperAdmin) {
+            $activeAcademicYearQuery->where('school_id', $schoolId);
+        }
+        $activeAcademicYear = $activeAcademicYearQuery->first();
 
         /*
         |--------------------------------------------------------------------------
         | Kehadiran hari ini
         |--------------------------------------------------------------------------
-        | Dibatasi ke enrollment kelas pada tahun ajaran aktif, lewat
-        | whereHas studentEnrollment.xclass (attendances tidak punya
-        | academic_year_id/xclass_id langsung).
         */
-
-        $todayCounts = Attendance::query()
+        $todayQuery = Attendance::query()
             ->whereDate('date', $today)
             ->when($activeAcademicYear, function ($q) use ($activeAcademicYear) {
-                $q->whereHas(
-                    'studentEnrollment.xclass',
-                    fn ($q2) => $q2->where('academic_year_id', $activeAcademicYear->id)
-                );
-            })
+                $q->whereHas('studentEnrollment', function ($q2) use ($activeAcademicYear) {
+                    $q2->where('academic_year_id', $activeAcademicYear->id);
+                });
+            });
+
+        if (!$isSuperAdmin) {
+            $todayQuery->where('school_id', $schoolId);
+        }
+
+        $todayCounts = $todayQuery
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
@@ -45,39 +55,45 @@ class DashboardController extends Controller
         | Kehadiran bulan ini
         |--------------------------------------------------------------------------
         */
-
-        $monthCounts = Attendance::query()
+        $monthQuery = Attendance::query()
             ->whereBetween('date', [$monthStart, $monthEnd])
             ->when($activeAcademicYear, function ($q) use ($activeAcademicYear) {
-                $q->whereHas(
-                    'studentEnrollment.xclass',
-                    fn ($q2) => $q2->where('academic_year_id', $activeAcademicYear->id)
-                );
-            })
+                $q->whereHas('studentEnrollment', function ($q2) use ($activeAcademicYear) {
+                    $q2->where('academic_year_id', $activeAcademicYear->id);
+                });
+            });
+
+        if (!$isSuperAdmin) {
+            $monthQuery->where('school_id', $schoolId);
+        }
+
+        $monthCounts = $monthQuery
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
 
         $monthTotal = $monthCounts->sum();
-
         $attendanceRate = $monthTotal
             ? round(($monthCounts->get('HADIR', 0) / $monthTotal) * 100, 1)
             : 0;
 
         /*
         |--------------------------------------------------------------------------
-        | Breakdown kelas (NO N+1)
+        | Breakdown kelas (join dengan student_enrollments)
         |--------------------------------------------------------------------------
-        | attendances tidak punya kolom xclass_id — groupBy dilakukan lewat
-        | join manual ke student_enrollments untuk dapat xclass_id, karena
-        | selectRaw/groupBy butuh nama kolom asli di level SQL (tidak bisa
-        | pakai relasi Eloquent di sini).
         */
-
-        $attendanceByClass = Attendance::query()
+        $attendanceByClassQuery = Attendance::query()
             ->join('student_enrollments', 'student_enrollments.id', '=', 'attendances.student_enrollment_id')
             ->whereBetween('attendances.date', [$monthStart, $monthEnd])
-            ->when($activeAcademicYear, fn ($q) => $q->where('student_enrollments.academic_year_id', $activeAcademicYear->id))
+            ->when($activeAcademicYear, function ($q) use ($activeAcademicYear) {
+                $q->where('student_enrollments.academic_year_id', $activeAcademicYear->id);
+            });
+
+        if (!$isSuperAdmin) {
+            $attendanceByClassQuery->where('attendances.school_id', $schoolId);
+        }
+
+        $attendanceByClass = $attendanceByClassQuery
             ->selectRaw("
                 student_enrollments.xclass_id,
                 SUM(attendances.status = 'HADIR') as hadir,
@@ -88,22 +104,22 @@ class DashboardController extends Controller
             ->get()
             ->keyBy('xclass_id');
 
-        $classBreakdown = Xclass::query()
-            ->withCount('students')
-            ->when($activeAcademicYear, fn ($q) => $q->where('academic_year_id', $activeAcademicYear->id))
+        // Ambil daftar kelas, filter sekolah dan tahun ajaran aktif
+        $classQuery = Xclass::withCount('students')
+            ->when($activeAcademicYear, fn($q) => $q->where('academic_year_id', $activeAcademicYear->id));
+
+        if (!$isSuperAdmin) {
+            $classQuery->where('school_id', $schoolId);
+        }
+
+        $classBreakdown = $classQuery
             ->get()
             ->map(function ($xclass) use ($attendanceByClass) {
                 $attendance = $attendanceByClass->get($xclass->id);
-
                 $total = $attendance->total ?? 0;
-
                 return [
                     'xclass' => $xclass,
-
-                    'rate' => $total
-                        ? round((($attendance->hadir ?? 0) / $total) * 100, 1)
-                        : null,
-
+                    'rate' => $total ? round((($attendance->hadir ?? 0) / $total) * 100, 1) : null,
                     'alpha' => $attendance->alpha ?? 0,
                 ];
             })
@@ -112,24 +128,23 @@ class DashboardController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Top Alpha
+        | Top Alpha (siswa terbanyak alpha)
         |--------------------------------------------------------------------------
-        | Attendance tidak punya relasi student()/xclass() langsung
-        | (hanya accessor getStudentAttribute() lewat studentEnrollment),
-        | dan Student tidak punya kolom/relasi xclass. Group dilakukan
-        | berdasarkan student_enrollment_id, lalu eager load
-        | studentEnrollment.student + studentEnrollment.xclass.
         */
-
-        $topAlpha = Attendance::query()
+        $topAlphaQuery = Attendance::query()
             ->whereBetween('date', [$monthStart, $monthEnd])
             ->where('status', 'ALPHA')
             ->when($activeAcademicYear, function ($q) use ($activeAcademicYear) {
-                $q->whereHas(
-                    'studentEnrollment.xclass',
-                    fn ($q2) => $q2->where('academic_year_id', $activeAcademicYear->id)
-                );
-            })
+                $q->whereHas('studentEnrollment', function ($q2) use ($activeAcademicYear) {
+                    $q2->where('academic_year_id', $activeAcademicYear->id);
+                });
+            });
+
+        if (!$isSuperAdmin) {
+            $topAlphaQuery->where('school_id', $schoolId);
+        }
+
+        $topAlpha = $topAlphaQuery
             ->selectRaw('student_enrollment_id, COUNT(*) as total')
             ->groupBy('student_enrollment_id')
             ->orderByDesc('total')
@@ -138,12 +153,12 @@ class DashboardController extends Controller
             ->get();
 
         return view('teacher.bk.dashboard', [
-            'todayCounts' => $todayCounts,
-            'monthCounts' => $monthCounts,
-            'attendanceRate' => $attendanceRate,
-            'classBreakdown' => $classBreakdown,
-            'topAlpha' => $topAlpha,
-            'monthLabel' => Carbon::now()->translatedFormat('F Y'),
+            'todayCounts'      => $todayCounts,
+            'monthCounts'      => $monthCounts,
+            'attendanceRate'   => $attendanceRate,
+            'classBreakdown'   => $classBreakdown,
+            'topAlpha'         => $topAlpha,
+            'monthLabel'       => Carbon::now()->translatedFormat('F Y'),
         ]);
     }
 }

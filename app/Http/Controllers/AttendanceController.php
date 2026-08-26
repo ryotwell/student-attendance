@@ -217,8 +217,9 @@ class AttendanceController extends Controller
                     'date'                  => $date,
                 ],
                 [
-                    'status'  => $attendanceData['status'],
-                    'user_id' => Auth::id(),
+                    'status'    => $attendanceData['status'],
+                    'user_id'   => Auth::id(),
+                    'school_id' => $class->school_id, // <-- FIX: tambahkan school_id
                 ]
             );
 
@@ -580,8 +581,9 @@ class AttendanceController extends Controller
                     'date'                  => $date,
                 ],
                 [
-                    'status'  => $attendanceData['status'],
-                    'user_id' => Auth::id(),
+                    'status'    => $attendanceData['status'],
+                    'user_id'   => Auth::id(),
+                    'school_id' => $class->school_id, // <-- FIX: tambahkan school_id
                 ]
             );
         }

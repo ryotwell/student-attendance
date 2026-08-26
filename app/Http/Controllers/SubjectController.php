@@ -48,11 +48,6 @@ class SubjectController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
-        // Filter grade
-        if ($request->filled('grade') && in_array($request->grade, ['X', 'XI', 'XII'])) {
-            $query->where('grade', $request->grade);
-        }
-
         $subjects = $query->latest()->paginate(10)->withQueryString();
 
         return view('admin.subject.index', compact('subjects'));
@@ -84,7 +79,6 @@ class SubjectController extends Controller
         // Validasi dasar
         $rules = [
             'name'  => ['required', 'string', 'max:255'],
-            'grade' => ['required', 'in:X,XI,XII'],
         ];
 
         // Jika SUPERADMIN, tambahkan validasi school_id
@@ -160,7 +154,6 @@ class SubjectController extends Controller
 
         $rules = [
             'name'  => ['required', 'string', 'max:255'],
-            'grade' => ['required', 'in:X,XI,XII'],
         ];
 
         if ($user->role === 'SUPERADMIN') {

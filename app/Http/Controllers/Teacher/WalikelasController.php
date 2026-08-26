@@ -9,26 +9,31 @@ use App\Models\Xclass;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class WalikelasController extends Controller
 {
     /**
      * Daftar kelas yang menjadi wali kelas, dibatasi ke tahun ajaran
-     * yang sedang aktif. Xclass terikat tetap ke satu academic_year_id,
-     * jadi tanpa filter ini kelas lama (tahun ajaran sebelumnya) tetap
-     * muncul selama user masih tercatat sebagai wali kelasnya — termasuk
-     * auto-redirect ke kelas lama kalau itu satu-satunya yang cocok.
+     * yang sedang aktif dan sekolah yang sama.
      */
     public function index(Request $request)
     {
-        $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+        $user = $request->user();
+        $isSuperAdmin = $user->role === 'SUPERADMIN';
+        $schoolId = $user->school_id;
 
-        $xclasses = $request->user()
+        $activeAcademicYear = AcademicYear::where('is_active', true)
+            ->when(!$isSuperAdmin, fn($q) => $q->where('school_id', $schoolId))
+            ->first();
+
+        $xclasses = $user
             ->classes()
             ->with('academicYear')
             ->withCount('studentEnrollments')
-            ->when($activeAcademicYear, fn ($q) => $q->where('academic_year_id', $activeAcademicYear->id))
+            ->when($activeAcademicYear, fn($q) => $q->where('academic_year_id', $activeAcademicYear->id))
+            ->when(!$isSuperAdmin, fn($q) => $q->where('school_id', $schoolId))
             ->get();
 
         abort_if($xclasses->isEmpty(), 403, 'Anda bukan wali kelas pada tahun ajaran ini.');
@@ -52,9 +57,13 @@ class WalikelasController extends Controller
         $enrollmentIds = $xclass->studentEnrollments->pluck('id');
 
         // Kehadiran hari ini
-        $todayCounts = Attendance::query()
+        $todayQuery = Attendance::query()
             ->whereIn('student_enrollment_id', $enrollmentIds)
-            ->whereDate('date', Carbon::today())
+            ->whereDate('date', Carbon::today());
+
+        $this->applyAttendanceSchoolFilter($todayQuery, $xclass);
+
+        $todayCounts = $todayQuery
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
@@ -63,9 +72,13 @@ class WalikelasController extends Controller
         $monthStart = Carbon::now()->startOfMonth();
         $monthEnd = Carbon::now()->endOfMonth();
 
-        $monthCounts = Attendance::query()
+        $monthQuery = Attendance::query()
             ->whereIn('student_enrollment_id', $enrollmentIds)
-            ->whereBetween('date', [$monthStart, $monthEnd])
+            ->whereBetween('date', [$monthStart, $monthEnd]);
+
+        $this->applyAttendanceSchoolFilter($monthQuery, $xclass);
+
+        $monthCounts = $monthQuery
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
@@ -77,10 +90,14 @@ class WalikelasController extends Controller
             : 0;
 
         // Siswa alpha terbanyak
-        $topAlpha = Attendance::query()
+        $topAlphaQuery = Attendance::query()
             ->whereIn('student_enrollment_id', $enrollmentIds)
             ->whereBetween('date', [$monthStart, $monthEnd])
-            ->where('status', 'ALPHA')
+            ->where('status', 'ALPHA');
+
+        $this->applyAttendanceSchoolFilter($topAlphaQuery, $xclass);
+
+        $topAlpha = $topAlphaQuery
             ->selectRaw('student_enrollment_id, COUNT(*) as total')
             ->groupBy('student_enrollment_id')
             ->orderByDesc('total')
@@ -89,12 +106,12 @@ class WalikelasController extends Controller
             ->get();
 
         return view('teacher.walikelas.dashboard', [
-            'xclass' => $xclass,
-            'todayCounts' => $todayCounts,
-            'monthCounts' => $monthCounts,
-            'attendanceRate' => $attendanceRate,
-            'topAlpha' => $topAlpha,
-            'monthLabel' => Carbon::now()->translatedFormat('F Y'),
+            'xclass'          => $xclass,
+            'todayCounts'     => $todayCounts,
+            'monthCounts'     => $monthCounts,
+            'attendanceRate'  => $attendanceRate,
+            'topAlpha'        => $topAlpha,
+            'monthLabel'      => Carbon::now()->translatedFormat('F Y'),
         ]);
     }
 
@@ -104,7 +121,6 @@ class WalikelasController extends Controller
     public function rekap(Request $request, Xclass $xclass)
     {
         $data = $this->buildRekap($request, $xclass);
-
         return view('teacher.walikelas.rekap', $data);
     }
 
@@ -126,18 +142,28 @@ class WalikelasController extends Controller
     }
 
     /**
-     * Cek wali kelas + kelas harus di tahun ajaran yang sedang aktif.
-     *
-     * Xclass terikat tetap ke satu academic_year_id. Tanpa cek ini,
-     * wali kelas masih bisa mengakses dashboard/rekap kelas dari tahun
-     * ajaran lama lewat URL langsung selama dia tercatat sebagai wali
-     * kelasnya, walau kelas itu sudah tidak aktif.
+     * Cek wali kelas + kelas harus di tahun ajaran aktif dan sekolah yang sama.
      */
     private function authorizeHomeroom(Request $request, Xclass $xclass)
     {
-        abort_unless($xclass->user_id === $request->user()->id, 403);
+        $user = $request->user();
+        $isSuperAdmin = $user->role === 'SUPERADMIN';
+        $schoolId = $user->school_id;
 
-        $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+        abort_unless($xclass->user_id === $user->id, 403);
+
+        // Cek sekolah (kecuali SUPERADMIN)
+        if (!$isSuperAdmin) {
+            abort_unless(
+                $xclass->school_id === $schoolId,
+                403,
+                'Anda tidak memiliki akses ke kelas ini.'
+            );
+        }
+
+        $activeAcademicYear = AcademicYear::where('is_active', true)
+            ->when(!$isSuperAdmin, fn($q) => $q->where('school_id', $schoolId))
+            ->first();
 
         abort_unless($activeAcademicYear, 404, 'Tidak ada tahun ajaran aktif yang dikonfigurasi.');
 
@@ -159,7 +185,6 @@ class WalikelasController extends Controller
 
         $monthOptions = collect(range(0, 5))->map(function ($i) {
             $date = Carbon::now()->subMonths($i)->startOfMonth();
-
             return [
                 'value' => $date->format('Y-m'),
                 'label' => $date->translatedFormat('F Y'),
@@ -177,9 +202,13 @@ class WalikelasController extends Controller
 
         $enrollmentIds = $xclass->studentEnrollments->pluck('id');
 
-        $counts = Attendance::query()
+        $countQuery = Attendance::query()
             ->whereIn('student_enrollment_id', $enrollmentIds)
-            ->whereBetween('date', [$start, $end])
+            ->whereBetween('date', [$start, $end]);
+
+        $this->applyAttendanceSchoolFilter($countQuery, $xclass);
+
+        $counts = $countQuery
             ->selectRaw('student_enrollment_id, status, COUNT(*) as total')
             ->groupBy('student_enrollment_id', 'status')
             ->get()
@@ -190,29 +219,41 @@ class WalikelasController extends Controller
                 $status = $counts->get($enrollment->id, collect())->pluck('total', 'status');
 
                 $hadir = $status->get('HADIR', 0);
-                $izin = $status->get('IZIN', 0);
+                $izin  = $status->get('IZIN', 0);
                 $sakit = $status->get('SAKIT', 0);
                 $alpha = $status->get('ALPHA', 0);
                 $total = $hadir + $izin + $sakit + $alpha;
 
                 return [
                     'student' => $enrollment->student,
-                    'HADIR' => $hadir,
-                    'IZIN' => $izin,
-                    'SAKIT' => $sakit,
-                    'ALPHA' => $alpha,
-                    'rate' => $total > 0 ? round(($hadir / $total) * 100, 1) : 0,
+                    'HADIR'   => $hadir,
+                    'IZIN'    => $izin,
+                    'SAKIT'   => $sakit,
+                    'ALPHA'   => $alpha,
+                    'rate'    => $total > 0 ? round(($hadir / $total) * 100, 1) : 0,
                 ];
             })
-            ->sortBy(fn ($row) => $row['student']->name)
+            ->sortBy(fn($row) => $row['student']->name)
             ->values();
 
         return [
-            'xclass' => $xclass,
-            'monthOptions' => $monthOptions,
+            'xclass'        => $xclass,
+            'monthOptions'  => $monthOptions,
             'selectedMonth' => $selectedMonth,
-            'monthLabel' => $monthOptions->firstWhere('value', $selectedMonth)['label'],
-            'recap' => $recap,
+            'monthLabel'    => $monthOptions->firstWhere('value', $selectedMonth)['label'],
+            'recap'         => $recap,
         ];
+    }
+
+    /**
+     * Tambahkan filter school_id pada query Attendance jika user bukan SUPERADMIN.
+     */
+    private function applyAttendanceSchoolFilter($query, Xclass $xclass)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN') {
+            $query->where('school_id', $xclass->school_id);
+        }
+        return $query;
     }
 }

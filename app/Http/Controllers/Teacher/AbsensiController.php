@@ -15,18 +15,53 @@ use Illuminate\Support\Str;
 class AbsensiController extends Controller
 {
     /**
+     * Terapkan filter school_id jika user bukan SUPERADMIN.
+     */
+    private function applySchoolFilter($query)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN') {
+            $query->where('school_id', $user->school_id);
+        }
+        return $query;
+    }
+
+    /**
+     * Cek apakah schedule milik sekolah yang sama dengan user (kecuali SUPERADMIN).
+     */
+    private function canAccessSchedule(Schedule $schedule): bool
+    {
+        $user = Auth::user();
+        if ($user->role === 'SUPERADMIN') {
+            return true;
+        }
+        return $schedule->xclass && $schedule->xclass->school_id === $user->school_id;
+    }
+
+    /**
      * Daftar jadwal guru login, dibatasi ke kelas pada tahun ajaran
-     * yang sedang aktif.
+     * yang sedang aktif dan sekolah yang sama.
      */
     public function schedules()
     {
-        $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+        $user = Auth::user();
+        $isSuperAdmin = $user->role === 'SUPERADMIN';
+        $schoolId = $user->school_id;
 
-        $schedules = Auth::user()
+        $activeAcademicYear = AcademicYear::where('is_active', true)
+            ->when(!$isSuperAdmin, function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            })
+            ->first();
+
+        $schedules = $user
             ->schedules()
             ->with(['subject', 'xclass'])
             ->when($activeAcademicYear, function ($q) use ($activeAcademicYear) {
                 $q->whereHas('xclass', fn ($q2) => $q2->where('academic_year_id', $activeAcademicYear->id));
+            })
+            ->when(!$isSuperAdmin, function ($q) use ($schoolId) {
+                $q->whereHas('xclass', fn ($q2) => $q2->where('school_id', $schoolId));
             })
             ->orderByRaw("FIELD(day, 'MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY')")
             ->orderBy('start_time')
@@ -36,17 +71,33 @@ class AbsensiController extends Controller
     }
 
     /**
-     * Riwayat absensi guru, dibatasi ke tahun ajaran yang sedang aktif.
+     * Riwayat absensi guru, dibatasi ke tahun ajaran yang sedang aktif
+     * dan sekolah yang sama.
      */
     public function history()
     {
-        $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+        $user = Auth::user();
+        $isSuperAdmin = $user->role === 'SUPERADMIN';
+        $schoolId = $user->school_id;
 
-        $histories = Attendance::with(['schedule.subject', 'studentEnrollment.xclass'])
-            ->where('user_id', Auth::id())
-            ->when($activeAcademicYear, function ($q) use ($activeAcademicYear) {
-                $q->whereHas('studentEnrollment', fn ($q2) => $q2->where('academic_year_id', $activeAcademicYear->id));
+        $activeAcademicYear = AcademicYear::where('is_active', true)
+            ->when(!$isSuperAdmin, function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
             })
+            ->first();
+
+        $query = Attendance::with(['schedule.subject', 'studentEnrollment.xclass'])
+            ->where('user_id', Auth::id());
+
+        if (!$isSuperAdmin) {
+            $query->where('school_id', $schoolId);
+        }
+
+        if ($activeAcademicYear) {
+            $query->whereHas('studentEnrollment', fn ($q2) => $q2->where('academic_year_id', $activeAcademicYear->id));
+        }
+
+        $histories = $query
             ->orderByDesc('date')
             ->get()
             ->unique(fn ($attendance) => $attendance->date->format('Y-m-d') . '-' . $attendance->schedule_id)
@@ -56,15 +107,19 @@ class AbsensiController extends Controller
     }
 
     /**
-     * Detail history. Sekarang abort 422 jika kelas/jadwal yang diminta
-     * bukan bagian dari tahun ajaran aktif, alih-alih diam-diam
-     * menampilkan halaman kosong.
-     *
-     * Route: /absensi/history/{date}/{class}/{schedule}
+     * Detail history.
      */
     public function showHistory($date, $class, $schedule)
     {
-        $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+        $user = Auth::user();
+        $isSuperAdmin = $user->role === 'SUPERADMIN';
+        $schoolId = $user->school_id;
+
+        $activeAcademicYear = AcademicYear::where('is_active', true)
+            ->when(!$isSuperAdmin, function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            })
+            ->first();
 
         abort_unless($activeAcademicYear, 404, 'Tidak ada tahun ajaran aktif yang dikonfigurasi.');
 
@@ -81,30 +136,56 @@ class AbsensiController extends Controller
             'Data absensi ini bukan dari tahun ajaran yang sedang aktif.'
         );
 
-        $attendances = Attendance::with(['studentEnrollment.student', 'studentEnrollment.xclass', 'schedule.subject'])
+        // Pastikan schedule berada di sekolah yang sama
+        if (!$isSuperAdmin) {
+            abort_unless(
+                $scheduleModel->xclass && $scheduleModel->xclass->school_id === $schoolId,
+                403,
+                'Anda tidak memiliki akses ke data ini.'
+            );
+        }
+
+        $query = Attendance::with(['studentEnrollment.student', 'studentEnrollment.xclass', 'schedule.subject'])
             ->where('user_id', Auth::id())
             ->whereDate('date', $date)
             ->where('schedule_id', $schedule)
             ->whereHas('studentEnrollment', function ($q) use ($class, $activeAcademicYear) {
                 $q->where('xclass_id', $class)
                   ->where('academic_year_id', $activeAcademicYear->id);
-            })
-            ->get();
+            });
+
+        if (!$isSuperAdmin) {
+            $query->where('school_id', $schoolId);
+        }
+
+        $attendances = $query->get();
 
         return view('teacher.absensi.history-detail', compact('attendances'));
     }
 
     /**
-     * Halaman pilih jadwal untuk rekap, dibatasi ke tahun ajaran aktif.
+     * Halaman pilih jadwal untuk rekap, dibatasi ke tahun ajaran aktif
+     * dan sekolah yang sama.
      */
     public function recapIndex(Request $request)
     {
-        $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+        $user = $request->user();
+        $isSuperAdmin = $user->role === 'SUPERADMIN';
+        $schoolId = $user->school_id;
 
-        $schedules = $request->user()
+        $activeAcademicYear = AcademicYear::where('is_active', true)
+            ->when(!$isSuperAdmin, function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            })
+            ->first();
+
+        $schedules = $user
             ->mySchedules()
             ->when($activeAcademicYear, function ($q) use ($activeAcademicYear) {
                 $q->whereHas('xclass', fn ($q2) => $q2->where('academic_year_id', $activeAcademicYear->id));
+            })
+            ->when(!$isSuperAdmin, function ($q) use ($schoolId) {
+                $q->whereHas('xclass', fn ($q2) => $q2->where('school_id', $schoolId));
             })
             ->get();
 
@@ -117,7 +198,6 @@ class AbsensiController extends Controller
     public function recapShow(Request $request, Schedule $schedule)
     {
         $data = $this->buildRecap($request, $schedule);
-
         return view('teacher.absensi.recap-show', $data);
     }
 
@@ -143,18 +223,32 @@ class AbsensiController extends Controller
 
     /**
      * Logic rekap utama.
-     *
-     * Sekarang abort 422 jika kelas milik jadwal ini bukan bagian dari
-     * tahun ajaran aktif, alih-alih diam-diam mengembalikan rekap kosong.
      */
     private function buildRecap(Request $request, Schedule $schedule): array
     {
+        $user = $request->user();
+        $isSuperAdmin = $user->role === 'SUPERADMIN';
+        $schoolId = $user->school_id;
+
         // Pastikan jadwal milik guru login
-        abort_unless($schedule->user_id === $request->user()->id, 403);
+        abort_unless($schedule->user_id === $user->id, 403);
 
         $schedule->load(['subject', 'xclass.academicYear']);
 
-        $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+        // Cek akses sekolah
+        if (!$isSuperAdmin) {
+            abort_unless(
+                $schedule->xclass && $schedule->xclass->school_id === $schoolId,
+                403,
+                'Anda tidak memiliki akses ke jadwal ini.'
+            );
+        }
+
+        $activeAcademicYear = AcademicYear::where('is_active', true)
+            ->when(!$isSuperAdmin, function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            })
+            ->first();
 
         abort_unless($activeAcademicYear, 404, 'Tidak ada tahun ajaran aktif yang dikonfigurasi.');
 
@@ -183,10 +277,16 @@ class AbsensiController extends Controller
             ->with('student')
             ->get();
 
-        $counts = Attendance::query()
+        $attendanceQuery = Attendance::query()
             ->where('schedule_id', $schedule->id)
             ->whereIn('student_enrollment_id', $enrollments->pluck('id'))
-            ->whereBetween('date', [$start, $end])
+            ->whereBetween('date', [$start, $end]);
+
+        if (!$isSuperAdmin) {
+            $attendanceQuery->where('school_id', $schoolId);
+        }
+
+        $counts = $attendanceQuery
             ->selectRaw('student_enrollment_id, status, COUNT(*) as total')
             ->groupBy('student_enrollment_id', 'status')
             ->get()
@@ -198,22 +298,22 @@ class AbsensiController extends Controller
 
                 return [
                     'student' => $enrollment->student,
-                    'HADIR' => $status->get('HADIR', 0),
-                    'IZIN' => $status->get('IZIN', 0),
-                    'SAKIT' => $status->get('SAKIT', 0),
-                    'ALPHA' => $status->get('ALPHA', 0),
+                    'HADIR'   => $status->get('HADIR', 0),
+                    'IZIN'    => $status->get('IZIN', 0),
+                    'SAKIT'   => $status->get('SAKIT', 0),
+                    'ALPHA'   => $status->get('ALPHA', 0),
                 ];
             })
             ->sortBy(fn ($row) => $row['student']->name)
             ->values();
 
         return [
-            'schedule' => $schedule,
-            'academicYear' => $activeAcademicYear,
-            'monthOptions' => $monthOptions,
-            'selectedMonth' => $selectedMonth,
-            'monthLabel' => $monthOptions->firstWhere('value', $selectedMonth)['label'],
-            'recap' => $recap,
+            'schedule'       => $schedule,
+            'academicYear'   => $activeAcademicYear,
+            'monthOptions'   => $monthOptions,
+            'selectedMonth'  => $selectedMonth,
+            'monthLabel'     => $monthOptions->firstWhere('value', $selectedMonth)['label'],
+            'recap'          => $recap,
         ];
     }
 

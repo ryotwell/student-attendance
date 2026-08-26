@@ -27,6 +27,15 @@ class Development2Seeder extends Seeder
                 'is_active' => true,
             ]
         );
+        $school2 = School::firstOrCreate(
+            [
+                'name'      => 'SMKN 1 Selong',
+                'address'   => 'Jl. Pendidikan No. 1, Pancor, Lombok Timur',
+                'phone'     => '081234567890',
+                'email'     => 'info@smkn1selong.sch.id',
+                'is_active' => true,
+            ]
+        );
 
         // 2. Buat Admin untuk sekolah tersebut
         User::firstOrCreate(
@@ -36,6 +45,15 @@ class Development2Seeder extends Seeder
                 'password'  => Hash::make('12345678'),
                 'role'      => 'ADMIN',
                 'school_id' => $school->id,
+            ]
+        );
+        User::firstOrCreate(
+            ['email' => 'smkn1selong@gmail.com'],
+            [
+                'name'      => 'SMKN 1 Selong',
+                'password'  => Hash::make('12345678'),
+                'role'      => 'ADMIN',
+                'school_id' => $school2->id,
             ]
         );
 
@@ -60,7 +78,6 @@ class Development2Seeder extends Seeder
             $subjects[$name] = Subject::firstOrCreate(
                 [
                     'name'      => $name,
-                    'grade'     => 'XII',
                     'school_id' => $school->id,
                 ]
             );
