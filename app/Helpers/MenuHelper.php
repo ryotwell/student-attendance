@@ -116,6 +116,11 @@ class MenuHelper
                 'icon' => 'pages',
                 'path' => '#!'
             ],
+            [
+                'name' => 'Sekolah',
+                'icon' => 'pages',
+                'path' => '/sekolah'
+            ],
                 // [
                 //     'name' => 'Pengumuman',
                 //     'icon' => 'calendar',

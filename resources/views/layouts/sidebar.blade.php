@@ -61,10 +61,10 @@
     <!-- Logo Section -->
     <div class="pt-8 pb-7 flex justify-center mt-10">
         <a href="/">
-            <img x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen" class="dark:hidden" src="/logo-sekolah.png" alt="Logo" width="125" height="125" />
-            <img x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen" class="hidden dark:block" src="/logo-sekolah.png" alt="Logo" width="125" height="125" />
-            <img x-show="!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen"
-                src="/images/logo/logo-icon.svg" alt="Logo" width="32" height="32" />
+            <img x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen" class="dark:hidden" src={{ '/storage/'. Auth::user()->school->logo }} alt="Logo" width="125" height="125" />
+            <img x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen" class="hidden dark:block" src={{ '/storage/'. Auth::user()->school->logo }} alt="Logo" width="125" height="125" />
+            {{-- <img x-show="!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen"
+                src="/images/logo/logo-icon.svg" alt="Logo" width="32" height="32" /> --}}
         </a>
     </div>
 

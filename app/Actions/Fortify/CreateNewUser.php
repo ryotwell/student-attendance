@@ -9,32 +9,60 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
+// Tambahkan use untuk job notifikasi
+use App\Jobs\SendRegistrationNotificationToAdmin;
+
 class CreateNewUser implements CreatesNewUsers
 {
     public function create(array $input)
     {
         Validator::make($input, [
-            'name'          => ['required', 'string', 'max:255'],
-            'email'         => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password'      => ['required', 'string', 'min:8', 'confirmed'],
+            // User fields
+            'name'      => ['required', 'string', 'max:255'],
+            'email'     => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password'  => ['required', 'string', 'min:8', 'confirmed'],
+            'role'      => ['sometimes', Rule::in(['SUPERADMIN', 'ADMIN', 'GURU', 'GURU_BK'])],
+
+            // School fields (semua wajib)
             'school_name'   => ['required', 'string', 'max:255'],
+            'npsn'          => ['required', 'string', 'size:8', 'unique:schools,npsn'],
             'school_level'  => ['required', Rule::in(['SD', 'SMP', 'SMA'])],
+            'address'       => ['required', 'string', 'max:500'],
+            'school_phone'  => ['required', 'string', 'max:20'],
+            'school_email'  => ['required', 'email', 'max:255', 'unique:schools,email'],
+            'school_logo'   => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ])->validate();
 
-        // Buat sekolah dengan level
+        // Upload logo jika ada
+        $logoPath = null;
+        if (isset($input['school_logo']) && $input['school_logo']->isValid()) {
+            $logoPath = $input['school_logo']->store('school-logos', 'public');
+        }
+
+        // Buat sekolah
         $school = School::create([
-            'name'  => $input['school_name'],
-            'level' => $input['school_level'],
+            'name'      => $input['school_name'],
+            'npsn'      => $input['npsn'],
+            'level'     => $input['school_level'],
+            'address'   => $input['address'],
+            'phone'     => $input['school_phone'],
+            'email'     => $input['school_email'],
+            'logo'      => $logoPath,
             'is_active' => true,
         ]);
 
-        // Buat user dengan role ADMIN dan terikat ke sekolah
-        return User::create([
+        // Buat user (role default ADMIN)
+        $user = User::create([
             'name'      => $input['name'],
             'email'     => $input['email'],
             'password'  => Hash::make($input['password']),
-            'role'      => 'ADMIN',
+            'role'      => $input['role'] ?? 'ADMIN',
             'school_id' => $school->id,
         ]);
+
+        // 🔔 Kirim notifikasi WhatsApp ke admin pusat
+        SendRegistrationNotificationToAdmin::dispatch($user, $school);
+
+        return $user;
     }
 }
