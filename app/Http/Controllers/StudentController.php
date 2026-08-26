@@ -8,20 +8,55 @@ use App\Models\StudentEnrollment;
 use App\Models\Xclass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class StudentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('admin.student.index', [
-            // Model Student tidak punya relasi xclass() langsung; kelas siswa
-            // didapat lewat currentEnrollment.xclass (tabel student_enrollments).
-            'students' => Student::with('currentEnrollment.xclass')->latest()->get(),
-        ]);
+        $query = Student::with('currentEnrollment.xclass');
+
+        // Pencarian berdasarkan nama, NIS, atau NISN
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('nis', 'like', "%{$search}%")
+                  ->orWhere('nisn', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter gender
+        if ($request->filled('gender') && in_array($request->gender, ['MALE', 'FEMALE'])) {
+            $query->where('gender', $request->gender);
+        }
+
+        // Filter status
+        if ($request->filled('status') && in_array($request->status, ['AKTIF', 'LULUS', 'PINDAH', 'KELUAR'])) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter kelas (berdasarkan enrollment pada tahun ajaran aktif)
+        if ($request->filled('xclass_id')) {
+            $query->whereHas('currentEnrollment', function ($q) use ($request) {
+                $q->where('xclass_id', $request->xclass_id);
+            });
+        }
+
+        // Pagination (10 per halaman) dengan mempertahankan query string
+        $students = $query->latest()->paginate(10)->withQueryString();
+
+        // Ambil daftar kelas pada tahun ajaran aktif untuk dropdown filter
+        $classes = Xclass::whereHas('academicYear', fn($q) => $q->where('is_active', true))
+                         ->orderBy('name')
+                         ->get();
+
+        return view('admin.student.index', compact('students', 'classes'));
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -29,7 +64,9 @@ class StudentController extends Controller
     public function create()
     {
         return view('admin.student.create', [
-            'classes' => Xclass::with('academicYear')->orderBy('name')->get(),
+            // Hanya kelas pada tahun ajaran aktif yang boleh dipilih,
+            // karena enrollment baru selalu mengikuti tahun ajaran aktif.
+            'classes' => $this->activeYearClasses(),
         ]);
     }
 
@@ -38,14 +75,14 @@ class StudentController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $this->validateRequest($request);
+        $academicYear = $this->activeAcademicYearOrFail();
+
+        $data = $this->validateRequest($request, $academicYear);
         $xclassId = $data['xclass_id'];
         unset($data['xclass_id']);
 
-        DB::transaction(function () use ($data, $xclassId) {
+        DB::transaction(function () use ($data, $xclassId, $academicYear) {
             $student = Student::create($data);
-
-            $academicYear = $this->resolveAcademicYearForClass($xclassId);
 
             $this->enrollStudent($student->id, $xclassId, $academicYear->id);
         });
@@ -71,7 +108,7 @@ class StudentController extends Controller
 
         return view('admin.student.edit', [
             'student' => $student,
-            'classes' => Xclass::with('academicYear')->orderBy('name')->get(),
+            'classes' => $this->activeYearClasses(),
         ]);
     }
 
@@ -80,44 +117,18 @@ class StudentController extends Controller
      */
     public function update(Request $request, Student $student)
     {
-        $data = $this->validateRequest($request, $student);
+        $academicYear = $this->activeAcademicYearOrFail();
+
+        $data = $this->validateRequest($request, $academicYear, $student);
         $xclassId = $data['xclass_id'];
         unset($data['xclass_id']);
 
-        DB::transaction(function () use ($data, $xclassId, $student) {
+        DB::transaction(function () use ($data, $xclassId, $academicYear, $student) {
             $student->update($data);
 
-            $enrollment = $student->currentEnrollment()->first();
-
-            if ($enrollment) {
-                // Pindah kelas: kalau kelas berubah, tahun ajaran mengikuti
-                // kelas tujuan (jaga konsistensi unique [student_id, academic_year_id]).
-                if ($enrollment->xclass_id !== $xclassId) {
-                    $academicYear = $this->resolveAcademicYearForClass($xclassId);
-
-                    // Kalau siswa sudah pernah enroll di tahun ajaran tujuan
-                    // (misal dikembalikan ke tahun ajaran lama), unique constraint
-                    // (student_id, academic_year_id) akan bentrok dengan enrollment
-                    // lama itu. Pakai enrollment yang sudah ada, jangan buat baru.
-                    $existingEnrollment = StudentEnrollment::where('student_id', $student->id)
-                        ->where('academic_year_id', $academicYear->id)
-                        ->where('id', '!=', $enrollment->id)
-                        ->first();
-
-                    if ($existingEnrollment) {
-                        $existingEnrollment->update(['xclass_id' => $xclassId]);
-                    } else {
-                        $enrollment->update([
-                            'xclass_id' => $xclassId,
-                            'academic_year_id' => $academicYear->id,
-                        ]);
-                    }
-                }
-            } else {
-                $academicYear = $this->resolveAcademicYearForClass($xclassId);
-
-                $this->enrollStudent($student->id, $xclassId, $academicYear->id);
-            }
+            // Enrollment untuk tahun ajaran aktif (kalau sudah ada, tinggal
+            // update kelasnya; kalau belum ada, buat baru).
+            $this->enrollStudent($student->id, $xclassId, $academicYear->id);
         });
 
         return redirect()->route('students.index')->with('success', 'Siswa berhasil diperbarui.');
@@ -133,7 +144,7 @@ class StudentController extends Controller
         return redirect()->route('students.index')->with('success', 'Siswa berhasil dihapus.');
     }
 
-    private function validateRequest(Request $request, ?Student $student = null): array
+    private function validateRequest(Request $request, AcademicYear $academicYear, ?Student $student = null): array
     {
         $ignoreId = $student?->id ?? 'NULL';
 
@@ -142,7 +153,11 @@ class StudentController extends Controller
             'nis' => ['required', 'string', 'max:20', "unique:students,nis,{$ignoreId}"],
             'nisn' => ['required', 'string', 'max:20', "unique:students,nisn,{$ignoreId}"],
             'gender' => ['required', 'in:MALE,FEMALE'],
-            'xclass_id' => ['required', 'exists:xclasses,id'],
+            // Kelas harus milik tahun ajaran aktif, bukan sekadar exists di xclasses.
+            'xclass_id' => [
+                'required',
+                'exists:xclasses,id,academic_year_id,' . $academicYear->id,
+            ],
             'parent_name' => ['nullable', 'string', 'max:255'],
             'parent_phone' => ['nullable', 'string', 'max:20'],
         ]);
@@ -172,10 +187,31 @@ class StudentController extends Controller
     }
 
     /**
-     * Tahun ajaran dari kelas terpilih (kelas selalu terikat ke satu tahun ajaran).
+     * Daftar kelas pada tahun ajaran yang sedang aktif saja.
      */
-    private function resolveAcademicYearForClass(int $xclassId): AcademicYear
+    private function activeYearClasses()
     {
-        return Xclass::findOrFail($xclassId)->academicYear;
+        return Xclass::with('academicYear')
+            ->whereHas('academicYear', fn ($q) => $q->where('is_active', true))
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Tahun ajaran aktif. Gagal (redirect back dengan error) kalau
+     * belum ada tahun ajaran yang diset aktif, supaya data siswa
+     * tidak ke-enroll ke tahun ajaran yang salah.
+     */
+    private function activeAcademicYearOrFail(): AcademicYear
+    {
+        $academicYear = AcademicYear::where('is_active', true)->first();
+
+        if (! $academicYear) {
+            throw ValidationException::withMessages([
+                'xclass_id' => 'Belum ada tahun ajaran aktif. Aktifkan tahun ajaran terlebih dahulu.',
+            ]);
+        }
+
+        return $academicYear;
     }
 }

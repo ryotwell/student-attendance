@@ -22,32 +22,70 @@ class ScheduleController extends Controller
      * Tanpa filter ini, jadwal dari kelas tahun ajaran lama tetap
      * muncul di daftar.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+        $query = Schedule::with(['subject', 'xclass.academicYear', 'user']);
 
-        $query = Schedule::with(['subject', 'xclass'])
-            ->when($activeAcademicYear, function ($q) use ($activeAcademicYear) {
-                $q->whereHas('xclass', fn ($q2) => $q2->where('academic_year_id', $activeAcademicYear->id));
-            });
+        $user = auth()->user();
 
-        if (auth()->user()->role === 'GURU') {
-            $query->where('user_id', auth()->id());
+        // Guru: hanya jadwal miliknya dan tahun ajaran aktif
+        if ($user->role === 'GURU') {
+            $query->where('user_id', $user->id);
+            $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+            if ($activeAcademicYear) {
+                $query->whereHas('xclass', fn($q) => $q->where('academic_year_id', $activeAcademicYear->id));
+            }
         }
 
+        // Pencarian (mata pelajaran / kelas)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('subject', fn($sq) => $sq->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('xclass', fn($xq) => $xq->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        // Filter hari
+        if ($request->filled('day')) {
+            $query->where('day', $request->day);
+        }
+
+        // Filter kelas
+        if ($request->filled('xclass_id')) {
+            $query->where('xclass_id', $request->xclass_id);
+        }
+
+        // Filter mata pelajaran
+        if ($request->filled('subject_id')) {
+            $query->where('subject_id', $request->subject_id);
+        }
+
+        // Filter guru (hanya untuk admin)
+        if ($request->filled('user_id') && $user->role === 'ADMIN') {
+            $query->where('user_id', $request->user_id);
+        }
+
+        // Urutkan dan paginasi
         $schedules = $query
             ->orderByRaw("FIELD(day, 'MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY')")
             ->orderBy('start_time')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
-        // return $schedules;
+        // Data untuk dropdown filter
+        $days = MenuHelper::days();
+        $classes = Xclass::orderBy('name')->get();
+        $subjects = Subject::orderBy('name')->get();
+        $users = User::where('role', 'GURU')->orderBy('name')->get();
 
-        if(Auth::user()->isTeacher()) {
-            return view('teacher.schedule.index', compact('schedules'));
+        if ($user->isTeacher()) {
+            return view('teacher.schedule.index', compact('schedules', 'days', 'classes', 'subjects'));
         }
 
-        return view('admin.schedule.index', compact('schedules'));
+        return view('admin.schedule.index', compact('schedules', 'days', 'classes', 'subjects', 'users'));
     }
+
 
     /**
      * Show the form for creating a new resource.

@@ -11,17 +11,36 @@ class AnnouncementController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        if(Auth::user()->isTeacher() || Auth::user()->isTeacherBK()) {
-            return view('teacher.announcement.index', [
-                'announcements' => Announcement::latest()->get(),
-            ]);
+        $query = Announcement::query();
+
+        // Pencarian berdasarkan judul atau konten
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('content', 'like', "%{$search}%");
+            });
         }
-        return view('admin.announcement.index', [
-            'announcements' => Announcement::latest()->get(),
-        ]);
+
+        // Filter status
+        if ($request->filled('status') && in_array($request->status, ['DRAFT', 'PUBLISHED'])) {
+            $query->where('status', $request->status);
+        }
+
+        // Pagination
+        $announcements = $query->latest()->paginate(10)->withQueryString();
+
+        $user = Auth::user();
+
+        if ($user->isTeacher() || $user->isTeacherBK()) {
+            return view('teacher.announcement.index', compact('announcements'));
+        }
+
+        return view('admin.announcement.index', compact('announcements'));
     }
+
 
     /**
      * Show the form for creating a new resource.

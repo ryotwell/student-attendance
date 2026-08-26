@@ -8,13 +8,28 @@ use Illuminate\Http\Request;
 class AcademicYearController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the resource with search, filter, and pagination.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('admin.academic-year.index', [
-            'academicYears' => AcademicYear::withCount('xclasses')->latest()->get(),
-        ]);
+        $query = AcademicYear::withCount('xclasses');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        if ($request->filled('semester') && in_array($request->semester, ['GANJIL', 'GENAP'])) {
+            $query->where('semester', $request->semester);
+        }
+
+        if ($request->filled('is_active') && in_array($request->is_active, ['1', '0'])) {
+            $query->where('is_active', $request->is_active);
+        }
+
+        $academicYears = $query->latest()->paginate(10)->withQueryString();
+
+        return view('admin.academic-year.index', compact('academicYears'));
     }
 
     /**
@@ -31,6 +46,11 @@ class AcademicYearController extends Controller
     public function store(Request $request)
     {
         $data = $this->validateRequest($request);
+
+        // Jika data is_active = true, nonaktifkan semua tahun ajaran lain
+        if (isset($data['is_active']) && $data['is_active']) {
+            AcademicYear::where('is_active', true)->update(['is_active' => false]);
+        }
 
         AcademicYear::create($data);
 
@@ -61,6 +81,12 @@ class AcademicYearController extends Controller
     public function update(Request $request, AcademicYear $academicYear)
     {
         $data = $this->validateRequest($request);
+
+        // Jika data is_active = true dan berbeda dengan status sebelumnya, 
+        // nonaktifkan semua tahun ajaran lain
+        if (isset($data['is_active']) && $data['is_active'] && !$academicYear->is_active) {
+            AcademicYear::where('is_active', true)->where('id', '!=', $academicYear->id)->update(['is_active' => false]);
+        }
 
         $academicYear->update($data);
 

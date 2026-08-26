@@ -10,11 +10,25 @@ class SubjectController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('admin.subject.index', [
-            'subjects' => Subject::latest()->get(),
-        ]);
+        $query = Subject::query();
+
+        // Pencarian berdasarkan nama mata pelajaran
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        // Filter grade (X, XI, XII)
+        if ($request->filled('grade') && in_array($request->grade, ['X', 'XI', 'XII'])) {
+            $query->where('grade', $request->grade);
+        }
+
+        // Pagination dengan tetap mempertahankan query string
+        $subjects = $query->latest()->paginate(10)->withQueryString();
+
+        return view('admin.subject.index', compact('subjects'));
     }
 
     /**
