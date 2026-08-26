@@ -30,13 +30,13 @@ class CreateNewUser implements CreatesNewUsers
             'address'       => ['required', 'string', 'max:500'],
             'school_phone'  => ['required', 'string', 'max:20'],
             'school_email'  => ['required', 'email', 'max:255', 'unique:schools,email'],
-            'school_logo'   => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'school_logo'   => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ])->validate();
 
-        // Upload logo jika ada
+        // Upload logo ke S3 / RustFS
         $logoPath = null;
         if (isset($input['school_logo']) && $input['school_logo']->isValid()) {
-            $logoPath = $input['school_logo']->store('school-logos', 'public');
+            $logoPath = $input['school_logo']->store('school-logos', 's3');
         }
 
         // Buat sekolah
@@ -47,7 +47,7 @@ class CreateNewUser implements CreatesNewUsers
             'address'   => $input['address'],
             'phone'     => $input['school_phone'],
             'email'     => $input['school_email'],
-            'logo'      => $logoPath,
+            'logo'      => $logoPath,   // tersimpan path S3
             'is_active' => true,
         ]);
 
@@ -61,7 +61,7 @@ class CreateNewUser implements CreatesNewUsers
         ]);
 
         // 🔔 Kirim notifikasi WhatsApp ke admin pusat
-        SendRegistrationNotificationToAdmin::dispatch($user, $school);
+        // SendRegistrationNotificationToAdmin::dispatch($user, $school);
 
         return $user;
     }

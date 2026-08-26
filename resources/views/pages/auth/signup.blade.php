@@ -295,7 +295,7 @@
 
                                 <div>
                                     <label for="school_logo" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                                        Logo Sekolah <span class="text-gray-400 text-xs">(opsional, maks. 2MB, jpg/png)</span>
+                                        Logo Sekolah <span class="text-gray-400 text-xs">(maks. 2MB, jpg/png)</span> <span class="text-error-500">*</span>
                                     </label>
                                     <div class="relative">
                                         <span class="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400">
