@@ -1,7 +1,8 @@
 @extends('layouts.fullscreen-layout')
 
 @section('content')
-    <div class="relative z-1 bg-gray-100 dark:bg-gray-900">
+    {{-- Background utama: brand di mobile, abu-abu di desktop --}}
+    <div class="relative z-1 bg-brand-600 dark:bg-brand-900 lg:bg-gray-100 lg:dark:bg-gray-900">
         <div class="relative flex h-screen w-full flex-col lg:flex-row">
 
             <!-- ============ SISI KIRI: Branding / Portal Info ============ -->
@@ -14,9 +15,6 @@
                 <!-- Logo & Nama Sekolah -->
                 <div class="relative z-10 flex items-center gap-3">
                     <img src="{{ asset('/logo-sekolah.png') }}" alt="Logo Sekolah" class="h-8 w-8 object-contain">
-                    {{-- <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm ring-1 ring-white/20">
-                        <span class="text-lg font-bold text-white">NS</span>
-                    </div> --}}
                     <div>
                         <p class="text-base font-semibold text-white">{{ config('app.name', 'Nama Sekolah') }}</p>
                         <p class="text-xs text-white/70">Portal Aplikasi Sekolah</p>
@@ -73,13 +71,15 @@
 
                     <!-- Logo untuk mobile (muncul hanya di layar kecil) -->
                     <div class="mb-8 flex items-center justify-center gap-3 lg:hidden">
-                        {{-- <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500">
-                            <span class="text-base font-bold text-white">NS</span>
-                        </div> --}}
                         <img src="{{ asset('/logo-sekolah.png') }}" alt="Logo Sekolah" class="h-15 w-15 object-contain">
                         <div class="text-left">
-                            <p class="text-xl font-semibold text-gray-800 dark:text-white/90">{{ config('app.name', 'Nama Sekolah') }}</p>
-                            <p class="text-gray-500 dark:text-gray-400">Portal Aplikasi Sekolah</p>
+                            {{-- Warna teks logo mobile diubah menjadi putih agar kontras dengan background brand --}}
+                            <p class="text-xl font-semibold text-white dark:text-white">
+                                {{ config('app.name', 'Nama Sekolah') }}
+                            </p>
+                            <p class="text-white/70 dark:text-white/70">
+                                Portal Aplikasi Sekolah
+                            </p>
                         </div>
                     </div>
 
@@ -153,29 +153,9 @@
                                     </div>
                                 </div>
 
-                                <!-- Checkbox + Lupa Password -->
+                                <!-- Checkbox + Lupa Password (opsional) -->
                                 {{-- <div class="flex items-center justify-between">
-                                    <div x-data="{ checkboxToggle: false }">
-                                        <label for="checkboxLabelOne"
-                                            class="flex cursor-pointer items-center text-sm font-normal text-gray-700 select-none dark:text-gray-400">
-                                            <div class="relative">
-                                                <input type="checkbox" id="checkboxLabelOne" name="remember" class="sr-only" @change="checkboxToggle = !checkboxToggle" />
-                                                <div :class="checkboxToggle ? 'border-brand-500 bg-brand-500' :
-                                                    'bg-transparent border-gray-300 dark:border-gray-700'"
-                                                    class="mr-3 flex h-5 w-5 items-center justify-center rounded-md border-[1.25px] transition-colors">
-                                                    <span :class="checkboxToggle ? '' : 'opacity-0'">
-                                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M11.6666 3.5L5.24992 9.91667L2.33325 7" stroke="white" stroke-width="1.94437" stroke-linecap="round" stroke-linejoin="round" />
-                                                        </svg>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            Ingat saya
-                                        </label>
-                                    </div>
-                                    <a href="{{ route('password.request') }}" class="text-brand-500 hover:text-brand-600 dark:text-brand-400 text-sm font-medium">
-                                        Lupa kata sandi?
-                                    </a>
+                                    ...
                                 </div> --}}
 
                                 <!-- Button -->
@@ -193,7 +173,7 @@
                     </div>
 
                     <!-- Footer kanan (mobile) -->
-                    <p class="mt-6 text-center text-xs text-gray-400 lg:hidden">
+                    <p class="mt-6 text-center text-xs text-white/60 lg:text-gray-400 lg:dark:text-gray-400 lg:hidden">
                         &copy; {{ date('Y') }} satak.id Seluruh hak cipta dilindungi.
                     </p>
                 </div>
