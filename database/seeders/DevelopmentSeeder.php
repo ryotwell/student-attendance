@@ -161,7 +161,7 @@ class DevelopmentSeeder extends Seeder
             return [
                 $name=>Subject::create([
                     'name'=>$name,
-                    'grade'=>'XII'
+                    'grade'=>'XI'
                 ])
             ];
         });

@@ -102,6 +102,9 @@
                         <th class="px-5 py-3 text-left sm:px-6">
                             <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Kelas</p>
                         </th>
+                        <th class="px-5 py-3 text-left sm:px-6">
+                            <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Status</p>
+                        </th>
                         <th class="px-5 py-3 text-right sm:px-6">
                             <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Aksi</p>
                         </th>
@@ -133,6 +136,9 @@
                             </td>
                             <td class="px-5 py-4 sm:px-6">
                                 <p class="text-gray-500 text-theme-sm dark:text-gray-400">{{ $student->currentEnrollment?->xclass?->name ?? '-' }}</p>
+                            </td>
+                            <td class="px-5 py-4 sm:px-6">
+                                <p class="text-gray-500 text-theme-sm dark:text-gray-400">{{ $student->status }}</p>
                             </td>
                             <td class="px-5 py-4 sm:px-6">
                                 <div class="flex items-center justify-end gap-3">

@@ -43,15 +43,17 @@ class SubjectController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:subjects,name'],
-        ]);
+{
+    $data = $request->validate([
+        'name'  => ['required', 'string', 'max:255', 'unique:subjects,name'],
+        'grade' => ['required', 'in:X,XI,XII'], // tambahkan
+    ]);
 
-        Subject::create($data);
+    Subject::create($data);
 
-        return redirect()->route('subjects.index')->with('success', 'Mata pelajaran berhasil ditambahkan.');
-    }
+    return redirect()->route('subjects.index')->with('success', 'Mata pelajaran berhasil ditambahkan.');
+}
+
 
     /**
      * Display the specified resource.
@@ -77,13 +79,15 @@ class SubjectController extends Controller
     public function update(Request $request, Subject $subject)
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255', "unique:subjects,name,{$subject->id}"],
+            'name'  => ['required', 'string', 'max:255', "unique:subjects,name,{$subject->id}"],
+            'grade' => ['required', 'in:X,XI,XII'], // tambahkan
         ]);
 
         $subject->update($data);
 
         return redirect()->route('subjects.index')->with('success', 'Mata pelajaran berhasil diperbarui.');
     }
+
 
     /**
      * Remove the specified resource from storage.

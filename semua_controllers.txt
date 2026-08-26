@@ -8,13 +8,28 @@ use Illuminate\Http\Request;
 class AcademicYearController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the resource with search, filter, and pagination.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('admin.academic-year.index', [
-            'academicYears' => AcademicYear::withCount('xclasses')->latest()->get(),
-        ]);
+        $query = AcademicYear::withCount('xclasses');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        if ($request->filled('semester') && in_array($request->semester, ['GANJIL', 'GENAP'])) {
+            $query->where('semester', $request->semester);
+        }
+
+        if ($request->filled('is_active') && in_array($request->is_active, ['1', '0'])) {
+            $query->where('is_active', $request->is_active);
+        }
+
+        $academicYears = $query->latest()->paginate(10)->withQueryString();
+
+        return view('admin.academic-year.index', compact('academicYears'));
     }
 
     /**
@@ -31,6 +46,11 @@ class AcademicYearController extends Controller
     public function store(Request $request)
     {
         $data = $this->validateRequest($request);
+
+        // Jika data is_active = true, nonaktifkan semua tahun ajaran lain
+        if (isset($data['is_active']) && $data['is_active']) {
+            AcademicYear::where('is_active', true)->update(['is_active' => false]);
+        }
 
         AcademicYear::create($data);
 
@@ -62,6 +82,12 @@ class AcademicYearController extends Controller
     {
         $data = $this->validateRequest($request);
 
+        // Jika data is_active = true dan berbeda dengan status sebelumnya, 
+        // nonaktifkan semua tahun ajaran lain
+        if (isset($data['is_active']) && $data['is_active'] && !$academicYear->is_active) {
+            AcademicYear::where('is_active', true)->where('id', '!=', $academicYear->id)->update(['is_active' => false]);
+        }
+
         $academicYear->update($data);
 
         return redirect()->route('academic-years.index')->with('success', 'Tahun ajaran berhasil diperbarui.');
@@ -88,8 +114,7 @@ class AcademicYearController extends Controller
 
         return $data;
     }
-}
-<?php
+}<?php
 
 namespace App\Http\Controllers;
 
@@ -102,17 +127,36 @@ class AnnouncementController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        if(Auth::user()->isTeacher() || Auth::user()->isTeacherBK()) {
-            return view('teacher.announcement.index', [
-                'announcements' => Announcement::latest()->get(),
-            ]);
+        $query = Announcement::query();
+
+        // Pencarian berdasarkan judul atau konten
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('content', 'like', "%{$search}%");
+            });
         }
-        return view('admin.announcement.index', [
-            'announcements' => Announcement::latest()->get(),
-        ]);
+
+        // Filter status
+        if ($request->filled('status') && in_array($request->status, ['DRAFT', 'PUBLISHED'])) {
+            $query->where('status', $request->status);
+        }
+
+        // Pagination
+        $announcements = $query->latest()->paginate(10)->withQueryString();
+
+        $user = Auth::user();
+
+        if ($user->isTeacher() || $user->isTeacherBK()) {
+            return view('teacher.announcement.index', compact('announcements'));
+        }
+
+        return view('admin.announcement.index', compact('announcements'));
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -730,21 +774,40 @@ use Illuminate\Http\Request;
 class ClassController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the resource with search, filter, and pagination.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('admin.class.index', [
-            'classes' => Xclass::with([
-                    'academicYear',
-                    'user'
-                ])
-                ->withCount('students')
-                ->latest()
-                ->get(),
-        ]);
-    }
+        $query = Xclass::with([
+            'academicYear',
+            'user'
+        ])->withCount('students');
 
+        // Pencarian berdasarkan nama kelas
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        // Filter tahun ajaran
+        if ($request->filled('academic_year_id')) {
+            $query->where('academic_year_id', $request->academic_year_id);
+        }
+
+        // Filter wali kelas (user_id)
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        // PAGINATION: 10 data per halaman, pertahankan query string
+        $classes = $query->latest()->paginate(10)->withQueryString();
+
+        // Data untuk dropdown filter
+        $academicYears = AcademicYear::latest()->get();
+        $users = User::where('role', 'GURU')->orderBy('name')->get();
+
+        return view('admin.class.index', compact('classes', 'academicYears', 'users'));
+    }
 
     /**
      * Show the form for creating a new resource.
@@ -759,72 +822,44 @@ class ClassController extends Controller
         ]);
     }
 
-
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255'
-            ],
-            'academic_year_id' => [
-                'required',
-                'exists:academic_years,id'
-            ],
-            'user_id' => [
-                'nullable',
-                'exists:users,id'
-            ],
+            'name' => ['required', 'string', 'max:255'],
+            'academic_year_id' => ['required', 'exists:academic_years,id'],
+            'user_id' => ['nullable', 'exists:users,id'],
         ]);
 
-        /**
-         * Cek guru hanya boleh wali 1 kelas
-         * dalam academic year yang sama
-         */
+        // Cek guru hanya boleh wali 1 kelas dalam academic year yang sama
         if (!empty($data['user_id'])) {
-
-            $exists = Xclass::where(
-                    'academic_year_id',
-                    $data['academic_year_id']
-                )
-                ->where(
-                    'user_id',
-                    $data['user_id']
-                )
+            $exists = Xclass::where('academic_year_id', $data['academic_year_id'])
+                ->where('user_id', $data['user_id'])
                 ->exists();
 
             if ($exists) {
                 return back()
                     ->withInput()
                     ->withErrors([
-                        'user_id' =>
-                        'Guru tersebut sudah menjadi wali kelas pada tahun ajaran ini.'
+                        'user_id' => 'Guru tersebut sudah menjadi wali kelas pada tahun ajaran ini.'
                     ]);
             }
         }
 
         Xclass::create($data);
 
-        return redirect()
-            ->route('classes.index')
-            ->with(
-                'success',
-                'Kelas berhasil ditambahkan.'
-            );
+        return redirect()->route('classes.index')
+            ->with('success', 'Kelas berhasil ditambahkan.');
     }
-
 
     /**
      * Display the specified resource.
      */
     public function show(Xclass $class)
     {
-        return redirect()
-            ->route('classes.index');
+        return redirect()->route('classes.index');
     }
 
     /**
@@ -847,60 +882,31 @@ class ClassController extends Controller
     public function update(Request $request, Xclass $class)
     {
         $data = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255'
-            ],
-            'academic_year_id' => [
-                'required',
-                'exists:academic_years,id'
-            ],
-            'user_id' => [
-                'nullable',
-                'exists:users,id'
-            ],
+            'name' => ['required', 'string', 'max:255'],
+            'academic_year_id' => ['required', 'exists:academic_years,id'],
+            'user_id' => ['nullable', 'exists:users,id'],
         ]);
 
-
-        /**
-         * Cek wali kelas duplikat
-         * kecuali kelas yang sedang diedit
-         */
+        // Cek wali kelas duplikat, kecuali kelas yang sedang diedit
         if (!empty($data['user_id'])) {
-            $exists = Xclass::where(
-                    'academic_year_id',
-                    $data['academic_year_id']
-                )
-                ->where(
-                    'user_id',
-                    $data['user_id']
-                )
-                ->where(
-                    'id',
-                    '!=',
-                    $class->id
-                )
+            $exists = Xclass::where('academic_year_id', $data['academic_year_id'])
+                ->where('user_id', $data['user_id'])
+                ->where('id', '!=', $class->id)
                 ->exists();
 
             if ($exists) {
                 return back()
                     ->withInput()
                     ->withErrors([
-                        'user_id' =>
-                        'Guru tersebut sudah menjadi wali kelas pada tahun ajaran ini.'
+                        'user_id' => 'Guru tersebut sudah menjadi wali kelas pada tahun ajaran ini.'
                     ]);
             }
         }
 
         $class->update($data);
 
-        return redirect()
-            ->route('classes.index')
-            ->with(
-                'success',
-                'Kelas berhasil diperbarui.'
-            );
+        return redirect()->route('classes.index')
+            ->with('success', 'Kelas berhasil diperbarui.');
     }
 
     /**
@@ -910,12 +916,8 @@ class ClassController extends Controller
     {
         $class->delete();
 
-        return redirect()
-            ->route('classes.index')
-            ->with(
-                'success',
-                'Kelas berhasil dihapus.'
-            );
+        return redirect()->route('classes.index')
+            ->with('success', 'Kelas berhasil dihapus.');
     }
 
     /**
@@ -923,9 +925,7 @@ class ClassController extends Controller
      */
     public function schedules(Xclass $class)
     {
-        $class->load(
-            'schedules.subject'
-        );
+        $class->load('schedules.subject');
 
         return view('admin.class.schedule', [
             'title' => 'Jadwal Kelas ' . $class->name,
@@ -934,20 +934,12 @@ class ClassController extends Controller
     }
 
     /**
-     * Get students by class
+     * Get students by class (JSON)
      */
     public function students(Xclass $class)
     {
-        // students() adalah belongsToMany lewat pivot student_enrollments,
-        // jadi kolom harus di-qualify dengan nama tabel supaya tidak
-        // ambigu / salah ambil dari tabel pivot.
-        $students = $class
-            ->students()
-            ->select(
-                'students.id',
-                'students.nis',
-                'students.name'
-            )
+        $students = $class->students()
+            ->select('students.id', 'students.nis', 'students.name')
             ->orderBy('students.name')
             ->get();
 
@@ -1182,32 +1174,70 @@ class ScheduleController extends Controller
      * Tanpa filter ini, jadwal dari kelas tahun ajaran lama tetap
      * muncul di daftar.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+        $query = Schedule::with(['subject', 'xclass.academicYear', 'user']);
 
-        $query = Schedule::with(['subject', 'xclass'])
-            ->when($activeAcademicYear, function ($q) use ($activeAcademicYear) {
-                $q->whereHas('xclass', fn ($q2) => $q2->where('academic_year_id', $activeAcademicYear->id));
-            });
+        $user = auth()->user();
 
-        if (auth()->user()->role === 'GURU') {
-            $query->where('user_id', auth()->id());
+        // Guru: hanya jadwal miliknya dan tahun ajaran aktif
+        if ($user->role === 'GURU') {
+            $query->where('user_id', $user->id);
+            $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+            if ($activeAcademicYear) {
+                $query->whereHas('xclass', fn($q) => $q->where('academic_year_id', $activeAcademicYear->id));
+            }
         }
 
+        // Pencarian (mata pelajaran / kelas)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('subject', fn($sq) => $sq->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('xclass', fn($xq) => $xq->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        // Filter hari
+        if ($request->filled('day')) {
+            $query->where('day', $request->day);
+        }
+
+        // Filter kelas
+        if ($request->filled('xclass_id')) {
+            $query->where('xclass_id', $request->xclass_id);
+        }
+
+        // Filter mata pelajaran
+        if ($request->filled('subject_id')) {
+            $query->where('subject_id', $request->subject_id);
+        }
+
+        // Filter guru (hanya untuk admin)
+        if ($request->filled('user_id') && $user->role === 'ADMIN') {
+            $query->where('user_id', $request->user_id);
+        }
+
+        // Urutkan dan paginasi
         $schedules = $query
             ->orderByRaw("FIELD(day, 'MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY')")
             ->orderBy('start_time')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
-        // return $schedules;
+        // Data untuk dropdown filter
+        $days = MenuHelper::days();
+        $classes = Xclass::orderBy('name')->get();
+        $subjects = Subject::orderBy('name')->get();
+        $users = User::where('role', 'GURU')->orderBy('name')->get();
 
-        if(Auth::user()->isTeacher()) {
-            return view('teacher.schedule.index', compact('schedules'));
+        if ($user->isTeacher()) {
+            return view('teacher.schedule.index', compact('schedules', 'days', 'classes', 'subjects'));
         }
 
-        return view('admin.schedule.index', compact('schedules'));
+        return view('admin.schedule.index', compact('schedules', 'days', 'classes', 'subjects', 'users'));
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -1497,14 +1527,48 @@ class StudentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('admin.student.index', [
-            // Model Student tidak punya relasi xclass() langsung; kelas siswa
-            // didapat lewat currentEnrollment.xclass (tabel student_enrollments).
-            'students' => Student::with('currentEnrollment.xclass')->latest()->get(),
-        ]);
+        $query = Student::with('currentEnrollment.xclass');
+
+        // Pencarian berdasarkan nama, NIS, atau NISN
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('nis', 'like', "%{$search}%")
+                  ->orWhere('nisn', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter gender
+        if ($request->filled('gender') && in_array($request->gender, ['MALE', 'FEMALE'])) {
+            $query->where('gender', $request->gender);
+        }
+
+        // Filter status
+        if ($request->filled('status') && in_array($request->status, ['AKTIF', 'LULUS', 'PINDAH', 'KELUAR'])) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter kelas (berdasarkan enrollment pada tahun ajaran aktif)
+        if ($request->filled('xclass_id')) {
+            $query->whereHas('currentEnrollment', function ($q) use ($request) {
+                $q->where('xclass_id', $request->xclass_id);
+            });
+        }
+
+        // Pagination (10 per halaman) dengan mempertahankan query string
+        $students = $query->latest()->paginate(10)->withQueryString();
+
+        // Ambil daftar kelas pada tahun ajaran aktif untuk dropdown filter
+        $classes = Xclass::whereHas('academicYear', fn($q) => $q->where('is_active', true))
+                         ->orderBy('name')
+                         ->get();
+
+        return view('admin.student.index', compact('students', 'classes'));
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -1674,11 +1738,25 @@ class SubjectController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('admin.subject.index', [
-            'subjects' => Subject::latest()->get(),
-        ]);
+        $query = Subject::query();
+
+        // Pencarian berdasarkan nama mata pelajaran
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        // Filter grade (X, XI, XII)
+        if ($request->filled('grade') && in_array($request->grade, ['X', 'XI', 'XII'])) {
+            $query->where('grade', $request->grade);
+        }
+
+        // Pagination dengan tetap mempertahankan query string
+        $subjects = $query->latest()->paginate(10)->withQueryString();
+
+        return view('admin.subject.index', compact('subjects'));
     }
 
     /**
