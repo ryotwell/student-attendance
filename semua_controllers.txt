@@ -3,16 +3,43 @@
 namespace App\Http\Controllers;
 
 use App\Models\AcademicYear;
+use App\Models\School;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AcademicYearController extends Controller
 {
+    /**
+     * Terapkan filter school_id jika user bukan SUPERADMIN.
+     */
+    private function applySchoolFilter($query)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN') {
+            $query->where('school_id', $user->school_id);
+        }
+        return $query;
+    }
+
+    /**
+     * Cek apakah tahun ajaran milik sekolah user (kecuali SUPERADMIN).
+     */
+    private function canAccessSchool(AcademicYear $academicYear): bool
+    {
+        $user = Auth::user();
+        if ($user->role === 'SUPERADMIN') {
+            return true;
+        }
+        return $academicYear->school_id === $user->school_id;
+    }
+
     /**
      * Display a listing of the resource with search, filter, and pagination.
      */
     public function index(Request $request)
     {
         $query = AcademicYear::withCount('xclasses');
+        $query = $this->applySchoolFilter($query);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -47,9 +74,33 @@ class AcademicYearController extends Controller
     {
         $data = $this->validateRequest($request);
 
-        // Jika data is_active = true, nonaktifkan semua tahun ajaran lain
+        // Tentukan school_id
+        $user = Auth::user();
+        if ($user->role === 'SUPERADMIN') {
+            // SUPERADMIN bisa memilih sekolah via request (jika ada)
+            if ($request->filled('school_id')) {
+                $request->validate([
+                    'school_id' => 'required|exists:schools,id',
+                ]);
+                $data['school_id'] = $request->school_id;
+            } else {
+                // Fallback: gunakan sekolah pertama (atau bisa diarahkan ke halaman pilih sekolah)
+                $firstSchool = School::first();
+                if (!$firstSchool) {
+                    return back()->withErrors(['school_id' => 'Belum ada sekolah.']);
+                }
+                $data['school_id'] = $firstSchool->id;
+            }
+        } else {
+            // Non-SUPERADMIN otomatis menggunakan sekolahnya
+            $data['school_id'] = $user->school_id;
+        }
+
+        // Jika is_active true, nonaktifkan semua tahun ajaran lain di sekolah yang sama
         if (isset($data['is_active']) && $data['is_active']) {
-            AcademicYear::where('is_active', true)->update(['is_active' => false]);
+            AcademicYear::where('school_id', $data['school_id'])
+                ->where('is_active', true)
+                ->update(['is_active' => false]);
         }
 
         AcademicYear::create($data);
@@ -70,6 +121,11 @@ class AcademicYearController extends Controller
      */
     public function edit(AcademicYear $academicYear)
     {
+        // Cek akses sekolah
+        if (!$this->canAccessSchool($academicYear)) {
+            abort(403, 'Anda tidak memiliki akses ke tahun ajaran ini.');
+        }
+
         return view('admin.academic-year.edit', [
             'academicYear' => $academicYear,
         ]);
@@ -80,12 +136,20 @@ class AcademicYearController extends Controller
      */
     public function update(Request $request, AcademicYear $academicYear)
     {
+        // Cek akses sekolah
+        if (!$this->canAccessSchool($academicYear)) {
+            abort(403, 'Anda tidak memiliki akses ke tahun ajaran ini.');
+        }
+
         $data = $this->validateRequest($request);
 
-        // Jika data is_active = true dan berbeda dengan status sebelumnya, 
-        // nonaktifkan semua tahun ajaran lain
+        // Jika is_active true dan berbeda dengan status sebelumnya,
+        // nonaktifkan semua tahun ajaran lain di sekolah yang sama
         if (isset($data['is_active']) && $data['is_active'] && !$academicYear->is_active) {
-            AcademicYear::where('is_active', true)->where('id', '!=', $academicYear->id)->update(['is_active' => false]);
+            AcademicYear::where('school_id', $academicYear->school_id)
+                ->where('is_active', true)
+                ->where('id', '!=', $academicYear->id)
+                ->update(['is_active' => false]);
         }
 
         $academicYear->update($data);
@@ -98,6 +162,11 @@ class AcademicYearController extends Controller
      */
     public function destroy(AcademicYear $academicYear)
     {
+        // Cek akses sekolah
+        if (!$this->canAccessSchool($academicYear)) {
+            abort(403, 'Anda tidak memiliki akses ke tahun ajaran ini.');
+        }
+
         $academicYear->delete();
 
         return redirect()->route('academic-years.index')->with('success', 'Tahun ajaran berhasil dihapus.');
@@ -106,7 +175,7 @@ class AcademicYearController extends Controller
     private function validateRequest(Request $request): array
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name'     => ['required', 'string', 'max:255'],
             'semester' => ['required', 'in:GANJIL,GENAP'],
         ]);
 
@@ -119,17 +188,43 @@ class AcademicYearController extends Controller
 namespace App\Http\Controllers;
 
 use App\Models\Announcement;
+use App\Models\School;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AnnouncementController extends Controller
 {
     /**
+     * Terapkan filter school_id jika user bukan SUPERADMIN.
+     */
+    private function applySchoolFilter($query)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN') {
+            $query->where('school_id', $user->school_id);
+        }
+        return $query;
+    }
+
+    /**
+     * Cek apakah pengumuman milik sekolah user (kecuali SUPERADMIN).
+     */
+    private function canAccessSchool(Announcement $announcement): bool
+    {
+        $user = Auth::user();
+        if ($user->role === 'SUPERADMIN') {
+            return true;
+        }
+        return $announcement->school_id === $user->school_id;
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
         $query = Announcement::query();
+        $query = $this->applySchoolFilter($query);
 
         // Pencarian berdasarkan judul atau konten
         if ($request->filled('search')) {
@@ -157,13 +252,20 @@ class AnnouncementController extends Controller
         return view('admin.announcement.index', compact('announcements'));
     }
 
-
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-        return view('admin.announcement.create');
+        $user = Auth::user();
+        $schools = null;
+
+        // Jika SUPERADMIN, berikan pilihan sekolah
+        if ($user->role === 'SUPERADMIN') {
+            $schools = School::orderBy('name')->get();
+        }
+
+        return view('admin.announcement.create', compact('schools'));
     }
 
     /**
@@ -172,6 +274,18 @@ class AnnouncementController extends Controller
     public function store(Request $request)
     {
         $data = $this->validateRequest($request);
+
+        // Tentukan school_id
+        $user = Auth::user();
+        if ($user->role === 'SUPERADMIN') {
+            // SUPERADMIN bisa memilih sekolah via request
+            $request->validate([
+                'school_id' => 'required|exists:schools,id',
+            ]);
+            $data['school_id'] = $request->school_id;
+        } else {
+            $data['school_id'] = $user->school_id;
+        }
 
         Announcement::create($data);
 
@@ -183,6 +297,11 @@ class AnnouncementController extends Controller
      */
     public function show(Announcement $announcement)
     {
+        // Cek akses
+        if (!$this->canAccessSchool($announcement)) {
+            abort(403, 'Anda tidak memiliki akses ke pengumuman ini.');
+        }
+
         return view('teacher.announcement.show', [
             'announcement' => $announcement,
         ]);
@@ -193,8 +312,22 @@ class AnnouncementController extends Controller
      */
     public function edit(Announcement $announcement)
     {
+        // Cek akses
+        if (!$this->canAccessSchool($announcement)) {
+            abort(403, 'Anda tidak memiliki akses ke pengumuman ini.');
+        }
+
+        $user = Auth::user();
+        $schools = null;
+
+        // Jika SUPERADMIN, berikan pilihan sekolah
+        if ($user->role === 'SUPERADMIN') {
+            $schools = School::orderBy('name')->get();
+        }
+
         return view('admin.announcement.edit', [
             'announcement' => $announcement,
+            'schools'      => $schools,
         ]);
     }
 
@@ -203,7 +336,21 @@ class AnnouncementController extends Controller
      */
     public function update(Request $request, Announcement $announcement)
     {
+        // Cek akses
+        if (!$this->canAccessSchool($announcement)) {
+            abort(403, 'Anda tidak memiliki akses ke pengumuman ini.');
+        }
+
         $data = $this->validateRequest($request);
+
+        // Jika SUPERADMIN, izinkan mengganti sekolah
+        $user = Auth::user();
+        if ($user->role === 'SUPERADMIN' && $request->filled('school_id')) {
+            $request->validate([
+                'school_id' => 'required|exists:schools,id',
+            ]);
+            $data['school_id'] = $request->school_id;
+        }
 
         $announcement->update($data);
 
@@ -215,6 +362,11 @@ class AnnouncementController extends Controller
      */
     public function destroy(Announcement $announcement)
     {
+        // Cek akses
+        if (!$this->canAccessSchool($announcement)) {
+            abort(403, 'Anda tidak memiliki akses ke pengumuman ini.');
+        }
+
         $announcement->delete();
 
         return redirect()->route('announcements.index')->with('success', 'Pengumuman berhasil dihapus.');
@@ -223,9 +375,9 @@ class AnnouncementController extends Controller
     private function validateRequest(Request $request): array
     {
         return $request->validate([
-            'title' => ['required', 'string', 'max:255'],
+            'title'   => ['required', 'string', 'max:255'],
             'content' => ['required', 'string'],
-            'status' => ['required', 'in:DRAFT,PUBLISHED'],
+            'status'  => ['required', 'in:DRAFT,PUBLISHED'],
         ]);
     }
 }<?php
@@ -245,18 +397,33 @@ use Illuminate\Support\Facades\Auth;
 class AttendanceController extends Controller
 {
     /**
-     * Check teacher role.
+     * Cek apakah user dapat mengakses sekolah dari suatu kelas.
      */
-    private function isTeacher(): bool
+    private function canAccessSchool($class): bool
     {
-        return in_array(auth()->user()->role, [
-            'GURU',
-            'GURU_BK'
-        ]);
+        $user = auth()->user();
+        if ($user->role === 'SUPERADMIN') {
+            return true;
+        }
+        return $class->school_id === $user->school_id;
     }
 
     /**
-     * Check class access.
+     * Apply filter school_id ke query jika user bukan SUPERADMIN.
+     */
+    private function applySchoolFilter($query)
+    {
+        $user = auth()->user();
+        if ($user->role !== 'SUPERADMIN') {
+            $query->where('school_id', $user->school_id);
+        }
+        return $query;
+    }
+
+    /**
+     * Check class access berdasarkan role:
+     * - ADMIN: akses ke semua kelas di sekolahnya (sudah dicek oleh canAccessSchool)
+     * - GURU/GURU_BK: akses hanya jika punya jadwal di kelas tersebut
      */
     private function canAccessClass($classId): bool
     {
@@ -266,23 +433,21 @@ class AttendanceController extends Controller
             return true;
         }
 
+        // Untuk guru, cek apakah ada jadwal di kelas tersebut
         return Schedule::where('user_id', $user->id)
             ->where('xclass_id', $classId)
             ->exists();
     }
 
     /**
-     * Pastikan kelas yang diakses adalah kelas dari tahun ajaran yang
-     * sedang aktif. Absensi tidak boleh diinput/diedit untuk kelas dari
-     * tahun ajaran lama (kelas lama tetap ada di DB untuk histori, tapi
-     * read-only lewat report/recap, bukan lewat endpoint ini).
+     * Pastikan kelas adalah bagian dari tahun ajaran aktif.
      */
     private function ensureActiveAcademicYear(Xclass $class): void
     {
         $isActive = $class->academicYear && $class->academicYear->is_active;
 
         abort_if(
-            ! $isActive,
+            !$isActive,
             403,
             'Kelas ini bukan bagian dari tahun ajaran yang sedang aktif. Absensi hanya bisa diinput/diedit untuk tahun ajaran aktif.'
         );
@@ -299,13 +464,15 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Base query kelas, dibatasi ke tahun ajaran aktif.
+     * Base query kelas, dibatasi ke tahun ajaran aktif dan sekolah user.
      */
     private function activeClassesQuery()
     {
-        return Xclass::with('academicYear')
-            ->whereHas('academicYear', fn ($q) => $q->where('is_active', true))
+        $query = Xclass::with('academicYear')
+            ->whereHas('academicYear', fn($q) => $q->where('is_active', true))
             ->orderBy('name');
+
+        return $this->applySchoolFilter($query);
     }
 
     /**
@@ -316,7 +483,7 @@ class AttendanceController extends Controller
         $classes = $this->activeClassesQuery()->get();
 
         return view('admin.attendance.index', [
-            'title' => 'Absensi Siswa',
+            'title'   => 'Absensi Siswa',
             'classes' => $classes,
         ]);
     }
@@ -327,18 +494,12 @@ class AttendanceController extends Controller
     public function show(Request $request)
     {
         $validated = $request->validate([
-            'class_id' => 'required|integer|exists:xclasses,id',
+            'class_id'    => 'required|integer|exists:xclasses,id',
             'schedule_id' => 'required|integer|exists:schedules,id',
-            'date' => 'required|date',
+            'date'        => 'required|date',
         ]);
 
-        $date = Carbon::parse($validated['date'])->startOfDay();
-
-        if (!$this->canAccessClass($validated['class_id'])) {
-            abort(403, 'Anda tidak memiliki akses ke kelas ini.');
-        }
-
-        $class = Xclass::select('id', 'name', 'academic_year_id')
+        $class = Xclass::select('id', 'name', 'academic_year_id', 'school_id')
             ->with([
                 'academicYear',
                 'students' => function ($q) {
@@ -348,11 +509,23 @@ class AttendanceController extends Controller
             ])
             ->findOrFail($validated['class_id']);
 
+        // Cek akses sekolah
+        if (!$this->canAccessSchool($class)) {
+            abort(403, 'Anda tidak memiliki akses ke sekolah ini.');
+        }
+
+        // Cek akses kelas (ADMIN otomatis true, guru cek jadwal)
+        if (!$this->canAccessClass($class->id)) {
+            abort(403, 'Anda tidak memiliki akses ke kelas ini.');
+        }
+
         $this->ensureActiveAcademicYear($class);
 
         $schedule = Schedule::select('id', 'subject_id')
             ->with('subject:id,name')
             ->findOrFail($validated['schedule_id']);
+
+        $date = Carbon::parse($validated['date'])->startOfDay();
 
         $enrollmentByStudentId = StudentEnrollment::where('xclass_id', $class->id)
             ->pluck('id', 'student_id');
@@ -365,15 +538,15 @@ class AttendanceController extends Controller
             ->keyBy('student_id');
 
         $viewData = [
-            'title' => 'Absensi: ' . $class->name . ' - ' . $schedule->subject->name,
-            'class' => $class,
-            'schedule' => $schedule,
-            'date' => $date,
+            'title'               => 'Absensi: ' . $class->name . ' - ' . $schedule->subject->name,
+            'class'               => $class,
+            'schedule'            => $schedule,
+            'date'                => $date,
             'existingAttendances' => $existingAttendances,
-            'statusOptions' => Attendance::STATUS_OPTIONS,
+            'statusOptions'       => Attendance::STATUS_OPTIONS,
         ];
 
-        if ($this->isTeacher()) {
+        if (Auth::user()->isTeacher()) {
             return view('teacher.absensi.absensi', $viewData);
         }
 
@@ -386,19 +559,24 @@ class AttendanceController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'class_id' => 'required|exists:xclasses,id',
+            'class_id'    => 'required|exists:xclasses,id',
             'schedule_id' => 'required|exists:schedules,id',
-            'date' => 'required|date',
+            'date'        => 'required|date',
             'attendances' => 'required|array',
             'attendances.*.student_id' => 'required|exists:students,id',
-            'attendances.*.status' => 'required|in:HADIR,IZIN,SAKIT,ALPHA',
+            'attendances.*.status'     => 'required|in:HADIR,IZIN,SAKIT,ALPHA',
         ]);
 
-        if (!$this->canAccessClass($request->class_id)) {
-            abort(403, 'Anda tidak memiliki akses.');
+        $class = Xclass::with('academicYear')->findOrFail($request->class_id);
+
+        if (!$this->canAccessSchool($class)) {
+            abort(403, 'Anda tidak memiliki akses ke sekolah ini.');
         }
 
-        $class = Xclass::with('academicYear')->findOrFail($request->class_id);
+        if (!$this->canAccessClass($class->id)) {
+            abort(403, 'Anda tidak memiliki akses ke kelas ini.');
+        }
+
         $this->ensureActiveAcademicYear($class);
 
         $date = Carbon::parse($request->date)->startOfDay();
@@ -415,13 +593,13 @@ class AttendanceController extends Controller
 
             $attendance = Attendance::updateOrCreate(
                 [
-                    'student_id' => $attendanceData['student_id'],
+                    'student_id'            => $attendanceData['student_id'],
                     'student_enrollment_id' => $enrollmentId,
-                    'schedule_id' => $request->schedule_id,
-                    'date' => $date,
+                    'schedule_id'           => $request->schedule_id,
+                    'date'                  => $date,
                 ],
                 [
-                    'status' => $attendanceData['status'],
+                    'status'  => $attendanceData['status'],
                     'user_id' => Auth::id(),
                 ]
             );
@@ -433,9 +611,9 @@ class AttendanceController extends Controller
 
         return redirect()
             ->route('attendance.show', [
-                'class_id' => $request->class_id,
+                'class_id'    => $request->class_id,
                 'schedule_id' => $request->schedule_id,
-                'date' => $date->format('Y-m-d'),
+                'date'        => $date->format('Y-m-d'),
             ])
             ->with('success', 'Absensi berhasil disimpan.');
     }
@@ -445,6 +623,10 @@ class AttendanceController extends Controller
      */
     public function getStudents(Xclass $class)
     {
+        if (!$this->canAccessSchool($class)) {
+            abort(403, 'Anda tidak memiliki akses ke sekolah ini.');
+        }
+
         $students = $class->students()
             ->select('students.id', 'students.name', 'students.nis')
             ->orderBy('students.name')
@@ -453,8 +635,15 @@ class AttendanceController extends Controller
         return response()->json($students);
     }
 
+    /**
+     * Get schedules of a class (for AJAX schedule dropdown).
+     */
     public function getSchedules(Xclass $class)
     {
+        if (!$this->canAccessSchool($class)) {
+            abort(403, 'Anda tidak memiliki akses ke sekolah ini.');
+        }
+
         $schedules = Schedule::where('xclass_id', $class->id)
             ->with('subject:id,name')
             ->orderByRaw("FIELD(day, 'MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY')")
@@ -472,26 +661,29 @@ class AttendanceController extends Controller
         $classes = $this->activeClassesQuery()->get();
 
         return view('admin.attendance.report', [
-            'title' => 'Laporan Absensi',
+            'title'   => 'Laporan Absensi',
             'classes' => $classes,
         ]);
     }
 
     /**
      * Show attendance report for selected class, student, and date range.
-     * Tidak dibatasi ke tahun ajaran aktif — laporan boleh dilihat lintas
-     * tahun ajaran (histori), berbeda dari input/edit absensi.
      */
     public function reportShow(Request $request)
     {
         $request->validate([
-            'class_id' => 'required|exists:xclasses,id',
+            'class_id'   => 'required|exists:xclasses,id',
             'student_id' => 'nullable|exists:students,id',
-            'date_from' => 'nullable|date',
-            'date_to' => 'nullable|date|after_or_equal:date_from',
+            'date_from'  => 'nullable|date',
+            'date_to'    => 'nullable|date|after_or_equal:date_from',
         ]);
 
         $class = Xclass::with(['academicYear', 'students'])->findOrFail($request->class_id);
+
+        if (!$this->canAccessSchool($class)) {
+            abort(403, 'Anda tidak memiliki akses ke sekolah ini.');
+        }
+
         $student = $request->student_id ? Student::find($request->student_id) : null;
         $dateFrom = $request->date_from ? Carbon::parse($request->date_from) : Carbon::now()->startOfMonth();
         $dateTo = $request->date_to ? Carbon::parse($request->date_to) : Carbon::now()->endOfMonth();
@@ -520,19 +712,19 @@ class AttendanceController extends Controller
         $summary = [
             'total' => $statusCounts->sum(),
             'hadir' => $statusCounts->get('HADIR', 0),
-            'izin' => $statusCounts->get('IZIN', 0),
+            'izin'  => $statusCounts->get('IZIN', 0),
             'sakit' => $statusCounts->get('SAKIT', 0),
             'alpha' => $statusCounts->get('ALPHA', 0),
         ];
 
         return view('admin.attendance.report-show', [
-            'title' => 'Laporan Absensi: ' . $class->name,
-            'class' => $class,
-            'student' => $student,
-            'dateFrom' => $dateFrom,
-            'dateTo' => $dateTo,
+            'title'       => 'Laporan Absensi: ' . $class->name,
+            'class'       => $class,
+            'student'     => $student,
+            'dateFrom'    => $dateFrom,
+            'dateTo'      => $dateTo,
             'attendances' => $attendances,
-            'summary' => $summary,
+            'summary'     => $summary,
         ]);
     }
 
@@ -544,24 +736,28 @@ class AttendanceController extends Controller
         $classes = $this->activeClassesQuery()->get();
 
         return view('admin.attendance.recap', [
-            'title' => 'Rekap Absensi',
+            'title'   => 'Rekap Absensi',
             'classes' => $classes,
         ]);
     }
 
     /**
      * Show attendance recap for selected class and date range.
-     * Sama seperti reportShow, sengaja tidak dibatasi tahun ajaran aktif.
      */
     public function recapShow(Request $request)
     {
         $request->validate([
-            'class_id' => 'required|exists:xclasses,id',
-            'date_from' => 'nullable|date',
-            'date_to' => 'nullable|date|after_or_equal:date_from',
+            'class_id'   => 'required|exists:xclasses,id',
+            'date_from'  => 'nullable|date',
+            'date_to'    => 'nullable|date|after_or_equal:date_from',
         ]);
 
         $class = Xclass::with(['students', 'academicYear'])->findOrFail($request->class_id);
+
+        if (!$this->canAccessSchool($class)) {
+            abort(403, 'Anda tidak memiliki akses ke sekolah ini.');
+        }
+
         $dateFrom = $request->date_from ? Carbon::parse($request->date_from) : Carbon::now()->startOfMonth();
         $dateTo = $request->date_to ? Carbon::parse($request->date_to) : Carbon::now()->endOfMonth();
 
@@ -578,12 +774,12 @@ class AttendanceController extends Controller
             $hadir = $studentAttendances->where('status', 'HADIR')->count();
 
             return [
-                'student' => $student,
-                'total' => $total,
-                'hadir' => $hadir,
-                'izin' => $studentAttendances->where('status', 'IZIN')->count(),
-                'sakit' => $studentAttendances->where('status', 'SAKIT')->count(),
-                'alpha' => $studentAttendances->where('status', 'ALPHA')->count(),
+                'student'    => $student,
+                'total'      => $total,
+                'hadir'      => $hadir,
+                'izin'       => $studentAttendances->where('status', 'IZIN')->count(),
+                'sakit'      => $studentAttendances->where('status', 'SAKIT')->count(),
+                'alpha'      => $studentAttendances->where('status', 'ALPHA')->count(),
                 'percentage' => $total > 0 ? round(($hadir / $total) * 100, 1) : 0,
             ];
         });
@@ -591,21 +787,21 @@ class AttendanceController extends Controller
         $totalAll = $attendances->count();
         $hadirAll = $attendances->where('status', 'HADIR')->count();
         $summary = [
-            'total' => $totalAll,
-            'hadir' => $hadirAll,
-            'izin' => $attendances->where('status', 'IZIN')->count(),
-            'sakit' => $attendances->where('status', 'SAKIT')->count(),
-            'alpha' => $attendances->where('status', 'ALPHA')->count(),
+            'total'      => $totalAll,
+            'hadir'      => $hadirAll,
+            'izin'       => $attendances->where('status', 'IZIN')->count(),
+            'sakit'      => $attendances->where('status', 'SAKIT')->count(),
+            'alpha'      => $attendances->where('status', 'ALPHA')->count(),
             'percentage' => $totalAll > 0 ? round(($hadirAll / $totalAll) * 100, 1) : 0,
         ];
 
         return view('admin.attendance.recap-show', [
-            'title' => 'Rekap Absensi: ' . $class->name,
-            'class' => $class,
-            'dateFrom' => $dateFrom,
-            'dateTo' => $dateTo,
+            'title'         => 'Rekap Absensi: ' . $class->name,
+            'class'         => $class,
+            'dateFrom'      => $dateFrom,
+            'dateTo'        => $dateTo,
             'studentRecaps' => $studentRecaps,
-            'summary' => $summary,
+            'summary'       => $summary,
         ]);
     }
 
@@ -616,15 +812,17 @@ class AttendanceController extends Controller
     {
         $user = auth()->user();
 
+        $query = $this->activeClassesQuery();
+
         if ($user->role === 'GURU' || $user->role === 'GURU_BK') {
             $classIds = Schedule::where('user_id', $user->id)->pluck('xclass_id')->unique();
-            $classes = $this->activeClassesQuery()->whereIn('id', $classIds)->get();
-        } else {
-            $classes = $this->activeClassesQuery()->get();
+            $query->whereIn('id', $classIds);
         }
 
+        $classes = $query->get();
+
         return view('admin.attendance.list', [
-            'title' => 'Daftar Absensi per Kelas',
+            'title'   => 'Daftar Absensi per Kelas',
             'classes' => $classes,
         ]);
     }
@@ -634,6 +832,10 @@ class AttendanceController extends Controller
      */
     public function listShow(Xclass $class)
     {
+        if (!$this->canAccessSchool($class)) {
+            abort(403, 'Anda tidak memiliki akses ke sekolah ini.');
+        }
+
         $user = auth()->user();
 
         if (($user->role === 'GURU' || $user->role === 'GURU_BK')) {
@@ -661,9 +863,9 @@ class AttendanceController extends Controller
             ->paginate(20);
 
         return view('admin.attendance.list-show', [
-            'title' => 'Daftar Absensi: ' . $class->name,
-            'class' => $class,
-            'schedules' => $schedules,
+            'title'      => 'Daftar Absensi: ' . $class->name,
+            'class'      => $class,
+            'schedules'  => $schedules,
             'attendances' => $attendances,
         ]);
     }
@@ -673,6 +875,10 @@ class AttendanceController extends Controller
      */
     public function listEdit(Xclass $class, Schedule $schedule, $date)
     {
+        if (!$this->canAccessSchool($class)) {
+            abort(403, 'Anda tidak memiliki akses ke sekolah ini.');
+        }
+
         $user = auth()->user();
 
         if (($user->role === 'GURU' || $user->role === 'GURU_BK')) {
@@ -697,10 +903,10 @@ class AttendanceController extends Controller
             ->keyBy('student_id');
 
         return view('admin.attendance.list-edit', [
-            'title' => 'Edit Absensi: ' . $class->name . ' - ' . $schedule->subject->name,
-            'class' => $class,
-            'schedule' => $schedule,
-            'date' => $date,
+            'title'               => 'Edit Absensi: ' . $class->name . ' - ' . $schedule->subject->name,
+            'class'               => $class,
+            'schedule'            => $schedule,
+            'date'                => $date,
             'existingAttendances' => $existingAttendances,
         ]);
     }
@@ -710,6 +916,10 @@ class AttendanceController extends Controller
      */
     public function listUpdate(Request $request, Xclass $class, Schedule $schedule, $date)
     {
+        if (!$this->canAccessSchool($class)) {
+            abort(403, 'Anda tidak memiliki akses ke sekolah ini.');
+        }
+
         $user = auth()->user();
 
         if (($user->role === 'GURU' || $user->role === 'GURU_BK')) {
@@ -728,7 +938,7 @@ class AttendanceController extends Controller
         $request->validate([
             'attendances' => 'required|array',
             'attendances.*.student_id' => 'required|exists:students,id',
-            'attendances.*.status' => 'required|in:HADIR,IZIN,SAKIT,ALPHA',
+            'attendances.*.status'     => 'required|in:HADIR,IZIN,SAKIT,ALPHA',
         ]);
 
         $scheduleId = $schedule->id;
@@ -746,13 +956,13 @@ class AttendanceController extends Controller
 
             Attendance::updateOrCreate(
                 [
-                    'student_id' => $attendanceData['student_id'],
+                    'student_id'            => $attendanceData['student_id'],
                     'student_enrollment_id' => $enrollmentId,
-                    'schedule_id' => $scheduleId,
-                    'date' => $date,
+                    'schedule_id'           => $scheduleId,
+                    'date'                  => $date,
                 ],
                 [
-                    'status' => $attendanceData['status'],
+                    'status'  => $attendanceData['status'],
                     'user_id' => Auth::id(),
                 ]
             );
@@ -770,9 +980,54 @@ use App\Models\AcademicYear;
 use App\Models\User;
 use App\Models\Xclass;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ClassController extends Controller
 {
+    /**
+     * Terapkan filter school_id jika user bukan SUPERADMIN.
+     */
+    private function applySchoolFilter($query)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN') {
+            $query->where('school_id', $user->school_id);
+        }
+        return $query;
+    }
+
+    /**
+     * Cek apakah kelas milik sekolah user (kecuali SUPERADMIN).
+     */
+    private function canAccessSchool(Xclass $class): bool
+    {
+        $user = Auth::user();
+        if ($user->role === 'SUPERADMIN') {
+            return true;
+        }
+        return $class->school_id === $user->school_id;
+    }
+
+    /**
+     * Ambil daftar tahun ajaran yang dapat diakses user.
+     */
+    private function getAvailableAcademicYears()
+    {
+        $query = AcademicYear::latest();
+        $this->applySchoolFilter($query);
+        return $query->get();
+    }
+
+    /**
+     * Ambil daftar guru yang dapat diakses user (hanya role GURU).
+     */
+    private function getAvailableTeachers()
+    {
+        $query = User::where('role', 'GURU')->orderBy('name');
+        $this->applySchoolFilter($query);
+        return $query->get();
+    }
+
     /**
      * Display a listing of the resource with search, filter, and pagination.
      */
@@ -782,6 +1037,9 @@ class ClassController extends Controller
             'academicYear',
             'user'
         ])->withCount('students');
+
+        // Filter sekolah
+        $query = $this->applySchoolFilter($query);
 
         // Pencarian berdasarkan nama kelas
         if ($request->filled('search')) {
@@ -799,12 +1057,11 @@ class ClassController extends Controller
             $query->where('user_id', $request->user_id);
         }
 
-        // PAGINATION: 10 data per halaman, pertahankan query string
         $classes = $query->latest()->paginate(10)->withQueryString();
 
-        // Data untuk dropdown filter
-        $academicYears = AcademicYear::latest()->get();
-        $users = User::where('role', 'GURU')->orderBy('name')->get();
+        // Data untuk dropdown filter (hanya yang dapat diakses user)
+        $academicYears = $this->getAvailableAcademicYears();
+        $users = $this->getAvailableTeachers();
 
         return view('admin.class.index', compact('classes', 'academicYears', 'users'));
     }
@@ -814,11 +1071,12 @@ class ClassController extends Controller
      */
     public function create()
     {
+        $academicYears = $this->getAvailableAcademicYears();
+        $users = $this->getAvailableTeachers();
+
         return view('admin.class.create', [
-            'academicYears' => AcademicYear::latest()->get(),
-            'users' => User::where('role', 'GURU')
-                ->orderBy('name', 'ASC')
-                ->get(),
+            'academicYears' => $academicYears,
+            'users' => $users,
         ]);
     }
 
@@ -833,9 +1091,38 @@ class ClassController extends Controller
             'user_id' => ['nullable', 'exists:users,id'],
         ]);
 
-        // Cek guru hanya boleh wali 1 kelas dalam academic year yang sama
+        // Tentukan school_id
+        $user = Auth::user();
+        if ($user->role === 'SUPERADMIN') {
+            // SUPERADMIN: bisa pilih sekolah? Atau default? Kita bisa ambil dari academic_year
+            // Ambil school_id dari tahun ajaran yang dipilih (asumsi tahun ajaran sudah punya school_id)
+            $academicYear = AcademicYear::findOrFail($data['academic_year_id']);
+            $data['school_id'] = $academicYear->school_id;
+        } else {
+            $data['school_id'] = $user->school_id;
+        }
+
+        // Validasi tambahan: pastikan academic_year dan user (jika ada) berada di sekolah yang sama
+        $academicYear = AcademicYear::findOrFail($data['academic_year_id']);
+        if ($academicYear->school_id != $data['school_id']) {
+            return back()->withInput()->withErrors([
+                'academic_year_id' => 'Tahun ajaran tidak sesuai dengan sekolah.'
+            ]);
+        }
+
+        if (!empty($data['user_id'])) {
+            $teacher = User::findOrFail($data['user_id']);
+            if ($teacher->school_id != $data['school_id']) {
+                return back()->withInput()->withErrors([
+                    'user_id' => 'Guru tidak berada di sekolah yang sama.'
+                ]);
+            }
+        }
+
+        // Cek guru hanya boleh wali 1 kelas dalam academic year yang sama (di sekolah yang sama)
         if (!empty($data['user_id'])) {
             $exists = Xclass::where('academic_year_id', $data['academic_year_id'])
+                ->where('school_id', $data['school_id'])
                 ->where('user_id', $data['user_id'])
                 ->exists();
 
@@ -843,7 +1130,7 @@ class ClassController extends Controller
                 return back()
                     ->withInput()
                     ->withErrors([
-                        'user_id' => 'Guru tersebut sudah menjadi wali kelas pada tahun ajaran ini.'
+                        'user_id' => 'Guru tersebut sudah menjadi wali kelas pada tahun ajaran ini di sekolah ini.'
                     ]);
             }
         }
@@ -867,12 +1154,18 @@ class ClassController extends Controller
      */
     public function edit(Xclass $class)
     {
+        // Cek akses
+        if (!$this->canAccessSchool($class)) {
+            abort(403, 'Anda tidak memiliki akses ke kelas ini.');
+        }
+
+        $academicYears = $this->getAvailableAcademicYears();
+        $users = $this->getAvailableTeachers();
+
         return view('admin.class.edit', [
             'class' => $class,
-            'academicYears' => AcademicYear::latest()->get(),
-            'users' => User::where('role', 'GURU')
-                ->orderBy('name', 'ASC')
-                ->get(),
+            'academicYears' => $academicYears,
+            'users' => $users,
         ]);
     }
 
@@ -881,15 +1174,52 @@ class ClassController extends Controller
      */
     public function update(Request $request, Xclass $class)
     {
+        // Cek akses
+        if (!$this->canAccessSchool($class)) {
+            abort(403, 'Anda tidak memiliki akses ke kelas ini.');
+        }
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'academic_year_id' => ['required', 'exists:academic_years,id'],
             'user_id' => ['nullable', 'exists:users,id'],
         ]);
 
-        // Cek wali kelas duplikat, kecuali kelas yang sedang diedit
+        // Untuk SUPERADMIN, izinkan mengubah sekolah? Biasanya tidak, tapi kita bisa.
+        // Kita pertahankan school_id yang sudah ada.
+        $user = Auth::user();
+        if ($user->role === 'SUPERADMIN' && $request->filled('school_id')) {
+            // Jika SUPERADMIN mengirim school_id, gunakan
+            $request->validate([
+                'school_id' => 'exists:schools,id',
+            ]);
+            $data['school_id'] = $request->school_id;
+        } else {
+            // Non-SUPERADMIN atau tanpa school_id, tetap gunakan yang lama
+            $data['school_id'] = $class->school_id;
+        }
+
+        // Validasi tambahan: pastikan academic_year dan user (jika ada) berada di sekolah yang sama
+        $academicYear = AcademicYear::findOrFail($data['academic_year_id']);
+        if ($academicYear->school_id != $data['school_id']) {
+            return back()->withInput()->withErrors([
+                'academic_year_id' => 'Tahun ajaran tidak sesuai dengan sekolah.'
+            ]);
+        }
+
+        if (!empty($data['user_id'])) {
+            $teacher = User::findOrFail($data['user_id']);
+            if ($teacher->school_id != $data['school_id']) {
+                return back()->withInput()->withErrors([
+                    'user_id' => 'Guru tidak berada di sekolah yang sama.'
+                ]);
+            }
+        }
+
+        // Cek guru duplikat, kecuali kelas yang sedang diedit
         if (!empty($data['user_id'])) {
             $exists = Xclass::where('academic_year_id', $data['academic_year_id'])
+                ->where('school_id', $data['school_id'])
                 ->where('user_id', $data['user_id'])
                 ->where('id', '!=', $class->id)
                 ->exists();
@@ -898,7 +1228,7 @@ class ClassController extends Controller
                 return back()
                     ->withInput()
                     ->withErrors([
-                        'user_id' => 'Guru tersebut sudah menjadi wali kelas pada tahun ajaran ini.'
+                        'user_id' => 'Guru tersebut sudah menjadi wali kelas pada tahun ajaran ini di sekolah ini.'
                     ]);
             }
         }
@@ -914,6 +1244,11 @@ class ClassController extends Controller
      */
     public function destroy(Xclass $class)
     {
+        // Cek akses
+        if (!$this->canAccessSchool($class)) {
+            abort(403, 'Anda tidak memiliki akses ke kelas ini.');
+        }
+
         $class->delete();
 
         return redirect()->route('classes.index')
@@ -925,6 +1260,11 @@ class ClassController extends Controller
      */
     public function schedules(Xclass $class)
     {
+        // Cek akses
+        if (!$this->canAccessSchool($class)) {
+            abort(403, 'Anda tidak memiliki akses ke kelas ini.');
+        }
+
         $class->load('schedules.subject');
 
         return view('admin.class.schedule', [
@@ -938,6 +1278,11 @@ class ClassController extends Controller
      */
     public function students(Xclass $class)
     {
+        // Cek akses
+        if (!$this->canAccessSchool($class)) {
+            abort(403, 'Anda tidak memiliki akses ke kelas ini.');
+        }
+
         $students = $class->students()
             ->select('students.id', 'students.nis', 'students.name')
             ->orderBy('students.name')
@@ -966,43 +1311,101 @@ use App\Models\Subject;
 use App\Models\User;
 use App\Models\Xclass;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     public function index()
     {
+        $user = Auth::user();
+        $isSuperAdmin = $user->role === 'SUPERADMIN';
+        $schoolId = $user->school_id; // null jika SUPERADMIN
+
         $today = Carbon::today();
         $monthStart = Carbon::now()->startOfMonth();
         $monthEnd = Carbon::now()->endOfMonth();
 
-        $activeYear = AcademicYear::where('is_active', true)->first();
+        // Ambil tahun ajaran aktif, filter berdasarkan sekolah (kecuali SUPERADMIN)
+        $activeYearQuery = AcademicYear::where('is_active', true);
+        if (! $isSuperAdmin) {
+            $activeYearQuery->where('school_id', $schoolId);
+        }
+        $activeYear = $activeYearQuery->first();
 
-        // Ringkasan jumlah entitas utama, dibatasi ke tahun ajaran aktif.
+        // Helper untuk menambahkan filter school_id jika bukan SUPERADMIN
+        $applySchoolFilter = function ($query) use ($isSuperAdmin, $schoolId) {
+            if (! $isSuperAdmin) {
+                $query->where('school_id', $schoolId);
+            }
+            return $query;
+        };
+
+        // Ringkasan jumlah entitas utama
+        $studentsQuery = Student::query();
+        if ($activeYear) {
+            $studentsQuery->whereHas('enrollments', function ($q) use ($activeYear) {
+                $q->where('academic_year_id', $activeYear->id);
+            });
+        } else {
+            $studentsQuery->whereRaw('0'); // jika tidak ada tahun aktif, hasil 0
+        }
+        $applySchoolFilter($studentsQuery);
+
+        $classesQuery = Xclass::query();
+        if ($activeYear) {
+            $classesQuery->where('academic_year_id', $activeYear->id);
+        } else {
+            $classesQuery->whereRaw('0');
+        }
+        $applySchoolFilter($classesQuery);
+
+        $subjectsQuery = Subject::query();
+        $applySchoolFilter($subjectsQuery);
+
+        $teachersQuery = User::where('role', 'GURU');
+        $applySchoolFilter($teachersQuery);
+
+        $counselorsQuery = User::where('role', 'GURU_BK');
+        $applySchoolFilter($counselorsQuery);
+
+        $adminsQuery = User::where('role', 'ADMIN');
+        $applySchoolFilter($adminsQuery);
+
         $totals = [
-            'students' => $activeYear
-                ? Student::whereHas('enrollments', fn ($q) => $q->where('academic_year_id', $activeYear->id))->count()
-                : 0,
-            'classes' => $activeYear
-                ? Xclass::where('academic_year_id', $activeYear->id)->count()
-                : 0,
-            'subjects' => Subject::count(),
-            'teachers' => User::where('role', 'GURU')->count(),
-            'counselors' => User::where('role', 'GURU_BK')->count(),
-            'admins' => User::where('role', 'ADMIN')->count(),
+            'students' => $studentsQuery->count(),
+            'classes'  => $classesQuery->count(),
+            'subjects' => $subjectsQuery->count(),
+            'teachers' => $teachersQuery->count(),
+            'counselors'=> $counselorsQuery->count(),
+            'admins'   => $adminsQuery->count(),
         ];
 
-        // Kehadiran hari ini, dibatasi ke enrollment tahun ajaran aktif.
-        $todayCounts = Attendance::query()
-            ->whereDate('date', $today)
-            ->whereHas('studentEnrollment', fn ($q) => $q->where('academic_year_id', $activeYear?->id))
+        // Kehadiran hari ini
+        $todayAttendanceQuery = Attendance::whereDate('date', $today);
+        $applySchoolFilter($todayAttendanceQuery);
+        if ($activeYear) {
+            $todayAttendanceQuery->whereHas('studentEnrollment', function ($q) use ($activeYear) {
+                $q->where('academic_year_id', $activeYear->id);
+            });
+        } else {
+            $todayAttendanceQuery->whereRaw('0');
+        }
+        $todayCounts = $todayAttendanceQuery
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        // Kehadiran bulan berjalan, dibatasi ke enrollment tahun ajaran aktif.
-        $monthCounts = Attendance::query()
-            ->whereBetween('date', [$monthStart, $monthEnd])
-            ->whereHas('studentEnrollment', fn ($q) => $q->where('academic_year_id', $activeYear?->id))
+        // Kehadiran bulan berjalan
+        $monthAttendanceQuery = Attendance::whereBetween('date', [$monthStart, $monthEnd]);
+        $applySchoolFilter($monthAttendanceQuery);
+        if ($activeYear) {
+            $monthAttendanceQuery->whereHas('studentEnrollment', function ($q) use ($activeYear) {
+                $q->where('academic_year_id', $activeYear->id);
+            });
+        } else {
+            $monthAttendanceQuery->whereRaw('0');
+        }
+        $monthCounts = $monthAttendanceQuery
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
@@ -1012,31 +1415,29 @@ class DashboardController extends Controller
             ? round(($monthCounts->get('HADIR', 0) / $monthTotal) * 100, 1)
             : 0;
 
-        // Aktivitas terbaru: user baru daftar + kasus BK baru (tahun ajaran aktif), digabung & diurutkan.
-        $recentUsers = User::query()
-            ->latest()
-            ->take(5)
-            ->get()
-            ->map(fn ($user) => [
-                'type' => 'user',
-                'title' => "{$user->name} bergabung sebagai " . strtolower(str_replace('_', ' ', $user->role)),
-                'timestamp' => $user->created_at,
-            ]);
+        // Aktivitas terbaru: user baru + kasus BK
+        $recentUsersQuery = User::latest()->take(5);
+        $applySchoolFilter($recentUsersQuery);
+        $recentUsers = $recentUsersQuery->get()->map(fn ($user) => [
+            'type'      => 'user',
+            'title'     => "{$user->name} bergabung sebagai " . strtolower(str_replace('_', ' ', $user->role)),
+            'timestamp' => $user->created_at,
+        ]);
 
-        $recentCases = CounselingCase::query()
-            ->with(['student', 'user'])
-            ->when($activeYear, fn ($q) => $q->whereHas(
-                'studentEnrollment',
-                fn ($q2) => $q2->where('academic_year_id', $activeYear->id)
-            ))
-            ->latest()
-            ->take(5)
-            ->get()
-            ->map(fn ($case) => [
-                'type' => 'counseling_case',
-                'title' => "{$case->user->name} mencatat kasus {$case->category_label} untuk {$case->student->name}",
-                'timestamp' => $case->created_at,
-            ]);
+        $recentCasesQuery = CounselingCase::with(['student', 'user'])->latest()->take(5);
+        $applySchoolFilter($recentCasesQuery);
+        if ($activeYear) {
+            $recentCasesQuery->whereHas('studentEnrollment', function ($q) use ($activeYear) {
+                $q->where('academic_year_id', $activeYear->id);
+            });
+        } else {
+            $recentCasesQuery->whereRaw('0');
+        }
+        $recentCases = $recentCasesQuery->get()->map(fn ($case) => [
+            'type'      => 'counseling_case',
+            'title'     => "{$case->user->name} mencatat kasus {$case->category_label} untuk {$case->student->name}",
+            'timestamp' => $case->created_at,
+        ]);
 
         $recentActivities = $recentUsers->concat($recentCases)
             ->sortByDesc('timestamp')
@@ -1044,12 +1445,12 @@ class DashboardController extends Controller
             ->values();
 
         return view('admin.dashboard', [
-            'activeYear' => $activeYear,
-            'totals' => $totals,
-            'todayCounts' => $todayCounts,
-            'monthCounts' => $monthCounts,
-            'attendanceRate' => $attendanceRate,
-            'monthLabel' => Carbon::now()->translatedFormat('F Y'),
+            'activeYear'       => $activeYear,
+            'totals'           => $totals,
+            'todayCounts'      => $todayCounts,
+            'monthCounts'      => $monthCounts,
+            'attendanceRate'   => $attendanceRate,
+            'monthLabel'       => Carbon::now()->translatedFormat('F Y'),
             'recentActivities' => $recentActivities,
         ]);
     }
@@ -1166,30 +1567,99 @@ use Illuminate\Support\Facades\Auth;
 class ScheduleController extends Controller
 {
     /**
+     * Terapkan filter school_id berdasarkan xclass atau user.
+     */
+    private function applySchoolFilter($query)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN') {
+            $query->whereHas('xclass', function ($q) use ($user) {
+                $q->where('school_id', $user->school_id);
+            });
+            // Opsional: tambahkan filter pada user juga untuk keamanan ekstra
+            // $query->whereHas('user', function ($q) use ($user) {
+            //     $q->where('school_id', $user->school_id);
+            // });
+        }
+        return $query;
+    }
+
+    /**
+     * Cek apakah jadwal milik sekolah user (kecuali SUPERADMIN).
+     */
+    private function canAccessSchool(Schedule $schedule): bool
+    {
+        $user = Auth::user();
+        if ($user->role === 'SUPERADMIN') {
+            return true;
+        }
+        return $schedule->xclass && $schedule->xclass->school_id === $user->school_id;
+    }
+
+    /**
+     * Ambil daftar kelas yang dapat diakses user.
+     */
+    private function getAvailableClasses()
+    {
+        $query = Xclass::orderBy('name');
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN') {
+            $query->where('school_id', $user->school_id);
+        }
+        return $query->get();
+    }
+
+    /**
+     * Ambil daftar mata pelajaran yang dapat diakses user.
+     */
+    private function getAvailableSubjects()
+    {
+        $query = Subject::orderBy('name');
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN') {
+            $query->where('school_id', $user->school_id);
+        }
+        return $query->get();
+    }
+
+    /**
+     * Ambil daftar guru yang dapat diakses user.
+     */
+    private function getAvailableUsers()
+    {
+        $query = User::where('role', 'GURU')->orderBy('name');
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN') {
+            $query->where('school_id', $user->school_id);
+        }
+        return $query->get();
+    }
+
+    /**
      * Display a listing of the resource.
-     *
-     * Dibatasi ke jadwal pada kelas yang berada di tahun ajaran yang
-     * sedang aktif. Schedule tidak punya academic_year_id sendiri —
-     * terikat ke xclass, dan xclass yang terikat ke academic_year_id.
-     * Tanpa filter ini, jadwal dari kelas tahun ajaran lama tetap
-     * muncul di daftar.
      */
     public function index(Request $request)
     {
         $query = Schedule::with(['subject', 'xclass.academicYear', 'user']);
+        $user = Auth::user();
 
-        $user = auth()->user();
+        // Filter berdasarkan sekolah (kecuali SUPERADMIN)
+        $this->applySchoolFilter($query);
 
         // Guru: hanya jadwal miliknya dan tahun ajaran aktif
         if ($user->role === 'GURU') {
             $query->where('user_id', $user->id);
-            $activeAcademicYear = AcademicYear::where('is_active', true)->first();
+            $activeAcademicYear = AcademicYear::where('is_active', true)
+                ->when($user->role !== 'SUPERADMIN', function ($q) use ($user) {
+                    $q->where('school_id', $user->school_id);
+                })
+                ->first();
             if ($activeAcademicYear) {
                 $query->whereHas('xclass', fn($q) => $q->where('academic_year_id', $activeAcademicYear->id));
             }
         }
 
-        // Pencarian (mata pelajaran / kelas)
+        // Pencarian
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -1213,9 +1683,19 @@ class ScheduleController extends Controller
             $query->where('subject_id', $request->subject_id);
         }
 
-        // Filter guru (hanya untuk admin)
-        if ($request->filled('user_id') && $user->role === 'ADMIN') {
-            $query->where('user_id', $request->user_id);
+        // Filter guru (hanya untuk admin, dan harus dari sekolah yang sama)
+        if ($request->filled('user_id') && ($user->role === 'ADMIN' || $user->role === 'SUPERADMIN')) {
+            // Pastikan user yang difilter berada di sekolah yang sama (untuk non-SUPERADMIN)
+            if ($user->role !== 'SUPERADMIN') {
+                $userExists = User::where('id', $request->user_id)
+                    ->where('school_id', $user->school_id)
+                    ->exists();
+                if ($userExists) {
+                    $query->where('user_id', $request->user_id);
+                }
+            } else {
+                $query->where('user_id', $request->user_id);
+            }
         }
 
         // Urutkan dan paginasi
@@ -1225,11 +1705,11 @@ class ScheduleController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        // Data untuk dropdown filter
+        // Data untuk dropdown filter (hanya data yang dapat diakses)
         $days = MenuHelper::days();
-        $classes = Xclass::orderBy('name')->get();
-        $subjects = Subject::orderBy('name')->get();
-        $users = User::where('role', 'GURU')->orderBy('name')->get();
+        $classes = $this->getAvailableClasses();
+        $subjects = $this->getAvailableSubjects();
+        $users = $this->getAvailableUsers();
 
         if ($user->isTeacher()) {
             return view('teacher.schedule.index', compact('schedules', 'days', 'classes', 'subjects'));
@@ -1238,17 +1718,20 @@ class ScheduleController extends Controller
         return view('admin.schedule.index', compact('schedules', 'days', 'classes', 'subjects', 'users'));
     }
 
-
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
+        $subjects = $this->getAvailableSubjects();
+        $classes = $this->getAvailableClasses();
+        $users = $this->getAvailableUsers();
+
         return view('admin.schedule.create', [
-            'subjects' => Subject::orderBy('name')->get(),
-            'classes' => Xclass::orderBy('name')->get(),
-            'users' => User::where('role', 'GURU')->orderBy('name')->get(),
-            'days' => MenuHelper::days(),
+            'subjects' => $subjects,
+            'classes'  => $classes,
+            'users'    => $users,
+            'days'     => MenuHelper::days(),
         ]);
     }
 
@@ -1258,6 +1741,9 @@ class ScheduleController extends Controller
     public function store(Request $request)
     {
         $data = $this->validateRequest($request);
+
+        // Validasi tambahan: pastikan semua entitas berada di sekolah yang sama
+        $this->ensureSameSchool($data['xclass_id'], $data['subject_id'], $data['user_id']);
 
         Schedule::create($data);
 
@@ -1277,12 +1763,21 @@ class ScheduleController extends Controller
      */
     public function edit(Schedule $schedule)
     {
+        // Cek akses
+        if (!$this->canAccessSchool($schedule)) {
+            abort(403, 'Anda tidak memiliki akses ke jadwal ini.');
+        }
+
+        $subjects = $this->getAvailableSubjects();
+        $classes = $this->getAvailableClasses();
+        $users = $this->getAvailableUsers();
+
         return view('admin.schedule.edit', [
             'schedule' => $schedule,
-            'subjects' => Subject::orderBy('name')->get(),
-            'classes' => Xclass::orderBy('name')->get(),
-            'users' => User::where('role', 'GURU')->orderBy('name')->get(),
-            'days' => MenuHelper::days(),
+            'subjects' => $subjects,
+            'classes'  => $classes,
+            'users'    => $users,
+            'days'     => MenuHelper::days(),
         ]);
     }
 
@@ -1291,7 +1786,15 @@ class ScheduleController extends Controller
      */
     public function update(Request $request, Schedule $schedule)
     {
+        // Cek akses
+        if (!$this->canAccessSchool($schedule)) {
+            abort(403, 'Anda tidak memiliki akses ke jadwal ini.');
+        }
+
         $data = $this->validateRequest($request);
+
+        // Validasi tambahan
+        $this->ensureSameSchool($data['xclass_id'], $data['subject_id'], $data['user_id']);
 
         $schedule->update($data);
 
@@ -1303,21 +1806,59 @@ class ScheduleController extends Controller
      */
     public function destroy(Schedule $schedule)
     {
+        // Cek akses
+        if (!$this->canAccessSchool($schedule)) {
+            abort(403, 'Anda tidak memiliki akses ke jadwal ini.');
+        }
+
         $schedule->delete();
 
         return redirect()->route('schedules.index')->with('success', 'Jadwal berhasil dihapus.');
     }
 
+    /**
+     * Validasi request.
+     */
     private function validateRequest(Request $request): array
     {
         return $request->validate([
-            'day' => ['required', 'in:MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,SATURDAY,SUNDAY'],
+            'day'        => ['required', 'in:MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,SATURDAY,SUNDAY'],
             'start_time' => ['required', 'date_format:H:i'],
-            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
+            'end_time'   => ['required', 'date_format:H:i', 'after:start_time'],
             'subject_id' => ['required', 'exists:subjects,id'],
-            'xclass_id' => ['required', 'exists:xclasses,id'],
-            'user_id' => ['required', 'exists:users,id'],
+            'xclass_id'  => ['required', 'exists:xclasses,id'],
+            'user_id'    => ['required', 'exists:users,id'],
         ]);
+    }
+
+    /**
+     * Pastikan kelas, mata pelajaran, dan guru berada di sekolah yang sama.
+     */
+    private function ensureSameSchool($xclassId, $subjectId, $userId)
+    {
+        $user = Auth::user();
+
+        $xclass = Xclass::findOrFail($xclassId);
+        $subject = Subject::findOrFail($subjectId);
+        $teacher = User::findOrFail($userId);
+
+        // Jika user bukan SUPERADMIN, semua harus sesuai dengan school_id user
+        if ($user->role !== 'SUPERADMIN') {
+            if ($xclass->school_id !== $user->school_id) {
+                abort(422, 'Kelas tidak berada di sekolah Anda.');
+            }
+            if ($subject->school_id !== $user->school_id) {
+                abort(422, 'Mata pelajaran tidak berada di sekolah Anda.');
+            }
+            if ($teacher->school_id !== $user->school_id) {
+                abort(422, 'Guru tidak berada di sekolah Anda.');
+            }
+        } else {
+            // SUPERADMIN: semua harus memiliki school_id yang sama
+            if ($xclass->school_id !== $subject->school_id || $xclass->school_id !== $teacher->school_id) {
+                abort(422, 'Kelas, mata pelajaran, dan guru harus berada di sekolah yang sama.');
+            }
+        }
     }
 }<?php
 
@@ -1519,17 +2060,87 @@ use App\Models\Student;
 use App\Models\StudentEnrollment;
 use App\Models\Xclass;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class StudentController extends Controller
 {
     /**
+     * Terapkan filter school_id jika user bukan SUPERADMIN.
+     */
+    private function applySchoolFilter($query)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN') {
+            $query->where('school_id', $user->school_id);
+        }
+        return $query;
+    }
+
+    /**
+     * Cek apakah siswa milik sekolah user (kecuali SUPERADMIN).
+     */
+    private function canAccessSchool(Student $student): bool
+    {
+        $user = Auth::user();
+        if ($user->role === 'SUPERADMIN') {
+            return true;
+        }
+        return $student->school_id === $user->school_id;
+    }
+
+    /**
+     * Daftar kelas pada tahun ajaran aktif yang dapat diakses user.
+     */
+    private function activeYearClasses()
+    {
+        $query = Xclass::with('academicYear')
+            ->whereHas('academicYear', function ($q) {
+                $q->where('is_active', true);
+                // Filter tahun ajaran berdasarkan sekolah akan otomatis karena academicYear sudah di-filter di activeAcademicYearOrFail()
+            })
+            ->orderBy('name');
+
+        // Filter berdasarkan sekolah (kecuali SUPERADMIN)
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN') {
+            $query->where('school_id', $user->school_id);
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * Tahun ajaran aktif milik sekolah user (atau semua jika SUPERADMIN).
+     */
+    private function activeAcademicYearOrFail(): AcademicYear
+    {
+        $user = Auth::user();
+        $query = AcademicYear::where('is_active', true);
+
+        if ($user->role !== 'SUPERADMIN') {
+            $query->where('school_id', $user->school_id);
+        }
+
+        $academicYear = $query->first();
+
+        if (!$academicYear) {
+            throw ValidationException::withMessages([
+                'xclass_id' => 'Belum ada tahun ajaran aktif di sekolah ini. Aktifkan tahun ajaran terlebih dahulu.',
+            ]);
+        }
+
+        return $academicYear;
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
         $query = Student::with('currentEnrollment.xclass');
+        $query = $this->applySchoolFilter($query);
 
         // Pencarian berdasarkan nama, NIS, atau NISN
         if ($request->filled('search')) {
@@ -1558,17 +2169,13 @@ class StudentController extends Controller
             });
         }
 
-        // Pagination (10 per halaman) dengan mempertahankan query string
         $students = $query->latest()->paginate(10)->withQueryString();
 
-        // Ambil daftar kelas pada tahun ajaran aktif untuk dropdown filter
-        $classes = Xclass::whereHas('academicYear', fn($q) => $q->where('is_active', true))
-                         ->orderBy('name')
-                         ->get();
+        // Ambil daftar kelas pada tahun ajaran aktif (sesuai sekolah user)
+        $classes = $this->activeYearClasses();
 
         return view('admin.student.index', compact('students', 'classes'));
     }
-
 
     /**
      * Show the form for creating a new resource.
@@ -1576,8 +2183,6 @@ class StudentController extends Controller
     public function create()
     {
         return view('admin.student.create', [
-            // Hanya kelas pada tahun ajaran aktif yang boleh dipilih,
-            // karena enrollment baru selalu mengikuti tahun ajaran aktif.
             'classes' => $this->activeYearClasses(),
         ]);
     }
@@ -1593,9 +2198,26 @@ class StudentController extends Controller
         $xclassId = $data['xclass_id'];
         unset($data['xclass_id']);
 
+        // Tentukan school_id
+        $user = Auth::user();
+        if ($user->role === 'SUPERADMIN') {
+            // SUPERADMIN: ambil dari xclass yang dipilih (pastikan konsisten)
+            $xclass = Xclass::findOrFail($xclassId);
+            $data['school_id'] = $xclass->school_id;
+        } else {
+            $data['school_id'] = $user->school_id;
+        }
+
+        // Validasi tambahan: pastikan xclass_id sesuai dengan school_id
+        $xclass = Xclass::findOrFail($xclassId);
+        if ($xclass->school_id != $data['school_id']) {
+            return back()->withInput()->withErrors([
+                'xclass_id' => 'Kelas tidak sesuai dengan sekolah.'
+            ]);
+        }
+
         DB::transaction(function () use ($data, $xclassId, $academicYear) {
             $student = Student::create($data);
-
             $this->enrollStudent($student->id, $xclassId, $academicYear->id);
         });
 
@@ -1615,7 +2237,10 @@ class StudentController extends Controller
      */
     public function edit(Student $student)
     {
-        // xclass ikut di-load karena form butuh xclass_id untuk pre-select dropdown.
+        if (!$this->canAccessSchool($student)) {
+            abort(403, 'Anda tidak memiliki akses ke siswa ini.');
+        }
+
         $student->load('currentEnrollment.xclass');
 
         return view('admin.student.edit', [
@@ -1629,17 +2254,35 @@ class StudentController extends Controller
      */
     public function update(Request $request, Student $student)
     {
+        if (!$this->canAccessSchool($student)) {
+            abort(403, 'Anda tidak memiliki akses ke siswa ini.');
+        }
+
         $academicYear = $this->activeAcademicYearOrFail();
 
         $data = $this->validateRequest($request, $academicYear, $student);
         $xclassId = $data['xclass_id'];
         unset($data['xclass_id']);
 
+        // Untuk SUPERADMIN, izinkan mengganti school_id? Biasanya tidak, tapi kita bisa.
+        $user = Auth::user();
+        if ($user->role === 'SUPERADMIN' && $request->filled('school_id')) {
+            $request->validate(['school_id' => 'exists:schools,id']);
+            $data['school_id'] = $request->school_id;
+        } else {
+            $data['school_id'] = $student->school_id; // tetap gunakan yang lama
+        }
+
+        // Validasi tambahan: pastikan xclass_id sesuai dengan school_id
+        $xclass = Xclass::findOrFail($xclassId);
+        if ($xclass->school_id != $data['school_id']) {
+            return back()->withInput()->withErrors([
+                'xclass_id' => 'Kelas tidak sesuai dengan sekolah.'
+            ]);
+        }
+
         DB::transaction(function () use ($data, $xclassId, $academicYear, $student) {
             $student->update($data);
-
-            // Enrollment untuk tahun ajaran aktif (kalau sudah ada, tinggal
-            // update kelasnya; kalau belum ada, buat baru).
             $this->enrollStudent($student->id, $xclassId, $academicYear->id);
         });
 
@@ -1651,6 +2294,10 @@ class StudentController extends Controller
      */
     public function destroy(Student $student)
     {
+        if (!$this->canAccessSchool($student)) {
+            abort(403, 'Anda tidak memiliki akses ke siswa ini.');
+        }
+
         $student->delete();
 
         return redirect()->route('students.index')->with('success', 'Siswa berhasil dihapus.');
@@ -1660,25 +2307,31 @@ class StudentController extends Controller
     {
         $ignoreId = $student?->id ?? 'NULL';
 
-        return $request->validate([
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'nis' => ['required', 'string', 'max:20', "unique:students,nis,{$ignoreId}"],
             'nisn' => ['required', 'string', 'max:20', "unique:students,nisn,{$ignoreId}"],
             'gender' => ['required', 'in:MALE,FEMALE'],
-            // Kelas harus milik tahun ajaran aktif, bukan sekadar exists di xclasses.
             'xclass_id' => [
                 'required',
                 'exists:xclasses,id,academic_year_id,' . $academicYear->id,
             ],
             'parent_name' => ['nullable', 'string', 'max:255'],
             'parent_phone' => ['nullable', 'string', 'max:20'],
-        ]);
+        ];
+
+        // Jika SUPERADMIN, izinkan memilih school_id (opsional)
+        if (Auth::user()->role === 'SUPERADMIN') {
+            $rules['school_id'] = ['nullable', 'exists:schools,id'];
+        }
+
+        return $request->validate($rules);
     }
 
     /**
      * Buat enrollment baru; kalau siswa ternyata sudah punya enrollment
      * di tahun ajaran yang sama (unique student_id+academic_year_id),
-     * update kelasnya saja alih-alih insert baru yang akan gagal.
+     * update kelasnya saja.
      */
     private function enrollStudent(int $studentId, int $xclassId, int $academicYearId): void
     {
@@ -1695,65 +2348,68 @@ class StudentController extends Controller
             'student_id' => $studentId,
             'xclass_id' => $xclassId,
             'academic_year_id' => $academicYearId,
+            // school_id otomatis diisi oleh model melalui relasi? Bisa juga kita set manual
+            // Tapi sebaiknya model StudentEnrollment memiliki school_id juga.
+            // Jika tidak, kita isi melalui observer atau event, atau kita set di sini.
+            // Untuk amannya, kita ambil dari xclass.
+            'school_id' => Xclass::find($xclassId)->school_id,
         ]);
-    }
-
-    /**
-     * Daftar kelas pada tahun ajaran yang sedang aktif saja.
-     */
-    private function activeYearClasses()
-    {
-        return Xclass::with('academicYear')
-            ->whereHas('academicYear', fn ($q) => $q->where('is_active', true))
-            ->orderBy('name')
-            ->get();
-    }
-
-    /**
-     * Tahun ajaran aktif. Gagal (redirect back dengan error) kalau
-     * belum ada tahun ajaran yang diset aktif, supaya data siswa
-     * tidak ke-enroll ke tahun ajaran yang salah.
-     */
-    private function activeAcademicYearOrFail(): AcademicYear
-    {
-        $academicYear = AcademicYear::where('is_active', true)->first();
-
-        if (! $academicYear) {
-            throw ValidationException::withMessages([
-                'xclass_id' => 'Belum ada tahun ajaran aktif. Aktifkan tahun ajaran terlebih dahulu.',
-            ]);
-        }
-
-        return $academicYear;
     }
 }<?php
 
 namespace App\Http\Controllers;
 
+use App\Models\School;
 use App\Models\Subject;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class SubjectController extends Controller
 {
+    /**
+     * Terapkan filter school_id jika user bukan SUPERADMIN.
+     */
+    private function applySchoolFilter($query)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN') {
+            $query->where('school_id', $user->school_id);
+        }
+        return $query;
+    }
+
+    /**
+     * Cek apakah mata pelajaran milik sekolah user (kecuali SUPERADMIN).
+     */
+    private function canAccessSchool(Subject $subject): bool
+    {
+        $user = Auth::user();
+        if ($user->role === 'SUPERADMIN') {
+            return true;
+        }
+        return $subject->school_id === $user->school_id;
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
         $query = Subject::query();
+        $query = $this->applySchoolFilter($query);
 
-        // Pencarian berdasarkan nama mata pelajaran
+        // Pencarian berdasarkan nama
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where('name', 'like', "%{$search}%");
         }
 
-        // Filter grade (X, XI, XII)
+        // Filter grade
         if ($request->filled('grade') && in_array($request->grade, ['X', 'XI', 'XII'])) {
             $query->where('grade', $request->grade);
         }
 
-        // Pagination dengan tetap mempertahankan query string
         $subjects = $query->latest()->paginate(10)->withQueryString();
 
         return view('admin.subject.index', compact('subjects'));
@@ -1764,24 +2420,59 @@ class SubjectController extends Controller
      */
     public function create()
     {
-        return view('admin.subject.create');
+        $user = Auth::user();
+        $schools = null;
+
+        // Jika SUPERADMIN, berikan pilihan sekolah
+        if ($user->role === 'SUPERADMIN') {
+            $schools = School::orderBy('name')->get();
+        }
+
+        return view('admin.subject.create', compact('schools'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-{
-    $data = $request->validate([
-        'name'  => ['required', 'string', 'max:255', 'unique:subjects,name'],
-        'grade' => ['required', 'in:X,XI,XII'], // tambahkan
-    ]);
+    {
+        $user = Auth::user();
 
-    Subject::create($data);
+        // Validasi dasar
+        $rules = [
+            'name'  => ['required', 'string', 'max:255'],
+            'grade' => ['required', 'in:X,XI,XII'],
+        ];
 
-    return redirect()->route('subjects.index')->with('success', 'Mata pelajaran berhasil ditambahkan.');
-}
+        // Jika SUPERADMIN, tambahkan validasi school_id
+        if ($user->role === 'SUPERADMIN') {
+            $rules['school_id'] = ['required', 'exists:schools,id'];
+        }
 
+        $data = $request->validate($rules);
+
+        // Tentukan school_id
+        if ($user->role === 'SUPERADMIN') {
+            $data['school_id'] = $request->school_id;
+        } else {
+            $data['school_id'] = $user->school_id;
+        }
+
+        // Validasi unique per sekolah
+        $exists = Subject::where('name', $data['name'])
+            ->where('school_id', $data['school_id'])
+            ->exists();
+
+        if ($exists) {
+            return back()->withInput()->withErrors([
+                'name' => 'Mata pelajaran dengan nama ini sudah ada di sekolah ini.'
+            ]);
+        }
+
+        Subject::create($data);
+
+        return redirect()->route('subjects.index')->with('success', 'Mata pelajaran berhasil ditambahkan.');
+    }
 
     /**
      * Display the specified resource.
@@ -1796,8 +2487,20 @@ class SubjectController extends Controller
      */
     public function edit(Subject $subject)
     {
+        if (!$this->canAccessSchool($subject)) {
+            abort(403, 'Anda tidak memiliki akses ke mata pelajaran ini.');
+        }
+
+        $user = Auth::user();
+        $schools = null;
+
+        if ($user->role === 'SUPERADMIN') {
+            $schools = School::orderBy('name')->get();
+        }
+
         return view('admin.subject.edit', [
-            'subject' => $subject,
+            'subject'  => $subject,
+            'schools'  => $schools,
         ]);
     }
 
@@ -1806,28 +2509,61 @@ class SubjectController extends Controller
      */
     public function update(Request $request, Subject $subject)
     {
-        $data = $request->validate([
-            'name'  => ['required', 'string', 'max:255', "unique:subjects,name,{$subject->id}"],
-            'grade' => ['required', 'in:X,XI,XII'], // tambahkan
-        ]);
+        if (!$this->canAccessSchool($subject)) {
+            abort(403, 'Anda tidak memiliki akses ke mata pelajaran ini.');
+        }
+
+        $user = Auth::user();
+
+        $rules = [
+            'name'  => ['required', 'string', 'max:255'],
+            'grade' => ['required', 'in:X,XI,XII'],
+        ];
+
+        if ($user->role === 'SUPERADMIN') {
+            $rules['school_id'] = ['nullable', 'exists:schools,id'];
+        }
+
+        $data = $request->validate($rules);
+
+        // Tentukan school_id
+        if ($user->role === 'SUPERADMIN' && $request->filled('school_id')) {
+            $data['school_id'] = $request->school_id;
+        } else {
+            $data['school_id'] = $subject->school_id; // tetap gunakan yang lama
+        }
+
+        // Validasi unique per sekolah (kecuali dirinya sendiri)
+        $exists = Subject::where('name', $data['name'])
+            ->where('school_id', $data['school_id'])
+            ->where('id', '!=', $subject->id)
+            ->exists();
+
+        if ($exists) {
+            return back()->withInput()->withErrors([
+                'name' => 'Mata pelajaran dengan nama ini sudah ada di sekolah ini.'
+            ]);
+        }
 
         $subject->update($data);
 
         return redirect()->route('subjects.index')->with('success', 'Mata pelajaran berhasil diperbarui.');
     }
 
-
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Subject $subject)
     {
+        if (!$this->canAccessSchool($subject)) {
+            abort(403, 'Anda tidak memiliki akses ke mata pelajaran ini.');
+        }
+
         $subject->delete();
 
         return redirect()->route('subjects.index')->with('success', 'Mata pelajaran berhasil dihapus.');
     }
-}
-<?php
+}<?php
 
 namespace App\Http\Controllers;
 
@@ -1838,70 +2574,92 @@ use Illuminate\Support\Facades\Auth;
 
 class TeacherDocumentController extends Controller
 {
+    /**
+     * Mendapatkan filter school_id berdasarkan role user.
+     */
+    private function applySchoolFilter($query)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN') {
+            $query->where('school_id', $user->school_id);
+        }
+        return $query;
+    }
+
     public function index(Request $request)
     {
-        $documents = TeacherDocument::query()
-            ->with(['user'])
-            ->when($request->status, function ($query, $status) {
-                $query->where('status', $status);
-            })
-            ->latest()
-            ->paginate(15);
+        $query = TeacherDocument::with(['user']);
+
+        // Filter berdasarkan sekolah (kecuali SUPERADMIN)
+        $this->applySchoolFilter($query);
+
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $documents = $query->latest()->paginate(15);
 
         return view('admin.teacher-documents.index', compact('documents'));
     }
 
-
     public function show(TeacherDocument $teacherDocument)
     {
+        // Pastikan dokumen milik sekolah user (kecuali SUPERADMIN)
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN' && $teacherDocument->school_id !== $user->school_id) {
+            abort(403, 'Anda tidak memiliki akses ke dokumen ini.');
+        }
+
         $teacherDocument->load('user');
 
         return view('admin.teacher-documents.show', compact('teacherDocument'));
     }
 
-
     public function verify(Request $request, TeacherDocument $teacherDocument)
     {
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN' && $teacherDocument->school_id !== $user->school_id) {
+            abort(403, 'Anda tidak memiliki akses ke dokumen ini.');
+        }
+
         $teacherDocument->update([
-            'status' => 'VERIFIED',
-            'note' => null,
-            'verified_by' => Auth::id(),
+            'status'      => 'VERIFIED',
+            'note'        => null,
+            'verified_by' => $user->id,
             'verified_at' => now(),
         ]);
 
-        return back()
-            ->with('success', 'Dokumen berhasil diverifikasi.');
+        return back()->with('success', 'Dokumen berhasil diverifikasi.');
     }
-
 
     public function reject(Request $request, TeacherDocument $teacherDocument)
     {
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN' && $teacherDocument->school_id !== $user->school_id) {
+            abort(403, 'Anda tidak memiliki akses ke dokumen ini.');
+        }
+
         $data = $request->validate([
-            'note' => [
-                'required',
-                'string',
-                'max:1000'
-            ],
+            'note' => 'required|string|max:1000',
         ]);
 
-
         $teacherDocument->update([
-            'status' => 'REJECTED',
-            'note' => $data['note'],
-            'verified_by' => Auth::id(),
+            'status'      => 'REJECTED',
+            'note'        => $data['note'],
+            'verified_by' => $user->id,
             'verified_at' => now(),
         ]);
 
-
-        return back()
-            ->with('success', 'Dokumen ditolak.');
+        return back()->with('success', 'Dokumen ditolak.');
     }
 }<?php
 
 namespace App\Http\Controllers;
 
+use App\Models\School;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -1909,23 +2667,54 @@ use Illuminate\Validation\Rules\Password;
 class UserController extends Controller
 {
     /**
+     * Terapkan filter school_id jika user bukan SUPERADMIN.
+     */
+    private function applySchoolFilter($query)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'SUPERADMIN') {
+            $query->where('school_id', $user->school_id);
+        }
+        return $query;
+    }
+
+    /**
+     * Cek apakah user milik sekolah yang sama (kecuali SUPERADMIN).
+     */
+    private function canAccessSchool(User $user): bool
+    {
+        $currentUser = Auth::user();
+        if ($currentUser->role === 'SUPERADMIN') {
+            return true;
+        }
+        // User tanpa school_id (misalnya SUPERADMIN) tidak bisa diakses oleh non-SUPERADMIN
+        if ($user->school_id === null) {
+            return false;
+        }
+        return $user->school_id === $currentUser->school_id;
+    }
+
+    /**
      * Tampilkan daftar user
      */
     public function index(Request $request)
     {
-        $users = User::query()
-            ->when($request->search, function ($q, $search) {
-                $q->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                });
-            })
-            ->when($request->role, function ($q, $role) {
-                $q->where('role', $role);
-            })
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+        $query = User::query();
+        $query = $this->applySchoolFilter($query);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
+
+        $users = $query->latest()->paginate(10)->withQueryString();
 
         return view('admin.user.index', compact('users'));
     }
@@ -1935,7 +2724,15 @@ class UserController extends Controller
      */
     public function create()
     {
-        return view('admin.user.create');
+        $user = Auth::user();
+        $schools = null;
+
+        // SUPERADMIN bisa memilih sekolah, yang lain tidak
+        if ($user->role === 'SUPERADMIN') {
+            $schools = School::orderBy('name')->get();
+        }
+
+        return view('admin.user.create', compact('schools'));
     }
 
     /**
@@ -1943,18 +2740,35 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+        $currentUser = Auth::user();
+
+        $rules = [
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
-            'role' => ['required', Rule::in(['ADMIN', 'GURU', 'GURU_BK'])],
-        ]);
+            'role'     => ['required', Rule::in(['ADMIN', 'GURU', 'GURU_BK'])],
+        ];
+
+        // SUPERADMIN bisa memilih sekolah
+        if ($currentUser->role === 'SUPERADMIN') {
+            $rules['school_id'] = ['required', 'exists:schools,id'];
+        }
+
+        $validated = $request->validate($rules);
+
+        // Tentukan school_id
+        if ($currentUser->role === 'SUPERADMIN') {
+            $schoolId = $validated['school_id'];
+        } else {
+            $schoolId = $currentUser->school_id;
+        }
 
         User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
+            'name'      => $validated['name'],
+            'email'     => $validated['email'],
+            'password'  => Hash::make($validated['password']),
+            'role'      => $validated['role'],
+            'school_id' => $schoolId,
         ]);
 
         return redirect()
@@ -1967,6 +2781,10 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
+        if (!$this->canAccessSchool($user)) {
+            abort(403, 'Anda tidak memiliki akses ke user ini.');
+        }
+
         $user->load('currentClasses');
 
         return view('admin.user.show', compact('user'));
@@ -1977,7 +2795,18 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return view('admin.user.edit', compact('user'));
+        if (!$this->canAccessSchool($user)) {
+            abort(403, 'Anda tidak memiliki akses ke user ini.');
+        }
+
+        $currentUser = Auth::user();
+        $schools = null;
+
+        if ($currentUser->role === 'SUPERADMIN') {
+            $schools = School::orderBy('name')->get();
+        }
+
+        return view('admin.user.edit', compact('user', 'schools'));
     }
 
     /**
@@ -1985,16 +2814,35 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'password' => ['nullable', 'confirmed', Password::defaults()],
-            'role' => ['required', Rule::in(['ADMIN', 'GURU', 'GURU_BK'])],
-        ]);
+        if (!$this->canAccessSchool($user)) {
+            abort(403, 'Anda tidak memiliki akses ke user ini.');
+        }
 
-        $user->name = $validated['name'];
+        $currentUser = Auth::user();
+
+        $rules = [
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'password' => ['nullable', 'confirmed', Password::defaults()],
+            'role'     => ['required', Rule::in(['ADMIN', 'GURU', 'GURU_BK'])],
+        ];
+
+        // SUPERADMIN bisa mengubah sekolah, yang lain tidak
+        if ($currentUser->role === 'SUPERADMIN') {
+            $rules['school_id'] = ['nullable', 'exists:schools,id'];
+        }
+
+        $validated = $request->validate($rules);
+
+        // Tentukan school_id
+        if ($currentUser->role === 'SUPERADMIN' && $request->filled('school_id')) {
+            $user->school_id = $validated['school_id'];
+        }
+        // Non-SUPERADMIN tidak bisa mengubah school_id, biarkan tetap
+
+        $user->name  = $validated['name'];
         $user->email = $validated['email'];
-        $user->role = $validated['role'];
+        $user->role  = $validated['role'];
 
         if (!empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
@@ -2014,6 +2862,10 @@ class UserController extends Controller
     {
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Anda tidak bisa menghapus akun sendiri.');
+        }
+
+        if (!$this->canAccessSchool($user)) {
+            abort(403, 'Anda tidak memiliki akses ke user ini.');
         }
 
         $user->delete();

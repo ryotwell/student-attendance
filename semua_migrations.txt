@@ -622,7 +622,7 @@ return new class extends Migration
             // Catatan admin
             $table->text('note')->nullable();
             // siapa yang memverifikasi
-            $table->foreignIdFor(User::class, 'verified_by')->nullable()->constrained()->nullOnDelete();
+            $table->foreignIdFor(User::class)->nullable()->constrained()->nullOnDelete();
             $table->foreignIdFor(School::class)->constrained()->cascadeOnDelete();
             $table->timestamp('verified_at')->nullable();
             $table->timestamps();
