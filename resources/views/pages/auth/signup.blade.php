@@ -1,15 +1,15 @@
 @extends('layouts.fullscreen-layout')
 
 @section('content')
-    <div class="relative z-1 min-h-screen bg-brand-600 dark:bg-brand-900 lg:bg-gray-100 lg:dark:bg-gray-900">
+    <div class="relative z-1 min-h-screen bg-[oklch(53.54%_0.2151_263.08)] dark:bg-[oklch(40%_0.2_263)] lg:bg-gray-100 lg:dark:bg-gray-900">
         <div class="flex min-h-screen w-full flex-col lg:flex-row">
 
             <!-- ============ SISI KIRI: Branding ============ -->
-            <div class="relative hidden w-full flex-col justify-between overflow-hidden bg-brand-600 p-6 sm:p-10 lg:flex lg:w-2/5 xl:w-1/2 dark:bg-brand-900">
+            <div class="relative hidden w-full flex-col justify-between overflow-hidden bg-[oklch(53.54%_0.2151_263.08)] p-6 sm:p-10 lg:flex lg:w-2/5 xl:w-1/2 dark:bg-[oklch(40%_0.2_263)]">
                 <!-- Dekorasi blur -->
                 <div class="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-white/10 blur-3xl"></div>
                 <div class="pointer-events-none absolute -right-16 bottom-0 h-96 w-96 rounded-full bg-white/10 blur-3xl"></div>
-                <div class="pointer-events-none absolute top-1/3 right-1/4 h-40 w-40 rounded-full bg-brand-400/20 blur-2xl"></div>
+                <div class="pointer-events-none absolute top-1/3 right-1/4 h-40 w-40 rounded-full bg-[oklch(53.54%_0.2151_263.08)]/20 blur-2xl"></div>
 
                 <div class="relative z-10 my-auto max-w-md">
                     <h2 class="mb-4 text-2xl font-bold text-white sm:text-3xl">
@@ -92,7 +92,7 @@
                                         </span>
                                         <input type="text" id="name" name="name" value="{{ old('name') }}" autofocus
                                             placeholder="Nama lengkap"
-                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('name') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
+                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-[oklch(53.54%_0.2151_263.08)] focus:ring-[oklch(53.54%_0.2151_263.08)]/10 dark:focus:border-[oklch(60%_0.2_263)] h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('name') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
                                     </div>
                                     @error('name')
                                         <p class="mt-1 text-sm text-error-500">{{ $message }}</p>
@@ -112,7 +112,7 @@
                                         </span>
                                         <input type="email" id="email" name="email" value="{{ old('email') }}" autocomplete="email"
                                             placeholder="email@sekolah.sch.id"
-                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('email') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
+                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-[oklch(53.54%_0.2151_263.08)] focus:ring-[oklch(53.54%_0.2151_263.08)]/10 dark:focus:border-[oklch(60%_0.2_263)] h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('email') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
                                     </div>
                                     @error('email')
                                         <p class="mt-1 text-sm text-error-500">{{ $message }}</p>
@@ -131,7 +131,7 @@
                                         </span>
                                         <input :type="showPassword ? 'text' : 'password'" id="password" name="password" autocomplete="new-password"
                                             placeholder="Minimal 8 karakter"
-                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-10 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('password') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
+                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-[oklch(53.54%_0.2151_263.08)] focus:ring-[oklch(53.54%_0.2151_263.08)]/10 dark:focus:border-[oklch(60%_0.2_263)] h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-10 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('password') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
                                         <button type="button" @click="showPassword = !showPassword"
                                             class="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
                                             <svg x-show="!showPassword" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">
@@ -160,7 +160,7 @@
                                         </span>
                                         <input type="password" id="password_confirmation" name="password_confirmation" autocomplete="new-password"
                                             placeholder="Ulangi kata sandi"
-                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('password_confirmation') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
+                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-[oklch(53.54%_0.2151_263.08)] focus:ring-[oklch(53.54%_0.2151_263.08)]/10 dark:focus:border-[oklch(60%_0.2_263)] h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('password_confirmation') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
                                     </div>
                                     @error('password_confirmation')
                                         <p class="mt-1 text-sm text-error-500">{{ $message }}</p>
@@ -180,7 +180,7 @@
                                         </span>
                                         <input type="text" id="school_name" name="school_name" value="{{ old('school_name') }}"
                                             placeholder="Nama sekolah Anda"
-                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('school_name') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
+                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-[oklch(53.54%_0.2151_263.08)] focus:ring-[oklch(53.54%_0.2151_263.08)]/10 dark:focus:border-[oklch(60%_0.2_263)] h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('school_name') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
                                     </div>
                                     @error('school_name')
                                         <p class="mt-1 text-sm text-error-500">{{ $message }}</p>
@@ -199,7 +199,7 @@
                                         </span>
                                         <input type="text" id="npsn" name="npsn" value="{{ old('npsn') }}"
                                             placeholder="Nomor Pokok Sekolah Nasional (8 digit)"
-                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('npsn') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
+                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-[oklch(53.54%_0.2151_263.08)] focus:ring-[oklch(53.54%_0.2151_263.08)]/10 dark:focus:border-[oklch(60%_0.2_263)] h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('npsn') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
                                     </div>
                                     @error('npsn')
                                         <p class="mt-1 text-sm text-error-500">{{ $message }}</p>
@@ -217,7 +217,7 @@
                                             </svg>
                                         </span>
                                         <select id="school_level" name="school_level" required
-                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-10 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('school_level') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror">
+                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-[oklch(53.54%_0.2151_263.08)] focus:ring-[oklch(53.54%_0.2151_263.08)]/10 dark:focus:border-[oklch(60%_0.2_263)] h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-10 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('school_level') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror">
                                             <option value="">Pilih Jenjang</option>
                                             <option value="SD" {{ old('school_level') == 'SD' ? 'selected' : '' }}>SD / MI</option>
                                             <option value="SMP" {{ old('school_level') == 'SMP' ? 'selected' : '' }}>SMP / MTs</option>
@@ -247,7 +247,7 @@
                                         </span>
                                         <input type="text" id="address" name="address" value="{{ old('address') }}"
                                             placeholder="Alamat lengkap sekolah"
-                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('address') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
+                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-[oklch(53.54%_0.2151_263.08)] focus:ring-[oklch(53.54%_0.2151_263.08)]/10 dark:focus:border-[oklch(60%_0.2_263)] h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('address') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
                                     </div>
                                     @error('address')
                                         <p class="mt-1 text-sm text-error-500">{{ $message }}</p>
@@ -267,7 +267,7 @@
                                         </span>
                                         <input type="text" id="school_phone" name="school_phone" value="{{ old('school_phone') }}"
                                             placeholder="Nomor telepon sekolah"
-                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('school_phone') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
+                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-[oklch(53.54%_0.2151_263.08)] focus:ring-[oklch(53.54%_0.2151_263.08)]/10 dark:focus:border-[oklch(60%_0.2_263)] h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('school_phone') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
                                     </div>
                                     @error('school_phone')
                                         <p class="mt-1 text-sm text-error-500">{{ $message }}</p>
@@ -286,7 +286,7 @@
                                         </span>
                                         <input type="email" id="school_email" name="school_email" value="{{ old('school_email') }}"
                                             placeholder="email@sekolah.sch.id"
-                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('school_email') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
+                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-[oklch(53.54%_0.2151_263.08)] focus:ring-[oklch(53.54%_0.2151_263.08)]/10 dark:focus:border-[oklch(60%_0.2_263)] h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 @error('school_email') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
                                     </div>
                                     @error('school_email')
                                         <p class="mt-1 text-sm text-error-500">{{ $message }}</p>
@@ -304,7 +304,7 @@
                                             </svg>
                                         </span>
                                         <input type="file" id="school_logo" name="school_logo" accept="image/*"
-                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 file:mr-4 file:rounded-md file:border-0 file:bg-brand-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-900/30 dark:file:text-brand-400 @error('school_logo') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
+                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-[oklch(53.54%_0.2151_263.08)] focus:ring-[oklch(53.54%_0.2151_263.08)]/10 dark:focus:border-[oklch(60%_0.2_263)] h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 file:mr-4 file:rounded-md file:border-0 file:bg-[oklch(95%_0.05_263)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[oklch(53.54%_0.2151_263.08)] hover:file:bg-[oklch(90%_0.08_263)] dark:file:bg-[oklch(30%_0.15_263)] dark:file:text-[oklch(70%_0.15_263)] @error('school_logo') border-error-400 focus:border-error-400 focus:ring-error-500/10 @enderror" />
                                     </div>
                                     @error('school_logo')
                                         <p class="mt-1 text-sm text-error-500">{{ $message }}</p>
@@ -314,7 +314,7 @@
                                 <!-- Tombol Daftar -->
                                 <div>
                                     <button type="submit"
-                                        class="bg-brand-500 shadow-theme-xs hover:bg-brand-600 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-white transition">
+                                        class="bg-[oklch(53.54%_0.2151_263.08)] shadow-theme-xs hover:bg-[oklch(48%_0.2151_263.08)] flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-white transition">
                                         <span>Daftar</span>
                                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
@@ -324,7 +324,7 @@
 
                                 <div class="text-center text-sm text-gray-500 dark:text-gray-400">
                                     Sudah punya akun?
-                                    <a href="{{ route('login') }}" class="text-brand-500 hover:text-brand-600 font-medium dark:text-brand-400">
+                                    <a href="{{ route('login') }}" class="text-[oklch(53.54%_0.2151_263.08)] hover:text-[oklch(48%_0.2151_263.08)] font-medium dark:text-[oklch(60%_0.2_263)]">
                                         Masuk di sini
                                     </a>
                                 </div>
@@ -342,7 +342,7 @@
             <!-- Toggler dark/light mode -->
             <div class="fixed right-4 bottom-4 z-50 sm:right-6 sm:bottom-6">
                 <button
-                    class="bg-brand-500 hover:bg-brand-600 inline-flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-colors sm:h-14 sm:w-14"
+                    class="bg-[oklch(53.54%_0.2151_263.08)] hover:bg-[oklch(48%_0.2151_263.08)] inline-flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-colors sm:h-14 sm:w-14"
                     @click.prevent="$store.theme.toggle()">
                     <svg class="hidden fill-current dark:block" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd" clip-rule="evenodd" d="M9.99998 1.5415C10.4142 1.5415 10.75 1.87729 10.75 2.2915V3.5415C10.75 3.95572 10.4142 4.2915 9.99998 4.2915C9.58577 4.2915 9.24998 3.95572 9.24998 3.5415V2.2915C9.24998 1.87729 9.58577 1.5415 9.99998 1.5415ZM10.0009 6.79327C8.22978 6.79327 6.79402 8.22904 6.79402 10.0001C6.79402 11.7712 8.22978 13.207 10.0009 13.207C11.772 13.207 13.2078 11.7712 13.2078 10.0001C13.2078 8.22904 11.772 6.79327 10.0009 6.79327ZM5.29402 10.0001C5.29402 7.40061 7.40135 5.29327 10.0009 5.29327C12.6004 5.29327 14.7078 7.40061 14.7078 10.0001C14.7078 12.5997 12.6004 14.707 10.0009 14.707C7.40135 14.707 5.29402 12.5997 5.29402 10.0001ZM15.9813 5.08035C16.2742 4.78746 16.2742 4.31258 15.9813 4.01969C15.6884 3.7268 15.2135 3.7268 14.9207 4.01969L14.0368 4.90357C13.7439 5.19647 13.7439 5.67134 14.0368 5.96423C14.3297 6.25713 14.8045 6.25713 15.0974 5.96423L15.9813 5.08035ZM18.4577 10.0001C18.4577 10.4143 18.1219 10.7501 17.7077 10.7501H16.4577C16.0435 10.7501 15.7077 10.4143 15.7077 10.0001C15.7077 9.58592 16.0435 9.25013 16.4577 9.25013H17.7077C18.1219 9.25013 18.4577 9.58592 18.4577 10.0001ZM14.9207 15.9806C15.2135 16.2735 15.6884 16.2735 15.9813 15.9806C16.2742 15.6877 16.2742 15.2128 15.9813 14.9199L15.0974 14.036C14.8045 13.7431 14.3297 13.7431 14.0368 14.036C13.7439 14.3289 13.7439 14.8038 14.0368 15.0967L14.9207 15.9806ZM9.99998 15.7088C10.4142 15.7088 10.75 16.0445 10.75 16.4588V17.7088C10.75 18.123 10.4142 18.4588 9.99998 18.4588C9.58577 18.4588 9.24998 18.123 9.24998 17.7088V16.4588C9.24998 16.0445 9.58577 15.7088 9.99998 15.7088ZM5.96356 15.0972C6.25646 14.8043 6.25646 14.3295 5.96356 14.0366C5.67067 13.7437 5.1958 13.7437 4.9029 14.0366L4.01902 14.9204C3.72613 15.2133 3.72613 15.6882 4.01902 15.9811C4.31191 16.274 4.78679 16.274 5.07968 15.9811L5.96356 15.0972ZM4.29224 10.0001C4.29224 10.4143 3.95645 10.7501 3.54224 10.7501H2.29224C1.87802 10.7501 1.54224 10.4143 1.54224 10.0001C1.54224 9.58592 1.87802 9.25013 2.29224 9.25013H3.54224C3.95645 9.25013 4.29224 9.58592 4.29224 10.0001ZM4.9029 5.9637C5.1958 6.25659 5.67067 6.25659 5.96356 5.9637C6.25646 5.6708 6.25646 5.19593 5.96356 4.90303L5.07968 4.01915C4.78679 3.72626 4.31191 3.72626 4.01902 4.01915C3.72613 4.31204 3.72613 4.78692 4.01902 5.07981L4.9029 5.9637Z" />
