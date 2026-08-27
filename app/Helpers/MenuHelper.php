@@ -28,102 +28,101 @@ class MenuHelper
     }
 
     public static function getMastertems()
-    {
-        return [
-            [
-                'name' => 'Absensi',
-                'icon' => 'calendar',
-                'subItems' => [
-                    ['name' => 'Input Absensi', 'path' => route('attendance.index')],
-                    ['name' => 'Laporan Absensi', 'path' => route('attendance.report')],
-                    ['name' => 'Rekap Absensi', 'path' => route('attendance.recap')],
-                ],
+{
+    return [
+        [
+            'name' => 'Siswa',
+            'icon' => 'user-profile',
+            'subItems' => [   // perbaikan di sini
+                ['name' => 'Daftar', 'path' => route('students.index')],
+                ['name' => 'Tambah Siswa Baru', 'path' => route('students.create')],
             ],
-            [
-                'name' => 'Siswa',
-                'icon' => 'user-profile',
-                'subItems' => [
-                    ['name' => 'Daftar', 'path' => route('students.index')],
-                    ['name' => 'Tambah Siswa Baru', 'path' => route('students.create')],
-                ],
+        ],
+        [
+            'name' => 'Kelas',
+            'icon' => 'class-group',
+            'subItems' => [
+                ['name' => 'Daftar', 'path' => route('classes.index')],
+                ['name' => 'Tambah Kelas Baru', 'path' => route('classes.create')],
             ],
-            [
-                'name' => 'Kelas',
-                'icon' => 'tables',
-                'subItems' => [
-                    ['name' => 'Daftar', 'path' => route('classes.index')],
-                    ['name' => 'Tambah Kelas Baru', 'path' => route('classes.create')],
-                ],
+        ],
+        [
+            'name' => 'Tahun Ajaran',
+            'icon' => 'calendar',
+            'subItems' => [
+                ['name' => 'Daftar', 'path' => route('academic-years.index')],
+                ['name' => 'Tambah Tahun Ajaran', 'path' => route('academic-years.create')],
             ],
-            [
-                'name' => 'Tahun Ajaran',
-                'icon' => 'calendar',
-                'subItems' => [
-                    ['name' => 'Daftar', 'path' => route('academic-years.index')],
-                    ['name' => 'Tambah Tahun Ajaran', 'path' => route('academic-years.create')],
-                ],
+        ],
+        [
+            'name' => 'Jadwal',
+            'icon' => 'calendar',
+            'subItems' => [
+                ['name' => 'Daftar', 'path' => route('schedules.index')],
+                ['name' => 'Tambah Jadwal', 'path' => route('schedules.create')],
             ],
-            [
-                'name' => 'Jadwal',
-                'icon' => 'calendar',
-                'subItems' => [
-                    ['name' => 'Daftar', 'path' => route('schedules.index')],
-                    ['name' => 'Tambah Jadwal', 'path' => route('schedules.create')],
-                ],
+        ],
+        [
+            'name' => 'Absensi',
+            'icon' => 'calendar',
+            'subItems' => [
+                ['name' => 'Input Absensi', 'path' => route('attendance.index')],
+                ['name' => 'Laporan Absensi', 'path' => route('attendance.report')],
+                ['name' => 'Rekap Absensi', 'path' => route('attendance.recap')],
             ],
-            [
-                'name' => 'Kenaikan Kelas',
-                'icon' => 'calendar',
-                'path' => route('admin.promotion.create')
+        ],
+        [
+            'name' => 'Pengguna',
+            'icon' => 'users',
+            'subItems' => [
+                ['name' => 'Daftar', 'path' => route('users.index')],
+                ['name' => 'Tambah Pengguna', 'path' => route('users.create')],
             ],
-            [
-                'name' => 'Pengguna',
-                'icon' => 'calendar',
-                'subItems' => [
-                    ['name' => 'Daftar', 'path' => route('users.index')],
-                    ['name' => 'Tambah Pengguna', 'path' => route('users.create')],
-                ],
+        ],
+        [
+            'name' => 'Pengumuman',
+            'icon' => 'megaphone',
+            'subItems' => [
+                ['name' => 'Daftar', 'path' => route('announcements.index')],
+                ['name' => 'Tambah Pengumuman', 'path' => route('announcements.create')],
             ],
-            [
-                'name' => 'Pengumuman',
-                'icon' => 'email',
-                'subItems' => [
-                    ['name' => 'Daftar', 'path' => route('announcements.index')],
-                    ['name' => 'Tambah Pengumuman', 'path' => route('announcements.create')],
-                ],
-            ],
-        ];
-    }
+        ],
+        [
+            'name' => 'Kenaikan Kelas',
+            'icon' => 'arrow-up',
+            'path' => route('admin.promotion.create')
+        ],
+    ];
+}
 
     public static function getOthersItems()
     {
         return [
             [
                 'name' => 'PPDB',
-                'icon' => 'user-profile',
+                'icon' => 'forms',
                 'path' => '#!'
             ],
             [
                 'name' => 'CBT',
-                'icon' => 'pages',
+                'icon' => 'computer',
                 'path' => '#!'
             ],
             [
                 'name' => 'Sekolah',
-                'icon' => 'pages',
+                'icon' => 'building',
                 'path' => '/sekolah'
             ],
-                // [
-                //     'name' => 'Pengumuman',
-                //     'icon' => 'calendar',
-                //     'subItems' => [
-                //         ['name' => 'Daftar', 'path' => '#!'],
-                //         ['name' => 'Tambah Pengumuman', 'path' => '#!'],
-                //     ],
-                // ],
+            // [
+            //     'name' => 'Pengumuman',
+            //     'icon' => 'calendar',
+            //     'subItems' => [
+            //         ['name' => 'Daftar', 'path' => '#!'],
+            //         ['name' => 'Tambah Pengumuman', 'path' => '#!'],
+            //     ],
+            // ],
         ];
     }
-    
     
     public static function getTemplateOthersItems()
     {
@@ -233,12 +232,12 @@ class MenuHelper
                             'path' => route('schedules.index'),
                         ],
                         [
-                            'icon' => 'calendar',
+                            'icon' => 'pages', // sebelumnya 'calendar' – sekarang konsisten dengan admin
                             'name' => 'Jurnal Guru',
                             'path' => route('teacher.documents.index'),
                         ],
                         [
-                            'icon' => 'email',
+                            'icon' => 'megaphone', // sebelumnya 'email'
                             'name' => 'Pengumuman Sekolah',
                             'path' => route('announcements.index'),
                         ],
@@ -248,27 +247,12 @@ class MenuHelper
                             'path' => '/walikelas',
                             'show' => $isWaliKelas,
                         ],
-                        // [
-                        //     'icon' => 'tables',
-                        //     'name' => 'Daftar Absensi',
-                        //     'path' => '/attendance/list',
-                        // ],
                     ],
                 ],
-                // [
-                //     'title' => 'Menu Wali Kelas',
-                //     'items' => [
-                //         [
-                //             'icon' => 'dashboard',
-                //             'name' => 'Dashboard',
-                //             'path' => '/',
-                //         ],
-                //     ],
-                // ],
             ];
 
             $menu[0]['items'] = array_values(array_filter($menu[0]['items'], function ($item) {
-                return $item['show'] ?? true; // default true kalau tidak ada flag
+                return $item['show'] ?? true;
             }));
 
             return $menu;
@@ -285,17 +269,17 @@ class MenuHelper
                             'path' => route('bk.dashboard'),
                         ],
                         [
-                            'icon' => 'calendar',
+                            'icon' => 'chat', // sebelumnya 'calendar'
                             'name' => 'Konseling',
                             'path' => route('bk.cases.index'),
                         ],
                         [
-                            'icon' => 'calendar',
+                            'icon' => 'pages', // sebelumnya 'calendar'
                             'name' => 'Jurnal Guru',
                             'path' => route('teacher.documents.index'),
                         ],
                         [
-                            'icon' => 'email',
+                            'icon' => 'megaphone', // sebelumnya 'email'
                             'name' => 'Pengumuman Sekolah',
                             'path' => route('announcements.index'),
                         ],
@@ -363,14 +347,24 @@ class MenuHelper
 
             'email' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.5 8.187V17.25C3.5 17.6642 3.83579 18 4.25 18H19.75C20.1642 18 20.5 17.6642 20.5 17.25V8.18747L13.2873 13.2171C12.5141 13.7563 11.4866 13.7563 10.7134 13.2171L3.5 8.187ZM20.5 6.2286C20.5 6.23039 20.5 6.23218 20.5 6.23398V6.24336C20.4976 6.31753 20.4604 6.38643 20.3992 6.42905L12.4293 11.9867C12.1716 12.1664 11.8291 12.1664 11.5713 11.9867L3.60116 6.42885C3.538 6.38481 3.50035 6.31268 3.50032 6.23568C3.50028 6.10553 3.60577 6 3.73592 6H20.2644C20.3922 6 20.4963 6.10171 20.5 6.2286ZM22 6.25648V17.25C22 18.4926 20.9926 19.5 19.75 19.5H4.25C3.00736 19.5 2 18.4926 2 17.25V6.23398C2 6.22371 2.00021 6.2135 2.00061 6.20333C2.01781 5.25971 2.78812 4.5 3.73592 4.5H20.2644C21.2229 4.5 22 5.27697 22.0001 6.23549C22.0001 6.24249 22.0001 6.24949 22 6.25648Z" fill="currentColor"></path></svg>',
 
-            // Icon baru: jam dengan panah putar, dipakai khusus untuk "Riwayat Absensi"
             'history' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.5 12C3.5 7.30558 7.30558 3.5 12 3.5C16.6944 3.5 20.5 7.30558 20.5 12C20.5 16.6944 16.6944 20.5 12 20.5C9.53619 20.5 7.31855 19.4404 5.77226 17.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M3.5 17V12.5H8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 7.75V12L15 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
 
-            // Icon baru: dokumen dengan grafik batang kecil, dipakai khusus untuk "Rekap Absensi"
             'report' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.5 3.75C5.25736 3.75 4.25 4.75736 4.25 6V18C4.25 19.2426 5.25736 20.25 6.5 20.25H17.5C18.7426 20.25 19.75 19.2426 19.75 18V8.81802C19.75 8.22128 19.5129 7.64898 19.091 7.22703L15.773 3.90901C15.351 3.48706 14.7787 3.25 14.182 3.25H6.5ZM5.75 6C5.75 5.58579 6.08579 5.25 6.5 5.25H13.75V8.5C13.75 9.32843 14.4216 10 15.25 10H18.25V18C18.25 18.4142 17.9142 18.75 17.5 18.75H6.5C6.08579 18.75 5.75 18.4142 5.75 18V6ZM17.9393 8.5L15.25 5.81066V8.25C15.25 8.38807 15.3619 8.5 15.5 8.5H17.9393Z" fill="currentColor"></path><path d="M7.75 14.25C7.75 13.8358 8.08579 13.5 8.5 13.5C8.91421 13.5 9.25 13.8358 9.25 14.25V16.25C9.25 16.6642 8.91421 17 8.5 17C8.08579 17 7.75 16.6642 7.75 16.25V14.25Z" fill="currentColor"></path><path d="M11.25 12.25C11.25 11.8358 11.5858 11.5 12 11.5C12.4142 11.5 12.75 11.8358 12.75 12.25V16.25C12.75 16.6642 12.4142 17 12 17C11.5858 17 11.25 16.6642 11.25 16.25V12.25Z" fill="currentColor"></path><path d="M14.75 11.25C14.75 10.8358 15.0858 10.5 15.5 10.5C15.9142 10.5 16.25 10.8358 16.25 11.25V16.25C16.25 16.6642 15.9142 17 15.5 17C15.0858 17 14.75 16.6642 14.75 16.25V11.25Z" fill="currentColor"></path></svg>',
 
-            // Icon baru: dua orang berdampingan (grup/kelompok), dipakai khusus untuk "Menu Wali Kelas"
             'class-group' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M9 5.75C7.75736 5.75 6.75 6.75736 6.75 8C6.75 9.24264 7.75736 10.25 9 10.25C10.2426 10.25 11.25 9.24264 11.25 8C11.25 6.75736 10.2426 5.75 9 5.75ZM5.25 8C5.25 5.92893 6.92893 4.25 9 4.25C11.0711 4.25 12.75 5.92893 12.75 8C12.75 10.0711 11.0711 11.75 9 11.75C6.92893 11.75 5.25 10.0711 5.25 8ZM15.5 7.25C15.0858 7.25 14.75 7.58579 14.75 8C14.75 8.41421 15.0858 8.75 15.5 8.75C15.9142 8.75 16.25 8.41421 16.25 8C16.25 7.58579 15.9142 7.25 15.5 7.25ZM13.25 8C13.25 6.75736 14.2574 5.75 15.5 5.75C16.7426 5.75 17.75 6.75736 17.75 8C17.75 9.24264 16.7426 10.25 15.5 10.25C14.2574 10.25 13.25 9.24264 13.25 8ZM4.5 14.75C3.80964 14.75 3.25 15.3096 3.25 16V17.5C3.25 17.9142 2.91421 18.25 2.5 18.25C2.08579 18.25 1.75 17.9142 1.75 17.5V16C1.75 14.4812 2.98122 13.25 4.5 13.25H8.5C9.51188 13.25 10.3967 13.7973 10.8735 14.6132C11.4014 14.0782 12.1349 13.75 12.9412 13.75H16.9412C18.5316 13.75 19.8412 15.0272 19.8721 16.6207C19.8797 17.0118 19.5806 17.3391 19.1897 17.3691C18.7987 17.3991 18.4573 17.1207 18.4273 16.7298C18.4098 15.9235 17.7509 15.25 16.9412 15.25H12.9412C12.1225 15.25 11.4589 15.9089 11.4425 16.7231C11.4348 17.1105 11.1129 17.4198 10.7255 17.4198H10.6902C10.3028 17.4198 9.98089 17.1105 9.97316 16.7231C9.95682 15.9089 9.2932 15.25 8.47441 15.25H4.5C3.80964 15.25 3.25 15.8096 3.25 16.5V19.25H9.5C9.91421 19.25 10.25 19.5858 10.25 20C10.25 20.4142 9.91421 20.75 9.5 20.75H2.5C2.08579 20.75 1.75 20.4142 1.75 20V16.5C1.75 14.9812 2.98122 13.75 4.5 13.75" fill="currentColor"></path></svg>',
+
+            // ================== Ikon baru yang ditambahkan ==================
+            'document' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.5 3.75C4.25736 3.75 3.25 4.75736 3.25 6V18C3.25 19.2426 4.25736 20.25 5.5 20.25H18.5C19.7426 20.25 20.75 19.2426 20.75 18V8.81802C20.75 8.22128 20.5129 7.64898 20.091 7.22703L16.773 3.90901C16.351 3.48706 15.7787 3.25 15.182 3.25H5.5ZM4.75 6C4.75 5.58579 5.08579 5.25 5.5 5.25H14.75V8.5C14.75 9.32843 15.4216 10 16.25 10H19.25V18C19.25 18.4142 18.9142 18.75 18.5 18.75H5.5C5.08579 18.75 4.75 18.4142 4.75 18V6ZM16.9393 8.5L14.25 5.81066V8.25C14.25 8.38807 14.3619 8.5 14.5 8.5H16.9393Z" fill="currentColor"/></svg>',
+
+            'arrow-up' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4L12 20M12 4L18 10M12 4L6 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
+            'megaphone' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.5 9.25C18.5 9.25 19.5 9.25 20.5 9.25M18.5 14.75C18.5 14.75 19.5 14.75 20.5 14.75M15.5 6.5L8.5 9.5H5.5C4.39543 9.5 3.5 10.3954 3.5 11.5V12.5C3.5 13.6046 4.39543 14.5 5.5 14.5H8.5L15.5 17.5V6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.5 6.5V17.5C17.5 16.5 18.5 14.5 18.5 12C18.5 9.5 17.5 7.5 15.5 6.5Z" stroke="currentColor" stroke-width="1.5"/></svg>',
+
+            'computer' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.25 5.5C4.25 4.25736 5.25736 3.25 6.5 3.25H17.5C18.7426 3.25 19.75 4.25736 19.75 5.5V14.5C19.75 15.7426 18.7426 16.75 17.5 16.75H6.5C5.25736 16.75 4.25 15.7426 4.25 14.5V5.5ZM6.5 4.75C6.08579 4.75 5.75 5.08579 5.75 5.5V14.5C5.75 14.9142 6.08579 15.25 6.5 15.25H17.5C17.9142 15.25 18.25 14.9142 18.25 14.5V5.5C18.25 5.08579 17.9142 4.75 17.5 4.75H6.5ZM8.25 19.25C8.25 18.8358 8.58579 18.5 9 18.5H15C15.4142 18.5 15.75 18.8358 15.75 19.25C15.75 19.6642 15.4142 20 15 20H9C8.58579 20 8.25 19.6642 8.25 19.25ZM12 15.25C11.5858 15.25 11.25 15.5858 11.25 16V18.5H12.75V16C12.75 15.5858 12.4142 15.25 12 15.25Z" fill="currentColor"/></svg>',
+
+            'building' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.25 4.5C4.25 3.25736 5.25736 2.25 6.5 2.25H17.5C18.7426 2.25 19.75 3.25736 19.75 4.5V19.75H20.5C20.9142 19.75 21.25 20.0858 21.25 20.5C21.25 20.9142 20.9142 21.25 20.5 21.25H3.5C3.08579 21.25 2.75 20.9142 2.75 20.5C2.75 20.0858 3.08579 19.75 3.5 19.75H4.25V4.5ZM5.75 19.75H18.25V4.5C18.25 4.08579 17.9142 3.75 17.5 3.75H6.5C6.08579 3.75 5.75 4.08579 5.75 4.5V19.75ZM8.25 7.25C8.25 6.83579 8.58579 6.5 9 6.5H15C15.4142 6.5 15.75 6.83579 15.75 7.25C15.75 7.66421 15.4142 8 15 8H9C8.58579 8 8.25 7.66421 8.25 7.25ZM9 10.5C8.58579 10.5 8.25 10.8358 8.25 11.25C8.25 11.6642 8.58579 12 9 12H15C15.4142 12 15.75 11.6642 15.75 11.25C15.75 10.8358 15.4142 10.5 15 10.5H9ZM8.25 15.25C8.25 14.8358 8.58579 14.5 9 14.5H12C12.4142 14.5 12.75 14.8358 12.75 15.25C12.75 15.6642 12.4142 16 12 16H9C8.58579 16 8.25 15.6642 8.25 15.25Z" fill="currentColor"/></svg>',
+
+            'users' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M9 5.25C7.75736 5.25 6.75 6.25736 6.75 7.5C6.75 8.74264 7.75736 9.75 9 9.75C10.2426 9.75 11.25 8.74264 11.25 7.5C11.25 6.25736 10.2426 5.25 9 5.25ZM5.25 7.5C5.25 4.42893 7.42893 3.75 9 3.75C10.5711 3.75 12.75 4.42893 12.75 7.5C12.75 10.5711 10.5711 11.25 9 11.25C7.42893 11.25 5.25 10.5711 5.25 7.5ZM14.25 7.5C14.25 7.08579 14.5858 6.75 15 6.75C15.4142 6.75 15.75 7.08579 15.75 7.5C15.75 7.91421 15.4142 8.25 15 8.25C14.5858 8.25 14.25 7.91421 14.25 7.5ZM18.75 7.5C18.75 7.08579 18.4142 6.75 18 6.75C17.5858 6.75 17.25 7.08579 17.25 7.5C17.25 7.91421 17.5858 8.25 18 8.25C18.4142 8.25 18.75 7.91421 18.75 7.5ZM4.5 13.5C3.25736 13.5 2.25 14.5074 2.25 15.75V18.75H9.75V15.75C9.75 14.5074 8.74264 13.5 7.5 13.5H4.5ZM13.5 13.5C12.2574 13.5 11.25 14.5074 11.25 15.75V18.75H20.25V15.75C20.25 14.5074 19.2426 13.5 18 13.5H13.5ZM0.75 15.75C0.75 13.6789 2.42893 12 4.5 12H7.5C9.57107 12 11.25 13.6789 11.25 15.75V19.5C11.25 19.9142 10.9142 20.25 10.5 20.25H1.5C1.08579 20.25 0.75 19.9142 0.75 19.5V15.75ZM12.75 15.75C12.75 13.6789 14.4289 12 16.5 12H19.5C21.5711 12 23.25 13.6789 23.25 15.75V19.5C23.25 19.9142 22.9142 20.25 22.5 20.25H13.5C13.0858 20.25 12.75 19.9142 12.75 19.5V15.75Z" fill="currentColor"/></svg>',
         ];
 
         return $icons[$iconName] ?? '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor"/></svg>';

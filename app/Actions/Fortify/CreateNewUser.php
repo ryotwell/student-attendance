@@ -60,7 +60,6 @@ class CreateNewUser implements CreatesNewUsers
             'school_id' => $school->id,
         ]);
 
-        // 🔔 Kirim notifikasi WhatsApp ke admin pusat
         SendRegistrationNotificationToAdmin::dispatch($user, $school);
 
         return $user;
