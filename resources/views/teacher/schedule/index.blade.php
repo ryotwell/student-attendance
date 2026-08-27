@@ -89,7 +89,7 @@
                                             </div>
 
                                             <p class="text-sm font-bold text-brand-700 dark:text-brand-400">
-                                                {{ $schedule->subject?->name ?? '-' }}
+                                                {{ $schedule->subject_name ?? '-' }}
                                             </p>
 
                                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">

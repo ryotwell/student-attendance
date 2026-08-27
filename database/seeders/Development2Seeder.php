@@ -7,7 +7,6 @@ use App\Models\Schedule;
 use App\Models\School;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
-use App\Models\Subject;
 use App\Models\User;
 use App\Models\Xclass;
 use Illuminate\Database\Seeder;
@@ -67,21 +66,7 @@ class Development2Seeder extends Seeder
             ['is_active' => true]
         );
 
-        // 4. Mata Pelajaran untuk kelas XII
-        $subjectNames = [
-            'Bahasa Inggris', 'PJOK', 'Ekonomi', 'Bahasa Inggris TKL',
-            'Sosiologi', 'Bahasa Indonesia', 'Matematika', 'Seni Budaya',
-            'PPKN', 'Geografi', 'Sejarah', 'PAI', 'Prakarya & Kewirausahaan',
-        ];
-        $subjects = [];
-        foreach ($subjectNames as $name) {
-            $subjects[$name] = Subject::firstOrCreate(
-                [
-                    'name'      => $name,
-                    'school_id' => $school->id,
-                ]
-            );
-        }
+        // 4. HAPUS BAGIAN MATA PELAJARAN (tidak ada tabel subjects lagi)
 
         // 5. Semua Guru (termasuk yang akan menjadi wali kelas)
         $teacherData = [
@@ -154,7 +139,7 @@ class Development2Seeder extends Seeder
             );
         }
 
-        // 10. Jadwal untuk kelas XII A
+        // 10. Jadwal untuk kelas XII A (menggunakan subject_name, tanpa subject_id)
         $xclassXIIA = Xclass::where('name', 'XII A')
             ->where('academic_year_id', $academicYear->id)
             ->where('school_id', $school->id)
@@ -183,17 +168,23 @@ class Development2Seeder extends Seeder
             ];
 
             foreach ($schedules as $s) {
+                // Cari guru berdasarkan nama subject
+                $teacher = $teachers[$s['subject']] ?? null;
+                if (!$teacher) {
+                    continue; // lewati jika guru tidak ditemukan (tapi seharusnya ada)
+                }
+
                 Schedule::firstOrCreate(
                     [
-                        'day'        => $s['day'],
-                        'start_time' => $s['start'],
-                        'end_time'   => $s['end'],
-                        'subject_id' => $subjects[$s['subject']]->id,
-                        'xclass_id'  => $xclassXIIA->id,
-                        'school_id'  => $school->id,
+                        'day'          => $s['day'],
+                        'start_time'   => $s['start'],
+                        'end_time'     => $s['end'],
+                        'subject_name' => $s['subject'], // <-- field baru
+                        'xclass_id'    => $xclassXIIA->id,
+                        'school_id'    => $school->id,
                     ],
                     [
-                        'user_id'    => $teachers[$s['subject']]->id,
+                        'user_id'      => $teacher->id,
                     ]
                 );
             }

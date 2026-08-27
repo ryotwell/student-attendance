@@ -86,7 +86,8 @@
                             const option = document.createElement('option');
                             option.value = schedule.id;
                             const dayName = dayNames[schedule.day] || schedule.day;
-                            option.textContent = `${schedule.subject.name} - ${dayName} ${schedule.start_time} - ${schedule.end_time}`;
+                            // Perubahan: pakai subject_name langsung
+                            option.textContent = `${schedule.subject_name} - ${dayName} ${schedule.start_time} - ${schedule.end_time}`;
                             scheduleSelect.appendChild(option);
                         });
 

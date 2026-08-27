@@ -6,7 +6,6 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudentController;
-use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TeacherDocumentController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -23,7 +22,6 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->group(function() {
     Route::resource('classes', ClassController::class);
     Route::get('/classes/{class}/schedules', [ClassController::class, 'schedules'])->name('classes.schedule');
     Route::resource('academic-years', AcademicYearController::class);
-    Route::resource('subjects', SubjectController::class);
     Route::resource('schedules', ScheduleController::class)->except('index', 'show');
     Route::resource('announcements', AnnouncementController::class)->except('index', 'show');
 
@@ -43,12 +41,6 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->group(function() {
     Route::post('/promotion', [App\Http\Controllers\PromotionController::class, 'store'])->name('admin.promotion.store');
 
     Route::resource('users', UserController::class);
-    
-    // attendance list (daftar absensi per kelas)
-    Route::get('attendance/list', [AttendanceController::class, 'list'])->name('attendance.list');
-    Route::get('attendance/list/{class}', [AttendanceController::class, 'listShow'])->name('attendance.list.show');
-    Route::get('attendance/list/{class}/{schedule}/{date}/edit', [AttendanceController::class, 'listEdit'])->name('attendance.list.edit');
-    Route::put('attendance/list/{class}/{schedule}/{date}', [AttendanceController::class, 'listUpdate'])->name('attendance.list.update');
 
     // 
     Route::get('/teacher-documents', [TeacherDocumentController::class, 'index'])

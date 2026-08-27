@@ -38,19 +38,6 @@ class Schedule extends Model
 
 
     /**
-     * Mata pelajaran
-     *
-     * schedules
-     *      |
-     *      +--- subjects
-     */
-    public function subject(): BelongsTo
-    {
-        return $this->belongsTo(Subject::class);
-    }
-
-
-    /**
      * Kelas yang diajar
      *
      * schedules

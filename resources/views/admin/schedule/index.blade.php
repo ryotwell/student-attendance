@@ -27,7 +27,7 @@
                 <div class="flex-1 min-w-[200px]">
                     <label for="search" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Cari</label>
                     <input type="text" id="search" name="search" value="{{ request('search') }}"
-                        placeholder="Mata pelajaran / kelas"
+                        placeholder="Mata pelajaran / kelas / guru"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                 </div>
 
@@ -55,19 +55,8 @@
                     </select>
                 </div>
 
-                <!-- Filter Mata Pelajaran -->
-                <div class="w-48">
-                    <label for="subject_id" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Mata Pelajaran</label>
-                    <select id="subject_id" name="subject_id"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30">
-                        <option value="">Semua</option>
-                        @foreach ($subjects as $subject)
-                            <option value="{{ $subject->id }}" @selected(request('subject_id') == $subject->id)>{{ $subject->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Filter Guru (khusus admin) -->
+                <!-- Filter Guru -->
+                @if(isset($users) && $users->count())
                 <div class="w-48">
                     <label for="user_id" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Guru</label>
                     <select id="user_id" name="user_id"
@@ -78,6 +67,7 @@
                         @endforeach
                     </select>
                 </div>
+                @endif
 
                 <div class="flex items-center gap-2">
                     <button type="submit"
@@ -130,8 +120,9 @@
                                     {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} — {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}
                                 </p>
                             </td>
+                            {{-- PERUBAHAN: pakai subject_name langsung --}}
                             <td class="px-5 py-4 sm:px-6">
-                                <p class="text-gray-500 text-theme-sm dark:text-gray-400">{{ $schedule->subject?->name ?? '-' }}</p>
+                                <p class="text-gray-500 text-theme-sm dark:text-gray-400">{{ $schedule->subject_name ?? '-' }}</p>
                             </td>
                             <td class="px-5 py-4 sm:px-6">
                                 <p class="text-gray-500 text-theme-sm dark:text-gray-400">{{ $schedule->xclass?->name ?? '-' }}</p>

@@ -7,7 +7,8 @@
         {{-- Header info --}}
         <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white">{{ $schedule->subject->name }}</h2>
+                {{-- PERUBAHAN: subject_name langsung --}}
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">{{ $schedule->subject_name }}</h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400">
                     Kelas {{ $schedule->xclass->name }} &middot; {{ App\Helpers\MenuHelper::getDayName($schedule->day) }}, {{ $schedule->start_time->format('H:i') }}–{{ $schedule->end_time->format('H:i') }}
                 </p>

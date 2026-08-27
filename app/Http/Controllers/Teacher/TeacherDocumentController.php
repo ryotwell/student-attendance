@@ -110,7 +110,7 @@ class TeacherDocumentController extends Controller
      */
     private function ensureTeacher($user)
     {
-        if ($user->role !== 'GURU') {
+        if ($user->role !== 'GURU' && $user->role !== 'GURU_BK') {
             abort(403, 'Hanya guru yang dapat mengakses fitur ini.');
         }
     }

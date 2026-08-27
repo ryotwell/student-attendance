@@ -52,7 +52,7 @@ class SendAlphaWhatsAppNotification implements ShouldQueue
             return;
         }
 
-        $subjectName = $this->attendance->schedule->subject->name ?? 'mata pelajaran';
+        $subjectName = $this->attendance->schedule->subject_name ?? 'mata pelajaran';
         $tanggal = $this->attendance->date->translatedFormat('d F Y');
 
         $pesan = "Assalamu'alaikum Bapak/Ibu.\n\n"

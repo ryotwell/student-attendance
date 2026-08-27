@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Rekap Absensi - {{ $schedule->subject->name }}</title>
+    <title>Rekap Absensi - {{ $schedule->subject_name }}</title>
     <style>
         @page {
             margin: 30px 35px;
@@ -92,7 +92,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>Rekap Absensi — {{ $schedule->subject->name }}</h1>
+        <h1>Rekap Absensi — {{ $schedule->subject_name }}</h1>
         <p>Kelas {{ $schedule->xclass->name }} &middot; {{ App\Helpers\MenuHelper::getDayName($schedule->day) }}, {{ $schedule->start_time->format('H:i') }}–{{ $schedule->end_time->format('H:i') }}</p>
         <p>Periode: {{ $monthLabel }}</p>
     </div>

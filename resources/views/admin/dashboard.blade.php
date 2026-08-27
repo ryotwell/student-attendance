@@ -32,6 +32,7 @@
                 <div class="text-xs font-semibold text-gray-500 dark:text-gray-400">Total Kelas</div>
             </div>
 
+            {{-- KARTU INI DIUBAH LABELNYA --}}
             <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
                 <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -39,7 +40,7 @@
                     </svg>
                 </div>
                 <div class="text-2xl font-bold text-gray-800 dark:text-white">{{ $totals['subjects'] }}</div>
-                <div class="text-xs font-semibold text-gray-500 dark:text-gray-400">Total Mapel</div>
+                <div class="text-xs font-semibold text-gray-500 dark:text-gray-400">Total Jadwal Pelajaran</div> {{-- <-- DIUBAH --}}
             </div>
 
             <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">

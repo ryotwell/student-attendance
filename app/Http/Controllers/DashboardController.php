@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\Attendance;
 use App\Models\CounselingCase;
+use App\Models\Schedule;          // <-- pakai Schedule untuk hitung subject_name unik
 use App\Models\Student;
-use App\Models\Subject;
 use App\Models\User;
 use App\Models\Xclass;
 use Illuminate\Support\Carbon;
@@ -19,20 +19,20 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $isSuperAdmin = $user->role === 'SUPERADMIN';
-        $schoolId = $user->school_id; // null jika SUPERADMIN
+        $schoolId = $user->school_id;
 
         $today = Carbon::today();
         $monthStart = Carbon::now()->startOfMonth();
         $monthEnd = Carbon::now()->endOfMonth();
 
-        // Ambil tahun ajaran aktif, filter berdasarkan sekolah (kecuali SUPERADMIN)
+        // Tahun ajaran aktif
         $activeYearQuery = AcademicYear::where('is_active', true);
         if (! $isSuperAdmin) {
             $activeYearQuery->where('school_id', $schoolId);
         }
         $activeYear = $activeYearQuery->first();
 
-        // Helper untuk menambahkan filter school_id jika bukan SUPERADMIN
+        // Helper filter sekolah
         $applySchoolFilter = function ($query) use ($isSuperAdmin, $schoolId) {
             if (! $isSuperAdmin) {
                 $query->where('school_id', $schoolId);
@@ -40,17 +40,17 @@ class DashboardController extends Controller
             return $query;
         };
 
-        // Ringkasan jumlah entitas utama
+        // ---- TOTALS ----
+        // Siswa (hanya yang terdaftar di tahun ajaran aktif)
         $studentsQuery = Student::query();
         if ($activeYear) {
-            $studentsQuery->whereHas('enrollments', function ($q) use ($activeYear) {
-                $q->where('academic_year_id', $activeYear->id);
-            });
+            $studentsQuery->whereHas('enrollments', fn($q) => $q->where('academic_year_id', $activeYear->id));
         } else {
-            $studentsQuery->whereRaw('0'); // jika tidak ada tahun aktif, hasil 0
+            $studentsQuery->whereRaw('0');
         }
         $applySchoolFilter($studentsQuery);
 
+        // Kelas (hanya tahun ajaran aktif)
         $classesQuery = Xclass::query();
         if ($activeYear) {
             $classesQuery->where('academic_year_id', $activeYear->id);
@@ -59,9 +59,12 @@ class DashboardController extends Controller
         }
         $applySchoolFilter($classesQuery);
 
-        $subjectsQuery = Subject::query();
-        $applySchoolFilter($subjectsQuery);
+        // Jumlah jadwal pelajaran UNIK (distinct subject_name) dari tabel schedules
+        $scheduleQuery = Schedule::query();
+        $applySchoolFilter($scheduleQuery);
+        $totalSchedules = $scheduleQuery->distinct('subject_name')->count('subject_name');
 
+        // Guru, BK, Admin
         $teachersQuery = User::where('role', 'GURU');
         $applySchoolFilter($teachersQuery);
 
@@ -72,21 +75,19 @@ class DashboardController extends Controller
         $applySchoolFilter($adminsQuery);
 
         $totals = [
-            'students' => $studentsQuery->count(),
-            'classes'  => $classesQuery->count(),
-            'subjects' => $subjectsQuery->count(),
-            'teachers' => $teachersQuery->count(),
-            'counselors'=> $counselorsQuery->count(),
-            'admins'   => $adminsQuery->count(),
+            'students'   => $studentsQuery->count(),
+            'classes'    => $classesQuery->count(),
+            'subjects'   => $totalSchedules, // sekarang berisi jumlah jadwal pelajaran unik
+            'teachers'   => $teachersQuery->count(),
+            'counselors' => $counselorsQuery->count(),
+            'admins'     => $adminsQuery->count(),
         ];
 
-        // Kehadiran hari ini
+        // ---- KEHADIRAN HARI INI ----
         $todayAttendanceQuery = Attendance::whereDate('date', $today);
         $applySchoolFilter($todayAttendanceQuery);
         if ($activeYear) {
-            $todayAttendanceQuery->whereHas('studentEnrollment', function ($q) use ($activeYear) {
-                $q->where('academic_year_id', $activeYear->id);
-            });
+            $todayAttendanceQuery->whereHas('studentEnrollment', fn($q) => $q->where('academic_year_id', $activeYear->id));
         } else {
             $todayAttendanceQuery->whereRaw('0');
         }
@@ -95,13 +96,11 @@ class DashboardController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        // Kehadiran bulan berjalan
+        // ---- KEHADIRAN BULAN INI ----
         $monthAttendanceQuery = Attendance::whereBetween('date', [$monthStart, $monthEnd]);
         $applySchoolFilter($monthAttendanceQuery);
         if ($activeYear) {
-            $monthAttendanceQuery->whereHas('studentEnrollment', function ($q) use ($activeYear) {
-                $q->where('academic_year_id', $activeYear->id);
-            });
+            $monthAttendanceQuery->whereHas('studentEnrollment', fn($q) => $q->where('academic_year_id', $activeYear->id));
         } else {
             $monthAttendanceQuery->whereRaw('0');
         }
@@ -115,25 +114,23 @@ class DashboardController extends Controller
             ? round(($monthCounts->get('HADIR', 0) / $monthTotal) * 100, 1)
             : 0;
 
-        // Aktivitas terbaru: user baru + kasus BK
+        // ---- AKTIVITAS TERBARU ----
         $recentUsersQuery = User::latest()->take(5);
         $applySchoolFilter($recentUsersQuery);
-        $recentUsers = $recentUsersQuery->get()->map(fn ($user) => [
+        $recentUsers = $recentUsersQuery->get()->map(fn($u) => [
             'type'      => 'user',
-            'title'     => "{$user->name} bergabung sebagai " . strtolower(str_replace('_', ' ', $user->role)),
-            'timestamp' => $user->created_at,
+            'title'     => "{$u->name} bergabung sebagai " . strtolower(str_replace('_', ' ', $u->role)),
+            'timestamp' => $u->created_at,
         ]);
 
         $recentCasesQuery = CounselingCase::with(['student', 'user'])->latest()->take(5);
         $applySchoolFilter($recentCasesQuery);
         if ($activeYear) {
-            $recentCasesQuery->whereHas('studentEnrollment', function ($q) use ($activeYear) {
-                $q->where('academic_year_id', $activeYear->id);
-            });
+            $recentCasesQuery->whereHas('studentEnrollment', fn($q) => $q->where('academic_year_id', $activeYear->id));
         } else {
             $recentCasesQuery->whereRaw('0');
         }
-        $recentCases = $recentCasesQuery->get()->map(fn ($case) => [
+        $recentCases = $recentCasesQuery->get()->map(fn($case) => [
             'type'      => 'counseling_case',
             'title'     => "{$case->user->name} mencatat kasus {$case->category_label} untuk {$case->student->name}",
             'timestamp' => $case->created_at,

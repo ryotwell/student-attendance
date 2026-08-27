@@ -64,14 +64,6 @@ class MenuHelper
                 ],
             ],
             [
-                'name' => 'Mata Pelajaran',
-                'icon' => 'pages',
-                'subItems' => [
-                    ['name' => 'Daftar', 'path' => route('subjects.index')],
-                    ['name' => 'Tambah Mata Pelajaran', 'path' => route('subjects.create')],
-                ],
-            ],
-            [
                 'name' => 'Jadwal',
                 'icon' => 'calendar',
                 'subItems' => [

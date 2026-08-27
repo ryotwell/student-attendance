@@ -139,8 +139,7 @@ class AttendanceController extends Controller
 
         $this->ensureActiveAcademicYear($class);
 
-        $schedule = Schedule::select('id', 'subject_id')
-            ->with('subject:id,name')
+        $schedule = Schedule::select('id', 'subject_name')
             ->findOrFail($validated['schedule_id']);
 
         $date = Carbon::parse($validated['date'])->startOfDay();
@@ -156,7 +155,7 @@ class AttendanceController extends Controller
             ->keyBy('student_id');
 
         $viewData = [
-            'title'               => 'Absensi: ' . $class->name . ' - ' . $schedule->subject->name,
+            'title'               => 'Absensi: ' . $class->name . ' - ' . $schedule->subject_name,
             'class'               => $class,
             'schedule'            => $schedule,
             'date'                => $date,
@@ -164,11 +163,7 @@ class AttendanceController extends Controller
             'statusOptions'       => Attendance::STATUS_OPTIONS,
         ];
 
-        if (Auth::user()->isTeacher()) {
-            return view('teacher.absensi.absensi', $viewData);
-        }
-
-        return view('admin.attendance.table', $viewData);
+        return view('teacher.absensi.absensi', $viewData);
     }
 
     /**
@@ -219,7 +214,7 @@ class AttendanceController extends Controller
                 [
                     'status'    => $attendanceData['status'],
                     'user_id'   => Auth::id(),
-                    'school_id' => $class->school_id, // <-- FIX: tambahkan school_id
+                    'school_id' => $class->school_id,
                 ]
             );
 
@@ -256,6 +251,7 @@ class AttendanceController extends Controller
 
     /**
      * Get schedules of a class (for AJAX schedule dropdown).
+     * Mengirim subject_name, bukan subject_id.
      */
     public function getSchedules(Xclass $class)
     {
@@ -264,10 +260,10 @@ class AttendanceController extends Controller
         }
 
         $schedules = Schedule::where('xclass_id', $class->id)
-            ->with('subject:id,name')
+            ->select('id', 'day', 'start_time', 'end_time', 'subject_name', 'xclass_id')
             ->orderByRaw("FIELD(day, 'MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY')")
             ->orderBy('start_time')
-            ->get(['id', 'day', 'start_time', 'end_time', 'subject_id', 'xclass_id']);
+            ->get();
 
         return response()->json($schedules);
     }
@@ -308,7 +304,7 @@ class AttendanceController extends Controller
         $dateTo = $request->date_to ? Carbon::parse($request->date_to) : Carbon::now()->endOfMonth();
 
         $query = $this->attendanceQueryForClass($class->id)
-            ->with(['schedule.subject', 'studentEnrollment.student'])
+            ->with(['schedule', 'studentEnrollment.student']) // <-- tanpa subject
             ->whereBetween('date', [$dateFrom, $dateTo])
             ->orderBy('date', 'desc')
             ->orderBy('created_at', 'desc');
@@ -381,7 +377,7 @@ class AttendanceController extends Controller
         $dateTo = $request->date_to ? Carbon::parse($request->date_to) : Carbon::now()->endOfMonth();
 
         $attendances = $this->attendanceQueryForClass($class->id)
-            ->with(['schedule.subject', 'studentEnrollment.student'])
+            ->with(['schedule', 'studentEnrollment.student']) // <-- tanpa subject
             ->whereBetween('date', [$dateFrom, $dateTo])
             ->orderBy('date', 'desc')
             ->orderBy('created_at', 'desc')
@@ -422,174 +418,5 @@ class AttendanceController extends Controller
             'studentRecaps' => $studentRecaps,
             'summary'       => $summary,
         ]);
-    }
-
-    /**
-     * Display attendance list selection form (per class).
-     */
-    public function list()
-    {
-        $user = auth()->user();
-
-        $query = $this->activeClassesQuery();
-
-        if ($user->role === 'GURU' || $user->role === 'GURU_BK') {
-            $classIds = Schedule::where('user_id', $user->id)->pluck('xclass_id')->unique();
-            $query->whereIn('id', $classIds);
-        }
-
-        $classes = $query->get();
-
-        return view('admin.attendance.list', [
-            'title'   => 'Daftar Absensi per Kelas',
-            'classes' => $classes,
-        ]);
-    }
-
-    /**
-     * Show attendance list for selected class.
-     */
-    public function listShow(Xclass $class)
-    {
-        if (!$this->canAccessSchool($class)) {
-            abort(403, 'Anda tidak memiliki akses ke sekolah ini.');
-        }
-
-        $user = auth()->user();
-
-        if (($user->role === 'GURU' || $user->role === 'GURU_BK')) {
-            $hasAccess = Schedule::where('user_id', $user->id)
-                ->where('xclass_id', $class->id)
-                ->exists();
-            if (!$hasAccess) {
-                abort(403, 'Anda tidak memiliki akses ke kelas ini.');
-            }
-        }
-
-        $class->loadMissing('academicYear');
-        $this->ensureActiveAcademicYear($class);
-
-        $schedules = Schedule::with('subject')
-            ->where('xclass_id', $class->id)
-            ->orderByRaw("FIELD(day, 'MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY')")
-            ->orderBy('start_time')
-            ->get();
-
-        $attendances = $this->attendanceQueryForClass($class->id)
-            ->with(['schedule.subject', 'studentEnrollment.student'])
-            ->orderBy('date', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-
-        return view('admin.attendance.list-show', [
-            'title'      => 'Daftar Absensi: ' . $class->name,
-            'class'      => $class,
-            'schedules'  => $schedules,
-            'attendances' => $attendances,
-        ]);
-    }
-
-    /**
-     * Show edit form for specific attendance session.
-     */
-    public function listEdit(Xclass $class, Schedule $schedule, $date)
-    {
-        if (!$this->canAccessSchool($class)) {
-            abort(403, 'Anda tidak memiliki akses ke sekolah ini.');
-        }
-
-        $user = auth()->user();
-
-        if (($user->role === 'GURU' || $user->role === 'GURU_BK')) {
-            $hasAccess = Schedule::where('user_id', $user->id)
-                ->where('xclass_id', $class->id)
-                ->where('id', $schedule->id)
-                ->exists();
-            if (!$hasAccess) {
-                abort(403, 'Anda tidak memiliki akses ke jadwal ini.');
-            }
-        }
-
-        $class->loadMissing('academicYear');
-        $this->ensureActiveAcademicYear($class);
-
-        $date = Carbon::parse($date);
-
-        $existingAttendances = $this->attendanceQueryForClass($class->id)
-            ->where('schedule_id', $schedule->id)
-            ->whereDate('date', $date)
-            ->get()
-            ->keyBy('student_id');
-
-        return view('admin.attendance.list-edit', [
-            'title'               => 'Edit Absensi: ' . $class->name . ' - ' . $schedule->subject->name,
-            'class'               => $class,
-            'schedule'            => $schedule,
-            'date'                => $date,
-            'existingAttendances' => $existingAttendances,
-        ]);
-    }
-
-    /**
-     * Update attendance records for specific session.
-     */
-    public function listUpdate(Request $request, Xclass $class, Schedule $schedule, $date)
-    {
-        if (!$this->canAccessSchool($class)) {
-            abort(403, 'Anda tidak memiliki akses ke sekolah ini.');
-        }
-
-        $user = auth()->user();
-
-        if (($user->role === 'GURU' || $user->role === 'GURU_BK')) {
-            $hasAccess = Schedule::where('user_id', $user->id)
-                ->where('xclass_id', $class->id)
-                ->where('id', $schedule->id)
-                ->exists();
-            if (!$hasAccess) {
-                abort(403, 'Anda tidak memiliki akses ke jadwal ini.');
-            }
-        }
-
-        $class->loadMissing('academicYear');
-        $this->ensureActiveAcademicYear($class);
-
-        $request->validate([
-            'attendances' => 'required|array',
-            'attendances.*.student_id' => 'required|exists:students,id',
-            'attendances.*.status'     => 'required|in:HADIR,IZIN,SAKIT,ALPHA',
-        ]);
-
-        $scheduleId = $schedule->id;
-        $date = Carbon::parse($date)->startOfDay();
-
-        $enrollmentByStudentId = StudentEnrollment::where('xclass_id', $class->id)
-            ->pluck('id', 'student_id');
-
-        foreach ($request->attendances as $attendanceData) {
-            $enrollmentId = $enrollmentByStudentId->get($attendanceData['student_id']);
-
-            if (!$enrollmentId) {
-                continue;
-            }
-
-            Attendance::updateOrCreate(
-                [
-                    'student_id'            => $attendanceData['student_id'],
-                    'student_enrollment_id' => $enrollmentId,
-                    'schedule_id'           => $scheduleId,
-                    'date'                  => $date,
-                ],
-                [
-                    'status'    => $attendanceData['status'],
-                    'user_id'   => Auth::id(),
-                    'school_id' => $class->school_id, // <-- FIX: tambahkan school_id
-                ]
-            );
-        }
-
-        return redirect()
-            ->route('attendance.list.show', $class)
-            ->with('success', 'Absensi berhasil diperbarui.');
     }
 }

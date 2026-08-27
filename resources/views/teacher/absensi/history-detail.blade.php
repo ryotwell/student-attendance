@@ -18,8 +18,9 @@
                 Kelas {{ $first->xclass->name }}
             </h2>
 
+            {{-- PERUBAHAN: subject_name langsung --}}
             <p class="text-sm text-gray-500 dark:text-gray-400">
-                Mata Pelajaran {{ $first->schedule->subject->name }}
+                Mata Pelajaran {{ $first->schedule->subject_name }}
             </p>
         </div>
 

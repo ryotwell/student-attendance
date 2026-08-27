@@ -60,7 +60,7 @@
                     </div>
 
                     <h4 class="mb-1 text-lg font-bold text-gray-800 transition group-hover:text-brand-600 dark:text-white dark:group-hover:text-brand-400">
-                        Mata Pelajaran {{ $schedule->subject?->name ?? 'Mata Pelajaran' }}
+                        Mata Pelajaran {{ $schedule->subject_name ?? 'Mata Pelajaran' }}
                     </h4>
 
                     <p class="mb-3 text-sm text-gray-500 dark:text-gray-400">

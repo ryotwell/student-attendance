@@ -41,6 +41,7 @@ class AbsensiController extends Controller
     /**
      * Daftar jadwal guru login, dibatasi ke kelas pada tahun ajaran
      * yang sedang aktif dan sekolah yang sama.
+     * Sekarang tanpa relasi subject, langsung pakai subject_name.
      */
     public function schedules()
     {
@@ -56,7 +57,7 @@ class AbsensiController extends Controller
 
         $schedules = $user
             ->schedules()
-            ->with(['subject', 'xclass'])
+            ->with(['xclass']) // subject dihapus
             ->when($activeAcademicYear, function ($q) use ($activeAcademicYear) {
                 $q->whereHas('xclass', fn ($q2) => $q2->where('academic_year_id', $activeAcademicYear->id));
             })
@@ -86,7 +87,7 @@ class AbsensiController extends Controller
             })
             ->first();
 
-        $query = Attendance::with(['schedule.subject', 'studentEnrollment.xclass'])
+        $query = Attendance::with(['schedule', 'studentEnrollment.xclass']) // subject dihapus
             ->where('user_id', Auth::id());
 
         if (!$isSuperAdmin) {
@@ -145,7 +146,7 @@ class AbsensiController extends Controller
             );
         }
 
-        $query = Attendance::with(['studentEnrollment.student', 'studentEnrollment.xclass', 'schedule.subject'])
+        $query = Attendance::with(['studentEnrollment.student', 'studentEnrollment.xclass', 'schedule']) // subject dihapus
             ->where('user_id', Auth::id())
             ->whereDate('date', $date)
             ->where('schedule_id', $schedule)
@@ -179,14 +180,18 @@ class AbsensiController extends Controller
             })
             ->first();
 
+        // Ambil jadwal milik user, tanpa relasi subject
         $schedules = $user
-            ->mySchedules()
+            ->schedules()
+            ->with(['xclass'])
             ->when($activeAcademicYear, function ($q) use ($activeAcademicYear) {
                 $q->whereHas('xclass', fn ($q2) => $q2->where('academic_year_id', $activeAcademicYear->id));
             })
             ->when(!$isSuperAdmin, function ($q) use ($schoolId) {
                 $q->whereHas('xclass', fn ($q2) => $q2->where('school_id', $schoolId));
             })
+            ->orderByRaw("FIELD(day, 'MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY')")
+            ->orderBy('start_time')
             ->get();
 
         return view('teacher.absensi.recap-index', compact('schedules'));
@@ -213,7 +218,7 @@ class AbsensiController extends Controller
 
         $fileName = sprintf(
             'rekap-absensi-%s-%s-%s.pdf',
-            Str::slug($schedule->subject->name),
+            Str::slug($schedule->subject_name),
             Str::slug($schedule->xclass->name),
             $data['selectedMonth']
         );
@@ -233,7 +238,7 @@ class AbsensiController extends Controller
         // Pastikan jadwal milik guru login
         abort_unless($schedule->user_id === $user->id, 403);
 
-        $schedule->load(['subject', 'xclass.academicYear']);
+        $schedule->load(['xclass.academicYear']); // subject dihapus
 
         // Cek akses sekolah
         if (!$isSuperAdmin) {
