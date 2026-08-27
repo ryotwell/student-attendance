@@ -60,7 +60,9 @@ class CreateNewUser implements CreatesNewUsers
             'school_id' => $school->id,
         ]);
 
-        SendRegistrationNotificationToAdmin::dispatch($user, $school);
+        if(config('app.env') === 'production') {
+            SendRegistrationNotificationToAdmin::dispatch($user, $school);
+        }
 
         return $user;
     }

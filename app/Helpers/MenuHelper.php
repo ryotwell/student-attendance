@@ -108,11 +108,11 @@ class MenuHelper
                 'icon' => 'computer',
                 'path' => '#!'
             ],
-            [
-                'name' => 'Sekolah',
-                'icon' => 'building',
-                'path' => '/sekolah'
-            ],
+            // [
+            //     'name' => 'Sekolah',
+            //     'icon' => 'building',
+            //     'path' => '/sekolah'
+            // ],
             // [
             //     'name' => 'Pengumuman',
             //     'icon' => 'calendar',
