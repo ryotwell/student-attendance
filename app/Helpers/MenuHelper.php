@@ -306,6 +306,26 @@ class MenuHelper
             ];
         }
 
+        if ($user->role === 'SUPERADMIN') {
+            return [
+                [
+                    'title' => 'Menu',
+                    'items' => [
+                        [
+                            'icon' => 'dashboard',
+                            'name' => 'Dashboard',
+                            'path' => route('superadmin.dashboard'),
+                        ],
+                        [
+                            'icon' => 'building',
+                            'name' => 'Sekolah',
+                            'path' => route('superadmin.schools.index'),
+                        ],
+                    ],
+                ],
+            ];
+        }
+
         return [];
     }
 

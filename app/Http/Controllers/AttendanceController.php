@@ -219,7 +219,9 @@ class AttendanceController extends Controller
             );
 
             if ($attendance->status === 'ALPHA') {
-                SendAlphaWhatsAppNotification::dispatch($attendance);
+                if(Auth::user()->school->package === 'premium') {
+                    SendAlphaWhatsAppNotification::dispatch($attendance);
+                }
             }
         }
 

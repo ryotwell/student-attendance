@@ -12,6 +12,37 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('login'))->middleware('guest');
 
+// SUPERADMIN
+Route::middleware(['auth', 'role:SUPERADMIN'])->prefix('superadmin')->name('superadmin.')->group(function () {
+    // Dashboard khusus superadmin (opsional)
+    Route::get('/', [App\Http\Controllers\SuperAdmin\DashboardController::class, 'index'])
+        ->name('dashboard');
+
+    // Manajemen Sekolah
+    Route::resource('schools', App\Http\Controllers\SuperAdmin\SchoolController::class)
+        ->except(['create', 'store', 'destroy']);
+
+    // // Manajemen User (khusus ADMIN)
+    // Route::resource('admins', App\Http\Controllers\SuperAdmin\AdminController::class)
+    //     ->except('show');
+
+    // // Opsional: melihat semua user dari semua sekolah (misalnya untuk monitoring)
+    // Route::get('/users', [App\Http\Controllers\SuperAdmin\UserController::class, 'index'])
+    //     ->name('users.index');
+    // Route::get('/users/{user}', [App\Http\Controllers\SuperAdmin\UserController::class, 'show'])
+    //     ->name('users.show');
+    // Route::delete('/users/{user}', [App\Http\Controllers\SuperAdmin\UserController::class, 'destroy'])
+    //     ->name('users.destroy');
+
+    // // Aktivasi/nonaktifkan sekolah
+    // Route::patch('/schools/{school}/toggle-active', [App\Http\Controllers\SuperAdmin\SchoolController::class, 'toggleActive'])
+    //     ->name('schools.toggle-active');
+
+    // // Reset password admin (atau user) jika diperlukan
+    // Route::post('/admins/{user}/reset-password', [App\Http\Controllers\SuperAdmin\AdminController::class, 'resetPassword'])
+    //     ->name('admins.reset-password');
+});
+
 // ADMIN
 Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->group(function() {
     // dashboard

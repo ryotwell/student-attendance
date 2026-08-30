@@ -200,5 +200,16 @@ class Development2Seeder extends Seeder
                 'school_id' => $school->id,
             ]
         );
+
+        // superadmin
+        User::firstOrCreate(
+            ['email' => 'super@gmail.com'],
+            [
+                'name'      => 'Akun Super Admin',
+                'password'  => Hash::make('12345678'),
+                'role'      => 'SUPERADMIN',
+                'school_id' => $school->id,
+            ]
+        );
     }
 }

@@ -2,7 +2,10 @@
 
 # =============================================================================
 # Script: export_php_code.sh
-# Deskripsi: Menggabungkan semua file .php dari folder Migrations & Models
+# Deskripsi: Menggabungkan semua file .php / .blade.php dari:
+#            - Migrations (database/migrations)
+#            - Models (app/Models)
+#            - Views Admin Student (resources/views/admin/student)
 #            menjadi file .txt dengan header untuk memudahkan review.
 # Cara pakai: ./export_php_code.sh
 # =============================================================================
@@ -11,7 +14,8 @@ set -e # Hentikan script jika ada error
 
 # --- KONFIGURASI (ubah jika struktur folder Anda beda) ---
 MIGRATIONS_PATH="database/migrations"
-MODELS_PATH="app/Models"   # Jika Laravel versi lama, ganti jadi "app"
+MODELS_PATH="app/Models"                # Jika Laravel versi lama, ganti jadi "app"
+VIEWS_PATH="resources/views/admin/student"
 OUTPUT_DIR="./exports"
 # ----------------------------------------------------------
 
@@ -34,7 +38,7 @@ export_directory() {
     # Kosongkan file output
     > "$OUTPUT_FILE"
 
-    # Cari semua file .php (rekursif), urutkan, lalu tulis dengan header
+    # Cari semua file .php (termasuk .blade.php) secara rekursif, urutkan, lalu tulis dengan header
     find "$SOURCE_DIR" -type f -name "*.php" | sort | while read -r FILE; do
         {
             echo "==================== $FILE ===================="
@@ -62,23 +66,45 @@ export_directory "$MIGRATIONS_PATH" "$OUTPUT_DIR/migrations.txt" "Migrations"
 # 2. Ekspor Models
 export_directory "$MODELS_PATH" "$OUTPUT_DIR/models.txt" "Models"
 
-# 3. Gabungkan keduanya (opsional)
-COMBINED_FILE="$OUTPUT_DIR/combined_migrations_models.txt"
-if [ -f "$OUTPUT_DIR/migrations.txt" ] && [ -f "$OUTPUT_DIR/models.txt" ]; then
-    echo "🔗 Membuat file gabungan: $COMBINED_FILE"
-    {
-        echo "====================================================="
-        echo "            GABUNGAN MIGRATIONS & MODELS             "
-        echo "====================================================="
-        echo ""
-        echo "================= MIGRATIONS =================="
+# 3. Ekspor Views (Admin Student)  <-- INI TAMBAHAN BARU
+export_directory "$VIEWS_PATH" "$OUTPUT_DIR/admin_student_views.txt" "Admin Student Views"
+
+# 4. Gabungkan ketiganya menjadi satu file (opsional)
+COMBINED_FILE="$OUTPUT_DIR/combined_all_code.txt"
+echo "🔗 Membuat file gabungan: $COMBINED_FILE"
+
+{
+    echo "====================================================="
+    echo "      GABUNGAN MIGRATIONS + MODELS + VIEWS           "
+    echo "====================================================="
+    echo ""
+
+    echo "================= 1. MIGRATIONS =================="
+    if [ -f "$OUTPUT_DIR/migrations.txt" ]; then
         cat "$OUTPUT_DIR/migrations.txt"
-        echo ""
-        echo "================= MODELS ======================"
+    else
+        echo "(File migrations.txt tidak ditemukan)"
+    fi
+
+    echo ""
+    echo "================= 2. MODELS ======================"
+    if [ -f "$OUTPUT_DIR/models.txt" ]; then
         cat "$OUTPUT_DIR/models.txt"
-    } > "$COMBINED_FILE"
-    echo "✅ File gabungan berhasil dibuat."
-fi
+    else
+        echo "(File models.txt tidak ditemukan)"
+    fi
+
+    echo ""
+    echo "================= 3. VIEWS (admin/student) ======="
+    if [ -f "$OUTPUT_DIR/admin_student_views.txt" ]; then
+        cat "$OUTPUT_DIR/admin_student_views.txt"
+    else
+        echo "(File admin_student_views.txt tidak ditemukan)"
+    fi
+
+} > "$COMBINED_FILE"
+
+echo "✅ File gabungan berhasil dibuat."
 
 echo "====================================="
 echo "✅ Ekspor selesai!"
