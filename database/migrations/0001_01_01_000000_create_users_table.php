@@ -19,7 +19,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('role', ['SUPERADMIN', 'ADMIN', 'GURU', 'GURU_BK']);
-            $table->foreignIdFor(School::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->nullable()->constrained()->nullOnDelete();
             $table->rememberToken();
             $table->timestamps();
         });

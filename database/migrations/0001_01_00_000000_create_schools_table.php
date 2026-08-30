@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->enum('package', ['basic', 'premium'])->default('basic');
             $table->enum('level', [
                 'SD',
                 'SMP',
