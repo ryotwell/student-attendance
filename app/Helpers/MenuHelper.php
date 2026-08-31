@@ -20,7 +20,7 @@ class MenuHelper
                 'path' => route('admin.teacher-documents.index')
             ],
             [
-                'name' => 'Tugas Guru',
+                'name' => 'Ekstrakurikuler',
                 'icon' => 'task',
                 'path' => '#!'
             ],
