@@ -232,6 +232,11 @@ class MenuHelper
                             'path' => route('schedules.index'),
                         ],
                         [
+                            'icon' => 'document',
+                            'name' => 'Rencana Pembelajaran',
+                            'path' => route('lesson-plans.index'),
+                        ],
+                        [
                             'icon' => 'pages', // sebelumnya 'calendar' – sekarang konsisten dengan admin
                             'name' => 'Jurnal Guru',
                             'path' => route('teacher.documents.index'),

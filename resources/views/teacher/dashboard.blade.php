@@ -30,6 +30,12 @@
             'icon' => 'calendar',
         ],
         [
+            'title' => 'Rencana Pembelajaran',
+            'description' => 'Buat dan kelola rencana pembelajaran',
+            'url' => route('lesson-plans.index'),
+            'icon' => 'document',
+        ],
+        [
             'title' => 'Pengumuman',
             'description' => 'Baca informasi dan pengumuman terbaru',
             'url' => route('announcements.index'),

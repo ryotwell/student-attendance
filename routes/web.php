@@ -101,6 +101,20 @@ Route::middleware(['auth'])->prefix('guru')->group(function() {
             ->name('absensi.recap.show');
         Route::get('/absensi/recap/{schedule}/export', [App\Http\Controllers\Teacher\AbsensiController::class, 'recapExport'])
             ->name('absensi.recap.export');
+
+        // Rencana Pembelajaran
+        Route::get('/lesson-plans', [App\Http\Controllers\Teacher\LessonPlanController::class, 'index'])
+            ->name('lesson-plans.index');
+        Route::get('/lesson-plans/create', [App\Http\Controllers\Teacher\LessonPlanController::class, 'create'])
+            ->name('lesson-plans.create');
+        Route::post('/lesson-plans', [App\Http\Controllers\Teacher\LessonPlanController::class, 'store'])
+            ->name('lesson-plans.store');
+        Route::get('/lesson-plans/{lessonPlan}/edit', [App\Http\Controllers\Teacher\LessonPlanController::class, 'edit'])
+            ->name('lesson-plans.edit');
+        Route::put('/lesson-plans/{lessonPlan}', [App\Http\Controllers\Teacher\LessonPlanController::class, 'update'])
+            ->name('lesson-plans.update');
+        Route::delete('/lesson-plans/{lessonPlan}', [App\Http\Controllers\Teacher\LessonPlanController::class, 'destroy'])
+            ->name('lesson-plans.destroy');
     });
 
     Route::middleware(['role:GURU,GURU_BK'])->group(function() {
