@@ -49,10 +49,10 @@
             </button>
 
             <!-- Logo (mobile only) -->
-            <a href="/" class="xl:hidden">
-                <img class="dark:hidden" src="/logo.png" alt="Logo" width="80" height="80" />
-                <img class="hidden dark:block" src="/images/logo/logo-dark.svg" alt="Logo" />
-            </a>
+            {{-- <a href="/" class="xl:hidden">
+                <img class="dark:hidden" src="/logo-sekolah.png" alt="Logo" width="80" height="80" />
+                <img class="hidden dark:block" src="/logo-sekolah.png" alt="Logo" />
+            </a> --}}
 
             <!-- Application Menu Toggle (mobile only) -->
             <button @click="toggleApplicationMenu()"
@@ -66,7 +66,7 @@
             </button>
 
             <!-- Search Bar (desktop only) -->
-            <div class="hidden xl:block">
+            {{-- <div class="hidden xl:block">
                 <form>
                     <div class="relative">
                         <span class="absolute -translate-y-1/2 pointer-events-none left-4 top-1/2">
@@ -87,7 +87,7 @@
                         </button>
                     </div>
                 </form>
-            </div>
+            </div> --}}
         </div>
 
         <!-- Application Menu (mobile) and Right Side Actions (desktop) -->
@@ -113,7 +113,7 @@
                 </button>
 
                 <!-- Notification Dropdown -->
-                <x-header.notification-dropdown />
+                {{-- <x-header.notification-dropdown /> --}}
             </div>
 
             <!-- User Dropdown -->

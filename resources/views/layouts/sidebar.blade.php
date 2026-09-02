@@ -1,4 +1,3 @@
-
 @php
     use App\Helpers\MenuHelper;
     $menuGroups = MenuHelper::getMenuGroups();
@@ -62,10 +61,10 @@
     <!-- Logo Section -->
     <div class="pt-8 pb-7 flex justify-center mt-10">
         <a href="/">
-            <img x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen" class="dark:hidden" src="/logo.png" alt="Logo" width="125" height="125" />
-            <img x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen" class="hidden dark:block" src="/logo.png" alt="Logo" width="125" height="125" />
-            <img x-show="!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen"
-                src="/images/logo/logo-icon.svg" alt="Logo" width="32" height="32" />
+            <img x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen" class="dark:hidden" src={{ Auth::user()->school?->logo ? Storage::disk('s3')->url(Auth::user()->school->logo) : '/satak.png' }} alt="Logo" width="125" height="125" />
+            <img x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen" class="hidden dark:block" src={{ Auth::user()->school?->logo ? Storage::disk('s3')->url(Auth::user()->school->logo) : '/satak.png' }} alt="Logo" width="125" height="125" />
+            {{-- <img x-show="!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen"
+                src="/images/logo/logo-icon.svg" alt="Logo" width="32" height="32" /> --}}
         </a>
     </div>
 
@@ -85,7 +84,7 @@
                             </template>
                             <template x-if="!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <path fill-rule="evenodd" clip-rule="evenodd" d="M5.99915 10.2451C6.96564 10.2451 7.74915 11.0286 7.74915 11.9951V12.0051C7.74915 12.9716 6.96564 13.7551 5.99915 13.7551C5.03265 13.7551 4.24915 12.9716 4.24915 12.0051V11.9951C4.24915 11.0286 5.03265 10.2451 5.99915 10.2451ZM17.9991 10.2451C18.9656 10.2451 19.7491 11.0286 19.7491 11.9951V12.0051C19.7491 12.9716 18.9656 13.7551 17.9991 13.7551C17.0326 13.7551 16.2491 12.9716 16.2491 12.0051V11.9951C16.2491 11.0286 17.0326 10.2451 17.9991 10.2451ZM13.7491 11.9951C13.7491 11.0286 12.9656 10.2451 11.9991 10.2451C11.0326 10.2451 10.2491 11.0286 10.2491 11.9951V12.0051C10.2491 12.9716 11.0326 13.7551 11.9991 13.7551C12.9656 13.7551 13.7491 12.9716 13.7491 12.0051V11.9951Z" fill="currentColor"/>
+                                  <path fill-rule="evenodd" clip-rule="evenodd" d="M5.99915 10.2451C6.96564 10.2451 7.74915 11.0286 7.74915 11.9951V12.0051C7.74915 12.9716 6.96564 13.7551 5.99915 13.7551C5.03265 13.7551 4.24915 12.9716 4.24915 12.0051V11.9951C4.24915 11.0286 5.03265 10.2451 5.99915 10.2451ZM17.9991 10.2451C18.9656 10.2451 19.7491 11.0286 19.7491 11.9951V12.0051C19.7491 12.9716 18.9656 13.7551 17.9991 13.7551C17.0326 13.7551 16.2491 12.9716 16.2491 12.0051V11.9951C16.2491 11.0286 17.0326 10.2451 17.9991 10.2451ZM13.7491 11.9951C13.7491 11.0286 12.9656 10.2451 11.9991 10.2451C11.0326 10.2451 10.2491 11.0286 10.2491 11.9951V12.0051C10.2491 12.9716 11.0326 13.7551 11.9991 13.7551C12.9656 13.7551 13.7491 12.9716 13.7491 12.0051V11.9951C13.7491 11.0286 12.9656 10.2451 11.9991 10.2451Z" fill="currentColor"/>
                                 </svg>
                             </template>
                         </h2>
@@ -210,6 +209,41 @@
                 @endforeach
             </div>
         </nav>
+
+        <div x-data x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen" 
+             x-transition 
+             class="mt-auto border-t border-gray-200 dark:border-gray-700 pt-4 pb-24">
+            <ul class="flex flex-col gap-1">
+                <li>
+                    <form method="POST" action="{{ route('logout') }}" id="logout-form">
+                        @csrf
+                        <button type="submit" 
+                                class="menu-item group w-full text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                                :class="[
+                                    !$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen ?
+                                    'xl:justify-center' : 'justify-start',
+                                    'menu-item-inactive'
+                                ]">
+                            <!-- Icon (Heroicons logout) - warna merah -->
+                            <span class="menu-item-icon-inactive text-red-500 dark:text-red-400">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" 
+                                     stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+                                     stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                    <polyline points="16 17 21 12 16 7" />
+                                    <line x1="21" y1="12" x2="9" y2="12" />
+                                </svg>
+                            </span>
+                            <!-- Teks Logout - merah -->
+                            <span x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen"
+                                  class="menu-item-text">
+                                Logout
+                            </span>
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
 
         <!-- Sidebar Widget -->
         {{-- <div x-data x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen" x-transition class="mt-auto">

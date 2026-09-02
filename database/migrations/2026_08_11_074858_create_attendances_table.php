@@ -1,7 +1,10 @@
 <?php
 
 use App\Models\Schedule;
+use App\Models\School;
 use App\Models\Student;
+use App\Models\StudentEnrollment;
+use App\Models\User;
 use App\Models\Xclass;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -15,6 +18,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('attendances', function (Blueprint $table) {
+            $table->index([
+                'student_id',
+                'date',
+                'status'
+            ]);
             $table->id();
             $table->enum('status', [
                 'HADIR',
@@ -23,9 +31,11 @@ return new class extends Migration
                 'ALPHA',
             ]);
             $table->timestamp('date');
+            $table->foreignIdFor(StudentEnrollment::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Student::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(Xclass::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Schedule::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(School::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }

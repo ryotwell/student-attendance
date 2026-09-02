@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Subject;
+use App\Models\School;
 use App\Models\User;
 use App\Models\Xclass;
 use Illuminate\Database\Migrations\Migration;
@@ -16,6 +16,7 @@ return new class extends Migration
     {
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
+            $table->string('subject_name');
             $table->enum('day', [
                 'MONDAY',
                 'TUESDAY',
@@ -28,8 +29,8 @@ return new class extends Migration
             $table->time('start_time');
             $table->time('end_time');
             $table->foreignIdFor(User::class);
-            $table->foreignIdFor(Subject::class);
             $table->foreignIdFor(Xclass::class);
+            $table->foreignIdFor(School::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }

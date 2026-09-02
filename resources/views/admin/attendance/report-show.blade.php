@@ -75,7 +75,6 @@
             <div class="text-sm text-gray-500 dark:text-gray-400">Alpha</div>
         </x-common.component-card>
     </div>
-</div>
 
     <!-- Attendance Table -->
     <x-common.component-card title="Detail Absensi">
@@ -95,7 +94,8 @@
                         @foreach ($attendances as $attendance)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
                                 <td class="px-4 py-3">{{ $attendance->date->format('d/m/Y') }}</td>
-                                <td class="px-4 py-3">{{ $attendance->schedule->subject->name ?? '-' }}</td>
+                                {{-- PERUBAHAN: pakai subject_name langsung --}}
+                                <td class="px-4 py-3">{{ $attendance->schedule->subject_name ?? '-' }}</td>
                                 <td class="px-4 py-3 font-medium">{{ $attendance->student->name }} ({{ $attendance->student->nis }})</td>
                                 <td class="px-4 py-3">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $attendance->status_badge_class }}">

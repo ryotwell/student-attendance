@@ -30,4 +30,5 @@ COPY docker/supervisord.conf /etc/supervisord.conf
 RUN chown -R www-data:www-data storage bootstrap/cache
 
 EXPOSE 80
-CMD ["sh", "-c", "export APP_KEY=\"${APP_KEY:-$(php -r 'echo \"base64:\".base64_encode(random_bytes(32));')}\" && php artisan migrate --force && supervisord -c /etc/supervisord.conf"]
+# CMD ["sh", "-c", "export APP_KEY=\"${APP_KEY:-$(php -r 'echo \"base64:\".base64_encode(random_bytes(32));')}\" && php artisan migrate --force && supervisord -c /etc/supervisord.conf"]
+CMD ["sh", "-c", "php artisan migrate --force && php artisan optimize && php artisan storage:link && supervisord -c /etc/supervisord.conf"]

@@ -2,40 +2,70 @@ services:
   app:
     build: .
     restart: unless-stopped
+    networks:
+      - dokploy-network
+      - default
     environment:
+      APP_NAME: ${APP_NAME}
+      APP_DEBUG: ${APP_DEBUG}
       APP_ENV: ${APP_ENV:-production}
       APP_KEY: ${APP_KEY:-}
       APP_URL: ${APP_URL:-http://localhost}
       LOG_CHANNEL: stderr
+
       DB_CONNECTION: mysql
-      DB_HOST: ${DB_HOST:-db}
+      DB_HOST: ${DB_HOST}
       DB_DATABASE: ${DB_DATABASE:-app}
       DB_USERNAME: ${DB_USERNAME:-app}
       DB_PASSWORD: ${DB_PASSWORD:-secret}
+
       CACHE_STORE: database
       QUEUE_CONNECTION: database
-      SESSION_DRIVER: database
+      SESSION_DRIVER: ${SESSION_DRIVER:-database}
+
+      WHATSAPP_API_URL: ${WHATSAPP_API_URL}
+      WHATSAPP_USERNAME: ${WHATSAPP_USERNAME}
+      WHATSAPP_PASSWORD: ${WHATSAPP_PASSWORD}
+      WHATSAPP_DEVICE_ID: ${WHATSAPP_DEVICE_ID}
+
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+      AWS_BUCKET: ${AWS_BUCKET}
+      AWS_USE_PATH_STYLE_ENDPOINT: ${AWS_USE_PATH_STYLE_ENDPOINT}
+      AWS_ENDPOINT: ${AWS_ENDPOINT}
+      AWS_URL: ${AWS_URL}
+
     ports:
       - "${APP_PORT:-8080}:80"
-    depends_on:
-      db:
-        condition: service_healthy
 
-  db:
-    image: mysql:8.4
+
+  queue:
+    build: .
     restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
+    networks:
+      - dokploy-network
+      - default
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE:-app}
-      MYSQL_USER: ${DB_USERNAME:-app}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
-    volumes:
-      - dbdata:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${DB_USERNAME:-app}", "-p${DB_PASSWORD:-secret}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      APP_NAME: ${APP_NAME}
+      APP_DEBUG: ${APP_DEBUG}
+      APP_ENV: ${APP_ENV:-production}
+      APP_KEY: ${APP_KEY:-}
+      APP_URL: ${APP_URL:-http://localhost}
+      LOG_CHANNEL: stderr
 
-volumes:
-  dbdata:
+      DB_CONNECTION: mysql
+      DB_HOST: ${DB_HOST}
+      DB_DATABASE: ${DB_DATABASE:-app}
+      DB_USERNAME: ${DB_USERNAME:-app}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      SESSION_DRIVER: ${SESSION_DRIVER:-database}
+
+      WHATSAPP_API_URL: ${WHATSAPP_API_URL}
+      WHATSAPP_USERNAME: ${WHATSAPP_USERNAME}
+      WHATSAPP_PASSWORD: ${WHATSAPP_PASSWORD}
+      WHATSAPP_DEVICE_ID: ${WHATSAPP_DEVICE_ID}

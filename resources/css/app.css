@@ -47,18 +47,18 @@
   --color-white: #ffffff;
   --color-black: #101828;
 
-  --color-brand-25: #f2f7ff;
-  --color-brand-50: #ecf3ff;
-  --color-brand-100: #dde9ff;
-  --color-brand-200: #c2d6ff;
-  --color-brand-300: #9cb9ff;
-  --color-brand-400: #7592ff;
-  --color-brand-500: #465fff;
-  --color-brand-600: #3641f5;
-  --color-brand-700: #2a31d8;
-  --color-brand-800: #252dae;
-  --color-brand-900: #262e89;
-  --color-brand-950: #161950;
+  --color-brand-25: #f7fbf8;
+  --color-brand-50: #eff8f2;
+  --color-brand-100: #d9f2e1;
+  --color-brand-200: #afe9c2;
+  --color-brand-300: #72df95;
+  --color-brand-400: #2bd462;
+  --color-brand-500: #1b843d;
+  --color-brand-600: #166c32;
+  --color-brand-700: #14582a;
+  --color-brand-800: #124623;
+  --color-brand-900: #10381d;
+  --color-brand-950: #0c2414;
 
   --color-blue-light-25: #f5fbff;
   --color-blue-light-50: #f0f9ff;
@@ -151,7 +151,7 @@
   --shadow-theme-xl: 0px 20px 24px -4px rgba(16, 24, 40, 0.08),
     0px 8px 8px -4px rgba(16, 24, 40, 0.03);
   --shadow-datepicker: -5px 0 0 #262d3c, 5px 0 0 #262d3c;
-  --shadow-focus-ring: 0px 0px 0px 4px rgba(70, 95, 255, 0.12);
+  --shadow-focus-ring: 0px 0px 0px 4px rgba(27, 132, 61, 0.12);
   --shadow-slider-navigation: 0px 1px 2px 0px rgba(16, 24, 40, 0.1),
     0px 1px 3px 0px rgba(16, 24, 40, 0.1);
   --shadow-tooltip: 0px 4px 6px -2px rgba(16, 24, 40, 0.05),
@@ -537,13 +537,13 @@ span.flatpickr-weekday,
 .flatpickr-day.selected.nextMonthDay,
 .flatpickr-day.startRange.nextMonthDay,
 .flatpickr-day.endRange.nextMonthDay {
-  background: #465fff;
+  background: #1b843d;
   @apply !border-brand-500 !bg-brand-500 hover:!border-brand-500 hover:!bg-brand-500;
 }
 .flatpickr-day.selected.startRange + .endRange:not(:nth-child(7n + 1)),
 .flatpickr-day.startRange.startRange + .endRange:not(:nth-child(7n + 1)),
 .flatpickr-day.endRange.startRange + .endRange:not(:nth-child(7n + 1)) {
-  box-shadow: -10px 0 0 #465fff;
+  box-shadow: -10px 0 0 #1b843d;
 }
 
 .flatpickr-months .flatpickr-prev-month svg,
@@ -879,4 +879,115 @@ pre[class*='language-'] {
   .flatpickr-calendar.static {
     margin-right: -60px !important;
   }
+}
+
+/* select2 */
+/* Select2 Tailwind Style */
+.select2-container {
+    width: 100% !important;
+}
+
+.select2-container .select2-selection--single {
+    height: 44px !important;
+    border-radius: 0.5rem !important;
+    border: 1px solid #d1d5db !important;
+    background-color: white !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.select2-container--default 
+.select2-selection--single 
+.select2-selection__rendered {
+    color: #374151 !important;
+    font-size: 0.875rem !important;
+    line-height: 44px !important;
+    padding-left: 1rem !important;
+}
+
+.select2-container--default 
+.select2-selection--single 
+.select2-selection__arrow {
+    height: 42px !important;
+    right: 10px !important;
+}
+
+
+.select2-container--default.select2-container--focus 
+.select2-selection--single {
+    border-color: #1b843d !important;
+    outline: none !important;
+}
+
+
+/* Dropdown */
+.select2-container--default 
+.select2-dropdown {
+    border-radius: 0.5rem !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1) !important;
+}
+
+
+.select2-container--default 
+.select2-search--dropdown 
+.select2-search__field {
+
+    height: 40px !important;
+    border-radius: 0.5rem !important;
+    border: 1px solid #d1d5db !important;
+    padding: 0 12px !important;
+}
+
+
+.select2-results__option {
+
+    padding: 10px 16px !important;
+    font-size: 0.875rem !important;
+
+}
+
+
+.select2-container--default 
+.select2-results__option--highlighted[aria-selected] {
+
+    background-color: #f3f4f6 !important;
+    color: #111827 !important;
+
+}
+
+
+/* Dark mode */
+.dark .select2-container .select2-selection--single {
+
+    background-color: #111827 !important;
+    border-color: #374151 !important;
+
+}
+
+
+.dark 
+.select2-container--default 
+.select2-selection--single 
+.select2-selection__rendered {
+
+    color: #e5e7eb !important;
+
+}
+
+
+.dark 
+.select2-container--default 
+.select2-dropdown {
+
+    background-color: #111827 !important;
+    border-color: #374151 !important;
+
+}
+
+
+.dark .select2-results__option {
+
+    color: #e5e7eb;
+
 }

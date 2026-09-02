@@ -7,37 +7,79 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Attendance extends Model
 {
-    protected $guarded = [];
-
-    protected $casts = [
-        'date' => 'datetime',
+    public const STATUS_OPTIONS = [
+        'HADIR' => [
+            'label' => 'Hadir',
+            'icon' => '✓',
+            'checkedClass' => 'peer-checked:bg-green-500',
+        ],
+        'IZIN' => [
+            'label' => 'Izin',
+            'icon' => '📘',
+            'checkedClass' => 'peer-checked:bg-blue-500',
+        ],
+        'SAKIT' => [
+            'label' => 'Sakit',
+            'icon' => '🤒',
+            'checkedClass' => 'peer-checked:bg-yellow-500',
+        ],
+        'ALPHA' => [
+            'label' => 'Alpha',
+            'icon' => '✕',
+            'checkedClass' => 'peer-checked:bg-red-500',
+        ],
     ];
 
-    public function student(): BelongsTo
+
+    protected $guarded = [];
+
+
+    protected $casts = [
+        'date' => 'date',
+    ];
+
+    public function school(): BelongsTo
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(School::class);
     }
 
-    public function xclass(): BelongsTo
+
+    public function studentEnrollment(): BelongsTo
     {
-        return $this->belongsTo(Xclass::class);
+        return $this->belongsTo(StudentEnrollment::class);
     }
+
 
     public function schedule(): BelongsTo
     {
         return $this->belongsTo(Schedule::class);
     }
 
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+
+    public function getStudentAttribute()
+    {
+        return $this->studentEnrollment?->student;
+    }
+
+
+    public function getXclassAttribute()
+    {
+        return $this->studentEnrollment?->xclass;
+    }
+
+
     public function getStatusLabelAttribute(): string
     {
-        return match ($this->status) {
-            'HADIR' => 'Hadir',
-            'IZIN' => 'Izin',
-            'SAKIT' => 'Sakit',
-            'ALPHA' => 'Alpha',
-            default => $this->status,
-        };
+        return self::STATUS_OPTIONS[$this->status]['label']
+            ?? $this->status;
     }
+
 
     public function getStatusColorAttribute(): string
     {
@@ -47,17 +89,6 @@ class Attendance extends Model
             'SAKIT' => 'warning',
             'ALPHA' => 'error',
             default => 'gray',
-        };
-    }
-
-    public function getStatusBadgeClassAttribute(): string
-    {
-        return match ($this->status) {
-            'HADIR' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-            'IZIN' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-            'SAKIT' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-            'ALPHA' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-            default => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
         };
     }
 }

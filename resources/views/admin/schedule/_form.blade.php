@@ -1,4 +1,4 @@
-@props(['schedule' => null])
+@props(['schedule' => null, 'users' => [], 'classes' => []])
 
 <form method="POST" action="{{ $schedule ? route('schedules.update', $schedule) : route('schedules.store') }}">
     @csrf
@@ -24,7 +24,29 @@
                 @enderror
             </div>
 
-            <div></div>
+            <div>
+                <label for="user_id" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    Guru<span class="text-error-500">*</span>
+                </label>
+
+                <select id="user_id" name="user_id"
+                    class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30">
+
+                    <option value="">Pilih Guru</option>
+
+                    @foreach ($users as $teacher)
+                        <option value="{{ $teacher->id }}"
+                            @selected(old('user_id', $schedule->user_id ?? '') == $teacher->id)>
+                            {{ $teacher->name }}
+                        </option>
+                    @endforeach
+
+                </select>
+
+                @error('user_id')
+                    <p class="mt-1.5 text-sm text-error-500">{{ $message }}</p>
+                @enderror
+            </div>
 
             <div>
                 <label for="start_time" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
@@ -48,18 +70,16 @@
                 @enderror
             </div>
 
+            {{-- PERUBAHAN: subject_name sebagai input text, bukan dropdown subject_id --}}
             <div>
-                <label for="subject_id" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                <label for="subject_name" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                     Mata Pelajaran<span class="text-error-500">*</span>
                 </label>
-                <select id="subject_id" name="subject_id"
-                    class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30">
-                    <option value="">Pilih Mata Pelajaran</option>
-                    @foreach ($subjects as $subject)
-                        <option value="{{ $subject->id }}" @selected(old('subject_id', $schedule->subject_id ?? '') == $subject->id)>{{ $subject->name }}</option>
-                    @endforeach
-                </select>
-                @error('subject_id')
+                <input type="text" id="subject_name" name="subject_name" 
+                    value="{{ old('subject_name', $schedule->subject_name ?? '') }}"
+                    placeholder="Contoh: Matematika, Bahasa Indonesia, dll."
+                    class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                @error('subject_name')
                     <p class="mt-1.5 text-sm text-error-500">{{ $message }}</p>
                 @enderror
             </div>
@@ -72,7 +92,7 @@
                     class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30">
                     <option value="">Pilih Kelas</option>
                     @foreach ($classes as $class)
-                        <option value="{{ $class->id }}" @selected(old('xclass_id', $schedule->xclass_id ?? '') == $class->id)>{{ $class->name }}</option>
+                        <option value="{{ $class->id }}" @selected(old('xclass_id', $schedule->xclass_id ?? request()->class ?? '') == $class->id)>{{ $class->name }}</option>
                     @endforeach
                 </select>
                 @error('xclass_id')
