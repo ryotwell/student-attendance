@@ -29,7 +29,7 @@
 
             {{-- Description --}}
             <p class="mb-8 max-w-xl text-sm leading-6 text-gray-500 dark:text-gray-400">
-                Fitur Jadwal Pelajaran hanya dapat digunakan oleh pengguna yang
+                Fitur Ini hanya dapat digunakan oleh pengguna yang
                 telah berlangganan. Silakan hubungi admin untuk melakukan
                 aktivasi atau berlangganan layanan.
             </p>
