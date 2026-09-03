@@ -1,34 +1,97 @@
-# ---------- frontend build ----------
-FROM node:22-alpine AS frontend
+# =========================================================
+# 1. FRONTEND BUILD
+# =========================================================
+FROM node:22-bookworm-slim AS frontend
+
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
+
+# Enable Corepack untuk menggunakan pnpm
+RUN corepack enable
+
+# Copy dependency files terlebih dahulu agar Docker cache efektif
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Install dependency berdasarkan lockfile
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
 COPY . .
-RUN npm run build
 
-# ---------- composer deps ----------
+# Build Vite
+RUN pnpm run build
+
+
+# =========================================================
+# 2. PHP COMPOSER DEPENDENCIES
+# =========================================================
 FROM php:8.4-cli-alpine AS vendor
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-WORKDIR /app
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-scripts --prefer-dist --no-interaction
 
-# ---------- runtime: nginx + php-fpm ----------
+WORKDIR /app
+
+# Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Copy dependency files
+COPY composer.json composer.lock ./
+
+# Install production dependencies
+RUN composer install \
+    --no-dev \
+    --no-scripts \
+    --prefer-dist \
+    --no-interaction \
+    --optimize-autoloader
+
+
+# =========================================================
+# 3. RUNTIME
+# Nginx + PHP-FPM + Supervisor
+# =========================================================
 FROM php:8.4-fpm-alpine
 
-RUN apk add --no-cache nginx supervisor && \
-    docker-php-ext-install pdo_mysql bcmath opcache
-
 WORKDIR /var/www/html
+
+# Install system packages + PHP extensions
+RUN apk add --no-cache \
+        nginx \
+        supervisor \
+    && docker-php-ext-install \
+        pdo_mysql \
+        bcmath \
+        opcache
+
+# Copy Laravel application
 COPY . .
+
+# Copy frontend build
 COPY --from=frontend /app/public/build /var/www/html/public/build
+
+# Copy Composer dependencies
 COPY --from=vendor /app/vendor /var/www/html/vendor
 
+# Nginx configuration
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
+
+# Supervisor configuration
 COPY docker/supervisord.conf /etc/supervisord.conf
 
-RUN chown -R www-data:www-data storage bootstrap/cache
+# Laravel permissions
+RUN chown -R www-data:www-data \
+        storage \
+        bootstrap/cache
+
+# PHP production configuration
+RUN { \
+        echo "opcache.enable=1"; \
+        echo "opcache.enable_cli=1"; \
+        echo "opcache.memory_consumption=128"; \
+        echo "opcache.interned_strings_buffer=8"; \
+        echo "opcache.max_accelerated_files=20000"; \
+        echo "opcache.validate_timestamps=0"; \
+        echo "opcache.revalidate_freq=0"; \
+    } > /usr/local/etc/php/conf.d/opcache.ini
 
 EXPOSE 80
-# CMD ["sh", "-c", "export APP_KEY=\"${APP_KEY:-$(php -r 'echo \"base64:\".base64_encode(random_bytes(32));')}\" && php artisan migrate --force && supervisord -c /etc/supervisord.conf"]
+
+# Start Laravel
 CMD ["sh", "-c", "php artisan migrate --force && php artisan optimize && php artisan storage:link && supervisord -c /etc/supervisord.conf"]
