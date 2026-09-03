@@ -101,12 +101,12 @@ class MenuHelper
             [
                 'name' => 'PPDB',
                 'icon' => 'forms',
-                'path' => '#!'
+                'path' => route('subscribe')
             ],
             [
                 'name' => 'CBT',
                 'icon' => 'computer',
-                'path' => '#!'
+                'path' => route('subscribe')
             ],
             // [
             //     'name' => 'Sekolah',

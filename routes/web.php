@@ -48,6 +48,10 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->group(function() {
     // dashboard
     Route::get('/', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('/subscribe', function() {
+        return view('subscribe');
+    })->name('subscribe');
+
     // students
     Route::resource('students', StudentController::class);
     Route::resource('classes', ClassController::class);
