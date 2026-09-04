@@ -101,9 +101,15 @@
 
                                 <!-- Password -->
                                 <div>
-                                    <label for="password" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                                        Kata Sandi<span class="text-error-500">*</span>
-                                    </label>
+                                        <div class="mb-1.5 flex items-center justify-between">
+        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-400">
+            Kata Sandi<span class="text-error-500">*</span>
+        </label>
+        <a href="{{ route('password.request') }}"
+            class="text-sm font-medium text-[oklch(53.54%_0.2151_263.08)] hover:text-[oklch(48%_0.2151_263.08)] dark:text-[oklch(60%_0.2_263)]">
+            Lupa kata sandi?
+        </a>
+    </div>
                                     <div x-data="{ showPassword: false }" class="relative">
                                         <span class="absolute top-1/2 left-3.5 -translate-y-1/2 text-gray-400">
                                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">

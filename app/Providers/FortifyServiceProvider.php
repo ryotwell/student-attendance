@@ -67,5 +67,17 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::registerView(function() {
             return view('pages.auth.signup', ['title' => 'Daftar']);
         });
+
+        Fortify::requestPasswordResetLinkView(function () {
+            return view('pages.auth.forgot-password', ['title' => 'Lupa Password']);
+        });
+
+        Fortify::resetPasswordView(function ($request) {
+            return view('pages.auth.reset-password', [
+                'title' => 'Reset Password',
+                'request' => $request,
+            ]);
+        });
+
     }
 }
