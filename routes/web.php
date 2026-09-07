@@ -8,6 +8,7 @@ use App\Http\Controllers\ClassController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\Teacher\AssignmentController;
+use App\Http\Controllers\Teacher\TeacherAttendanceController;
 use App\Http\Controllers\TeacherDocumentController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -152,6 +153,18 @@ Route::middleware(['auth'])->prefix('guru')->group(function() {
             ->name('teacher.documents.edit');
         Route::put('/documents', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'update'])
             ->name('teacher.documents.update');
+
+        Route::middleware(['auth'])->group(function () {
+
+        /*
+        * Absensi Guru
+        */
+        Route::get('/absensi-guru/attendance', [TeacherAttendanceController::class, 'index'])->name('teacher.attendance.index');
+        Route::post('/absensi-guru/attendance/check-in', [TeacherAttendanceController::class, 'checkIn'])->name('teacher.attendance.check-in');
+        Route::post('/absensi-guru/attendance/check-out', [TeacherAttendanceController::class, 'checkOut'])->name('teacher.attendance.check-out');
+        Route::get('/absensi-guru/attendance/{teacherAttendance}', [TeacherAttendanceController::class, 'show'])->name('teacher.attendance.show');
+
+    });
     });
 });
 

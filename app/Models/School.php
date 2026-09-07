@@ -62,4 +62,9 @@ class School extends Model
     {
         return $this->hasMany(TeacherDocument::class);
     }
+
+    public function teacherAttendances(): HasMany
+    {
+        return $this->hasMany(TeacherAttendance::class);
+    }
 }
