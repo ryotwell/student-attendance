@@ -24,19 +24,19 @@
 
             {{-- Title --}}
             <h2 class="mb-3 text-2xl font-semibold text-gray-800 dark:text-white/90">
-                Maaf, Anda Belum Berlangganan
+                Maaf, Anda Belum Berlangganan Enterprise
             </h2>
 
             {{-- Description --}}
             <p class="mb-8 max-w-xl text-sm leading-6 text-gray-500 dark:text-gray-400">
                 Fitur Ini hanya dapat digunakan oleh pengguna yang
-                telah berlangganan. Silakan hubungi admin untuk melakukan
-                aktivasi atau berlangganan layanan.
+                telah berlangganan Enterprise. Silakan hubungi admin untuk melakukan
+                aktivasi atau berlangganan layanan Enterprise.
             </p>
 
             {{-- WhatsApp Button --}}
             <a
-                href="https://wa.me/6281947556108?text=Halo%20Admin,%20saya%20ingin%20berlangganan%20layanan."
+                href="https://wa.me/6281947556108?text=Halo%20Admin,%20saya%20ingin%20berlangganan%20layanan%20Enterprise."
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center justify-center gap-2 rounded-lg bg-green-500 px-5 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-green-600 focus:outline-none focus:ring-3 focus:ring-green-500/20">

@@ -237,6 +237,11 @@ class MenuHelper
                             'path' => route('lesson-plans.index'),
                         ],
                         [
+                            'icon' => 'document',
+                            'name' => 'Tugas Siswa',
+                            'path' => route('assignments.index'),
+                        ],
+                        [
                             'icon' => 'pages', // sebelumnya 'calendar' – sekarang konsisten dengan admin
                             'name' => 'Jurnal Guru',
                             'path' => route('teacher.documents.index'),

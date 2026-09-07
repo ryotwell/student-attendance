@@ -6,6 +6,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\Teacher\AssignmentController;
 use App\Http\Controllers\TeacherDocumentController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -119,6 +120,9 @@ Route::middleware(['auth'])->prefix('guru')->group(function() {
             ->name('lesson-plans.update');
         Route::delete('/lesson-plans/{lessonPlan}', [App\Http\Controllers\Teacher\LessonPlanController::class, 'destroy'])
             ->name('lesson-plans.destroy');
+
+        Route::resource('assignments', AssignmentController::class)
+            ->except(['show']);
     });
 
     Route::middleware(['role:GURU,GURU_BK'])->group(function() {
