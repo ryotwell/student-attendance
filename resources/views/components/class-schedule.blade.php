@@ -41,7 +41,7 @@
                         <td class="px-2 py-3 text-center align-top">
                             @if($schedule)
                                 <div class="bg-brand-50 dark:bg-brand-500/10 rounded-lg p-2 min-h-[60px]">
-                                    <p class="font-medium text-brand-700 dark:text-brand-400 text-sm">{{ $schedule->subject?->name }}</p>
+                                    <p class="font-medium text-brand-700 dark:text-brand-400 text-sm">{{ $schedule->subject_name }}</p>
                                     <p class="text-theme-xs text-gray-500 dark:text-gray-400">
                                         {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}
                                     </p>
