@@ -112,6 +112,12 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->group(function() {
     // impprt kelas
     Route::get('/classes-import', [ClassController::class, 'importForm'])->name('classes.import.form');
     Route::post('/classes-import', [ClassController::class, 'import'])->name('classes.import');
+
+    // Form import siswa
+    Route::get('/students-import', [StudentController::class, 'importForm'])->name('students.import.form');
+
+    // Proses import siswa
+    Route::post('/students-import', [StudentController::class, 'import'])->name('students.import');
 });
 
 // GURU
