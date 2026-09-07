@@ -20,9 +20,9 @@ class MenuHelper
                 'path' => route('admin.teacher-documents.index')
             ],
             [
-                'name' => 'Ekstrakurikuler',
+                'name' => 'Tugas Siswa',
                 'icon' => 'task',
-                'path' => '#!'
+                'path' => route('admin.assignments.index')
             ],
         ];
     }
@@ -107,6 +107,11 @@ class MenuHelper
                 'name' => 'CBT',
                 'icon' => 'computer',
                 'path' => route('subscribe')
+            ],
+            [
+                'name' => 'Pengaturan Sekolah',
+                'icon' => 'building',
+                'path' => route('school-settings.index')
             ],
             // [
             //     'name' => 'Sekolah',

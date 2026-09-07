@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Manajemen User" />
+    <x-common.page-breadcrumb pageTitle="Manajemen Pengguna" />
 
     @if (session('success'))
         <div class="mb-6">
@@ -15,10 +15,10 @@
         </div>
     @endif
 
-    <x-common.component-card title="Daftar User">
+    <x-common.component-card title="Daftar Pengguna">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <p class="text-sm text-gray-500 dark:text-gray-400">
-                {{ $users->total() }} user terdaftar
+                {{ $users->total() }} pengguna terdaftar
             </p>
 
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -42,7 +42,7 @@
 
                 <a href="{{ route('users.create') }}"
                     class="bg-brand-500 shadow-theme-xs hover:bg-brand-600 inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white transition">
-                    Tambah User
+                    Tambah Pengguna
                 </a>
             </div>
         </div>

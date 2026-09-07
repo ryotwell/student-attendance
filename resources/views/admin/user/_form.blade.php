@@ -6,7 +6,7 @@
         @method('PUT')
     @endif
 
-    <x-common.component-card :title="$user ? 'Edit User' : 'Tambah User'">
+    <x-common.component-card :title="$user ? 'Edit Data Pengguna' : 'Data Pengguna'">
         <div>
             <label for="name" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                 Nama<span class="text-error-500">*</span>

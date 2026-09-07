@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AcademicYearController;
+use App\Http\Controllers\Admin\SchoolSettingController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ClassController;
@@ -87,6 +88,21 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->group(function() {
         ->name('admin.teacher-documents.verify');
     Route::post('/teacher-documents/{teacherDocument}/reject', [TeacherDocumentController::class, 'reject'])
         ->name('admin.teacher-documents.reject');
+
+    // school
+    Route::get('/school-settings', [SchoolSettingController::class, 'index'])
+        ->name('school-settings.index');
+
+    Route::put('/school-settings', [SchoolSettingController::class, 'update'])
+        ->name('school-settings.update');
+
+
+    // Assignment - Admin hanya melihat
+    Route::get('/assignments', [App\Http\Controllers\Admin\AssignmentController::class, 'index'])
+        ->name('admin.assignments.index');
+
+    Route::get('/assignments/{assignment}', [App\Http\Controllers\Admin\AssignmentController::class, 'show'])
+        ->name('admin.assignments.show');
 });
 
 // GURU
