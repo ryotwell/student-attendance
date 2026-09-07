@@ -6,19 +6,25 @@
 
     $menuItems = [
         [
-            'title' => 'Input Absensi',
+            'title' => 'Absensi Guru',
+            'description' => 'Lakukan absensi guru',
+            'url' => route('teacher.attendance.index'),
+            'icon' => 'clipboard-plus',
+        ],
+        [
+            'title' => 'Input Absensi Siswa',
             'description' => 'Input dan kelola data kehadiran siswa',
             'url' => route('absensi.schedules'),
             'icon' => 'clipboard-plus',
         ],
         [
-            'title' => 'Rekap Absensi',
+            'title' => 'Rekap Absensi Siswa',
             'description' => 'Lihat dan cetak rekap kehadiran siswa',
             'url' => route('absensi.recap'),
             'icon' => 'file-chart',
         ],
         [
-            'title' => 'Riwayat Absensi',
+            'title' => 'Riwayat Absensi Siswa',
             'description' => 'Lihat riwayat absensi berdasarkan jadwal & tanggal',
             'url' => route('absensi.history'),
             'icon' => 'calendar-check',
@@ -30,7 +36,7 @@
             'icon' => 'calendar',
         ],
         [
-            'title' => 'Rencana Pembelajaran',
+            'title' => 'Rencana Pembelajaran Siswa',
             'description' => 'Buat dan kelola rencana pembelajaran',
             'url' => route('lesson-plans.index'),
             'icon' => 'document',

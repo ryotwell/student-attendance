@@ -8,7 +8,6 @@ use App\Http\Controllers\ClassController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\Teacher\AssignmentController;
-use App\Http\Controllers\Teacher\TeacherAttendanceController;
 use App\Http\Controllers\TeacherDocumentController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -104,6 +103,11 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->group(function() {
 
     Route::get('/assignments/{assignment}', [App\Http\Controllers\Admin\AssignmentController::class, 'show'])
         ->name('admin.assignments.show');
+
+    // absensi guru
+    Route::get( '/teacher-attendance', [App\Http\Controllers\Admin\TeacherAttendanceController::class, 'index'] )->name('admin.teacher-attendance.index');
+    Route::get( '/teacher-attendance/export-pdf', [App\Http\Controllers\Admin\TeacherAttendanceController::class, 'exportPdf'] )->name('admin.teacher-attendance.export-pdf');
+    Route::get( '/teacher-attendance/{teacherAttendance}', [App\Http\Controllers\Admin\TeacherAttendanceController::class, 'show'] )->name('admin.teacher-attendance.show');
 });
 
 // GURU
@@ -159,10 +163,10 @@ Route::middleware(['auth'])->prefix('guru')->group(function() {
         /*
         * Absensi Guru
         */
-        Route::get('/absensi-guru/attendance', [TeacherAttendanceController::class, 'index'])->name('teacher.attendance.index');
-        Route::post('/absensi-guru/attendance/check-in', [TeacherAttendanceController::class, 'checkIn'])->name('teacher.attendance.check-in');
-        Route::post('/absensi-guru/attendance/check-out', [TeacherAttendanceController::class, 'checkOut'])->name('teacher.attendance.check-out');
-        Route::get('/absensi-guru/attendance/{teacherAttendance}', [TeacherAttendanceController::class, 'show'])->name('teacher.attendance.show');
+        Route::get('/teacher-attendance/attendance', [App\Http\Controllers\Teacher\TeacherAttendanceController::class, 'index'])->name('teacher.attendance.index');
+        Route::post('/teacher-attendance/attendance/check-in', [App\Http\Controllers\Teacher\TeacherAttendanceController::class, 'checkIn'])->name('teacher.attendance.check-in');
+        Route::post('/teacher-attendance/attendance/check-out', [App\Http\Controllers\Teacher\TeacherAttendanceController::class, 'checkOut'])->name('teacher.attendance.check-out');
+        Route::get('/teacher-attendance/attendance/{teacherAttendance}', [App\Http\Controllers\Teacher\TeacherAttendanceController::class, 'show'])->name('teacher.attendance.show');
 
     });
     });

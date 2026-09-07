@@ -63,13 +63,18 @@ class MenuHelper
             ],
         ],
         [
-            'name' => 'Absensi',
+            'name' => 'Absensi Siswa',
             'icon' => 'calendar',
             'subItems' => [
                 ['name' => 'Input Absensi', 'path' => route('attendance.index')],
                 ['name' => 'Laporan Absensi', 'path' => route('attendance.report')],
                 ['name' => 'Rekap Absensi', 'path' => route('attendance.recap')],
             ],
+        ],
+        [
+            'name' => 'Absensi Guru',
+            'icon' => 'calendar',
+            'path' => route('admin.teacher-attendance.index')
         ],
         [
             'name' => 'Pengguna',
@@ -218,17 +223,22 @@ class MenuHelper
                         ],
                         [
                             'icon' => 'calendar',
-                            'name' => 'Absensi',
+                            'name' => 'Absensi Guru',
+                            'path' => route('teacher.attendance.index'),
+                        ],
+                        [
+                            'icon' => 'calendar',
+                            'name' => 'Absensi Siswa',
                             'path' => route('absensi.schedules'),
                         ],
                         [
                             'icon' => 'report',
-                            'name' => 'Rekap Absensi',
+                            'name' => 'Rekap Absensi Siswa',
                             'path' => route('absensi.recap'),
                         ],
                         [
                             'icon' => 'history',
-                            'name' => 'Riwayat Absensi',
+                            'name' => 'Riwayat Absensi Siswa',
                             'path' => route('absensi.history'),
                         ],
                         [
@@ -247,12 +257,12 @@ class MenuHelper
                             'path' => route('assignments.index'),
                         ],
                         [
-                            'icon' => 'pages', // sebelumnya 'calendar' – sekarang konsisten dengan admin
+                            'icon' => 'pages',
                             'name' => 'Jurnal Guru',
                             'path' => route('teacher.documents.index'),
                         ],
                         [
-                            'icon' => 'megaphone', // sebelumnya 'email'
+                            'icon' => 'megaphone',
                             'name' => 'Pengumuman Sekolah',
                             'path' => route('announcements.index'),
                         ],
