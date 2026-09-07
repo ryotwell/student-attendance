@@ -88,15 +88,22 @@ class ClassController extends Controller
         // Filter berdasarkan sekolah
         $this->applySchoolFilter($query);
 
-        // Pencarian berdasarkan nama kelas
+        // Pencarian berdasarkan nama kelas atau kode kelas
         if ($request->filled('search')) {
             $search = trim($request->search);
 
-            $query->where(
-                'name',
-                'like',
-                '%' . $search . '%'
-            );
+            $query->where(function ($q) use ($search) {
+                $q->where(
+                    'name',
+                    'like',
+                    '%' . $search . '%'
+                )
+                ->orWhere(
+                    'kode_kelas',
+                    'like',
+                    '%' . $search . '%'
+                );
+            });
         }
 
         // Filter tahun ajaran
@@ -153,8 +160,17 @@ class ClassController extends Controller
      */
     public function store(Request $request)
     {
+        /*
+         * Validasi input.
+         */
         $data = $request->validate([
             'name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'kode_kelas' => [
                 'required',
                 'string',
                 'max:255',
@@ -169,6 +185,21 @@ class ClassController extends Controller
                 'nullable',
                 'exists:users,id',
             ],
+        ], [
+            'name.required' =>
+                'Nama kelas wajib diisi.',
+
+            'kode_kelas.required' =>
+                'Kode kelas wajib diisi.',
+
+            'academic_year_id.required' =>
+                'Tahun ajaran wajib dipilih.',
+
+            'academic_year_id.exists' =>
+                'Tahun ajaran tidak valid.',
+
+            'user_id.exists' =>
+                'Wali kelas tidak valid.',
         ]);
 
         $user = Auth::user();
@@ -183,13 +214,17 @@ class ClassController extends Controller
          * school_id diambil dari akun user.
          */
         if ($user->role === 'SUPERADMIN') {
+
             $academicYear = AcademicYear::findOrFail(
                 $data['academic_year_id']
             );
 
             $data['school_id'] = $academicYear->school_id;
+
         } else {
+
             $data['school_id'] = $user->school_id;
+
         }
 
         /*
@@ -213,17 +248,44 @@ class ClassController extends Controller
         }
 
         /*
+         * Pastikan kode kelas tidak duplikat
+         * pada sekolah dan tahun ajaran yang sama.
+         */
+        $exists = Xclass::query()
+            ->where(
+                'kode_kelas',
+                $data['kode_kelas']
+            )
+            ->where(
+                'school_id',
+                $data['school_id']
+            )
+            ->where(
+                'academic_year_id',
+                $data['academic_year_id']
+            )
+            ->exists();
+
+        if ($exists) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'kode_kelas' =>
+                        'Kode kelas tersebut sudah digunakan pada tahun ajaran ini.',
+                ]);
+        }
+
+        /*
          * Jika wali kelas dipilih,
          * pastikan guru berasal dari sekolah yang sama.
          */
         if (!empty($data['user_id'])) {
+
             $teacher = User::findOrFail(
                 $data['user_id']
             );
 
-            if (
-                $teacher->role !== 'GURU'
-            ) {
+            if ($teacher->role !== 'GURU') {
                 return back()
                     ->withInput()
                     ->withErrors([
@@ -250,6 +312,7 @@ class ClassController extends Controller
          * untuk satu kelas pada satu tahun ajaran.
          */
         if (!empty($data['user_id'])) {
+
             $exists = Xclass::query()
                 ->where(
                     'academic_year_id',
@@ -290,8 +353,6 @@ class ClassController extends Controller
 
     /**
      * Display the specified class.
-     *
-     * Saat ini diarahkan kembali ke index.
      */
     public function show(Xclass $class)
     {
@@ -337,8 +398,17 @@ class ClassController extends Controller
             );
         }
 
+        /*
+         * Validasi input.
+         */
         $data = $request->validate([
             'name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'kode_kelas' => [
                 'required',
                 'string',
                 'max:255',
@@ -353,6 +423,21 @@ class ClassController extends Controller
                 'nullable',
                 'exists:users,id',
             ],
+        ], [
+            'name.required' =>
+                'Nama kelas wajib diisi.',
+
+            'kode_kelas.required' =>
+                'Kode kelas wajib diisi.',
+
+            'academic_year_id.required' =>
+                'Tahun ajaran wajib dipilih.',
+
+            'academic_year_id.exists' =>
+                'Tahun ajaran tidak valid.',
+
+            'user_id.exists' =>
+                'Wali kelas tidak valid.',
         ]);
 
         $user = Auth::user();
@@ -371,6 +456,7 @@ class ClassController extends Controller
             $user->role === 'SUPERADMIN' &&
             $request->filled('school_id')
         ) {
+
             $request->validate([
                 'school_id' => [
                     'required',
@@ -402,17 +488,52 @@ class ClassController extends Controller
         }
 
         /*
+         * Pastikan kode kelas tidak digunakan
+         * oleh kelas lain pada sekolah dan
+         * tahun ajaran yang sama.
+         *
+         * Kelas yang sedang diedit dikecualikan.
+         */
+        $exists = Xclass::query()
+            ->where(
+                'kode_kelas',
+                $data['kode_kelas']
+            )
+            ->where(
+                'school_id',
+                $data['school_id']
+            )
+            ->where(
+                'academic_year_id',
+                $data['academic_year_id']
+            )
+            ->where(
+                'id',
+                '!=',
+                $class->id
+            )
+            ->exists();
+
+        if ($exists) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'kode_kelas' =>
+                        'Kode kelas tersebut sudah digunakan pada tahun ajaran ini.',
+                ]);
+        }
+
+        /*
          * Jika wali kelas dipilih,
          * validasi role dan sekolah.
          */
         if (!empty($data['user_id'])) {
+
             $teacher = User::findOrFail(
                 $data['user_id']
             );
 
-            if (
-                $teacher->role !== 'GURU'
-            ) {
+            if ($teacher->role !== 'GURU') {
                 return back()
                     ->withInput()
                     ->withErrors([
@@ -441,6 +562,7 @@ class ClassController extends Controller
          * Kelas yang sedang diedit dikecualikan.
          */
         if (!empty($data['user_id'])) {
+
             $exists = Xclass::query()
                 ->where(
                     'academic_year_id',
@@ -509,11 +631,6 @@ class ClassController extends Controller
 
     /**
      * Menampilkan jadwal pelajaran kelas.
-     *
-     * Schedule tidak memiliki relasi Subject.
-     *
-     * Nama mata pelajaran tersimpan langsung
-     * pada schedules.subject_name.
      */
     public function schedules(Xclass $class)
     {
@@ -527,13 +644,6 @@ class ClassController extends Controller
 
         /*
          * Load jadwal kelas.
-         *
-         * schedules memiliki relasi:
-         * - user
-         * - xclass
-         *
-         * Tidak ada:
-         * - schedules.subject
          */
         $class->load([
             'schedules.user',
