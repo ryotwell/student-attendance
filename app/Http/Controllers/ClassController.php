@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\ClassImport;
 use App\Models\AcademicYear;
 use App\Models\User;
 use App\Models\Xclass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\ValidationException;
 
 class ClassController extends Controller
 {
@@ -26,12 +29,6 @@ class ClassController extends Controller
 
     /**
      * Cek apakah kelas dapat diakses user.
-     *
-     * SUPERADMIN:
-     * - Bisa mengakses semua sekolah.
-     *
-     * User selain SUPERADMIN:
-     * - Hanya bisa mengakses kelas dari sekolahnya sendiri.
      */
     private function canAccessSchool(Xclass $class): bool
     {
@@ -45,7 +42,7 @@ class ClassController extends Controller
     }
 
     /**
-     * Ambil daftar tahun ajaran yang dapat diakses user.
+     * Ambil tahun ajaran yang dapat diakses user.
      */
     private function getAvailableAcademicYears()
     {
@@ -58,9 +55,7 @@ class ClassController extends Controller
     }
 
     /**
-     * Ambil daftar guru yang dapat diakses user.
-     *
-     * Hanya user dengan role GURU.
+     * Ambil daftar guru.
      */
     private function getAvailableTeachers()
     {
@@ -74,7 +69,7 @@ class ClassController extends Controller
     }
 
     /**
-     * Display a listing of classes.
+     * Daftar kelas.
      */
     public function index(Request $request)
     {
@@ -85,37 +80,48 @@ class ClassController extends Controller
             ])
             ->withCount('students');
 
-        // Filter berdasarkan sekolah
         $this->applySchoolFilter($query);
 
-        // Pencarian berdasarkan nama kelas atau kode kelas
+        /*
+         * Search nama kelas atau kode kelas.
+         */
         if ($request->filled('search')) {
+
             $search = trim($request->search);
 
             $query->where(function ($q) use ($search) {
+
                 $q->where(
                     'name',
                     'like',
                     '%' . $search . '%'
-                )
-                ->orWhere(
+                );
+
+                $q->orWhere(
                     'kode_kelas',
                     'like',
                     '%' . $search . '%'
                 );
+
             });
         }
 
-        // Filter tahun ajaran
+        /*
+         * Filter tahun ajaran.
+         */
         if ($request->filled('academic_year_id')) {
+
             $query->where(
                 'academic_year_id',
                 $request->academic_year_id
             );
         }
 
-        // Filter wali kelas
+        /*
+         * Filter wali kelas.
+         */
         if ($request->filled('user_id')) {
+
             $query->where(
                 'user_id',
                 $request->user_id
@@ -127,9 +133,11 @@ class ClassController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        // Data dropdown filter
-        $academicYears = $this->getAvailableAcademicYears();
-        $users = $this->getAvailableTeachers();
+        $academicYears =
+            $this->getAvailableAcademicYears();
+
+        $users =
+            $this->getAvailableTeachers();
 
         return view(
             'admin.class.index',
@@ -142,12 +150,15 @@ class ClassController extends Controller
     }
 
     /**
-     * Show the form for creating a new class.
+     * Form tambah kelas.
      */
     public function create()
     {
-        $academicYears = $this->getAvailableAcademicYears();
-        $users = $this->getAvailableTeachers();
+        $academicYears =
+            $this->getAvailableAcademicYears();
+
+        $users =
+            $this->getAvailableTeachers();
 
         return view('admin.class.create', [
             'academicYears' => $academicYears,
@@ -156,13 +167,10 @@ class ClassController extends Controller
     }
 
     /**
-     * Store a newly created class.
+     * Simpan kelas.
      */
     public function store(Request $request)
     {
-        /*
-         * Validasi input.
-         */
         $data = $request->validate([
             'name' => [
                 'required',
@@ -205,35 +213,31 @@ class ClassController extends Controller
         $user = Auth::user();
 
         /*
-         * Tentukan school_id.
-         *
-         * SUPERADMIN:
-         * school_id diambil dari academic year.
-         *
-         * User biasa:
-         * school_id diambil dari akun user.
+         * Tentukan sekolah.
          */
         if ($user->role === 'SUPERADMIN') {
 
-            $academicYear = AcademicYear::findOrFail(
-                $data['academic_year_id']
-            );
+            $academicYear =
+                AcademicYear::findOrFail(
+                    $data['academic_year_id']
+                );
 
-            $data['school_id'] = $academicYear->school_id;
+            $data['school_id'] =
+                $academicYear->school_id;
 
         } else {
 
-            $data['school_id'] = $user->school_id;
-
+            $data['school_id'] =
+                $user->school_id;
         }
 
         /*
-         * Pastikan tahun ajaran berasal dari sekolah
-         * yang sama dengan kelas.
+         * Pastikan tahun ajaran sesuai sekolah.
          */
-        $academicYear = AcademicYear::findOrFail(
-            $data['academic_year_id']
-        );
+        $academicYear =
+            AcademicYear::findOrFail(
+                $data['academic_year_id']
+            );
 
         if (
             (int) $academicYear->school_id !==
@@ -248,8 +252,7 @@ class ClassController extends Controller
         }
 
         /*
-         * Pastikan kode kelas tidak duplikat
-         * pada sekolah dan tahun ajaran yang sama.
+         * Cek kode kelas.
          */
         $exists = Xclass::query()
             ->where(
@@ -276,16 +279,17 @@ class ClassController extends Controller
         }
 
         /*
-         * Jika wali kelas dipilih,
-         * pastikan guru berasal dari sekolah yang sama.
+         * Validasi wali kelas.
          */
         if (!empty($data['user_id'])) {
 
-            $teacher = User::findOrFail(
-                $data['user_id']
-            );
+            $teacher =
+                User::findOrFail(
+                    $data['user_id']
+                );
 
             if ($teacher->role !== 'GURU') {
+
                 return back()
                     ->withInput()
                     ->withErrors([
@@ -309,7 +313,7 @@ class ClassController extends Controller
 
         /*
          * Satu guru hanya boleh menjadi wali
-         * untuk satu kelas pada satu tahun ajaran.
+         * untuk satu kelas dalam satu tahun ajaran.
          */
         if (!empty($data['user_id'])) {
 
@@ -329,18 +333,16 @@ class ClassController extends Controller
                 ->exists();
 
             if ($exists) {
+
                 return back()
                     ->withInput()
                     ->withErrors([
                         'user_id' =>
-                            'Guru tersebut sudah menjadi wali kelas pada tahun ajaran ini di sekolah ini.',
+                            'Guru tersebut sudah menjadi wali kelas pada tahun ajaran ini.',
                     ]);
             }
         }
 
-        /*
-         * Buat kelas.
-         */
         Xclass::create($data);
 
         return redirect()
@@ -352,7 +354,189 @@ class ClassController extends Controller
     }
 
     /**
-     * Display the specified class.
+     * Form import kelas.
+     */
+    public function importForm()
+    {
+        $academicYears =
+            $this->getAvailableAcademicYears();
+
+        return view(
+            'admin.class.import',
+            [
+                'academicYears' => $academicYears,
+            ]
+        );
+    }
+
+    /**
+     * Import kelas dari Excel.
+     */
+    public function import(Request $request)
+    {
+        /*
+        * Validasi file.
+        */
+        $request->validate([
+            'academic_year_id' => [
+                'required',
+                'exists:academic_years,id',
+            ],
+
+            'file' => [
+                'required',
+                'file',
+                'mimes:xlsx,xls,csv',
+                'max:5120',
+            ],
+        ], [
+            'academic_year_id.required' =>
+                'Tahun ajaran wajib dipilih.',
+
+            'academic_year_id.exists' =>
+                'Tahun ajaran tidak valid.',
+
+            'file.required' =>
+                'File Excel wajib dipilih.',
+
+            'file.file' =>
+                'File yang diupload tidak valid.',
+
+            'file.mimes' =>
+                'File harus berformat XLSX, XLS, atau CSV.',
+
+            'file.max' =>
+                'Ukuran file maksimal 5 MB.',
+        ]);
+
+        $user = Auth::user();
+
+        /*
+        * Ambil tahun ajaran.
+        */
+        $academicYear = AcademicYear::findOrFail(
+            $request->academic_year_id
+        );
+
+        /*
+        * Tentukan school_id.
+        */
+        if ($user->role === 'SUPERADMIN') {
+
+            $schoolId = $academicYear->school_id;
+
+        } else {
+
+            $schoolId = $user->school_id;
+
+            /*
+            * Pastikan tahun ajaran milik sekolah user.
+            */
+            if (
+                (int) $academicYear->school_id !==
+                (int) $schoolId
+            ) {
+                return back()
+                    ->withInput()
+                    ->withErrors([
+                        'academic_year_id' =>
+                            'Tahun ajaran tidak sesuai dengan sekolah Anda.',
+                    ]);
+            }
+        }
+
+        try {
+
+            /*
+            * Buat object import.
+            */
+            $import = new ClassImport(
+                $academicYear->id,
+                $schoolId
+            );
+
+            /*
+            * Jalankan import.
+            */
+            Excel::import(
+                $import,
+                $request->file('file')
+            );
+
+            /*
+            * Ambil hasil.
+            */
+            $successCount =
+                $import->getSuccessCount();
+
+            $errors =
+                $import->getErrors();
+
+            /*
+            * Jika tidak ada yang berhasil
+            * dan semuanya gagal.
+            */
+            if (
+                $successCount === 0 &&
+                count($errors) > 0
+            ) {
+
+                return back()
+                    ->withInput()
+                    ->with(
+                        'import_errors',
+                        $errors
+                    )
+                    ->with(
+                        'import_success_count',
+                        0
+                    )
+                    ->with(
+                        'import_error_count',
+                        count($errors)
+                    );
+            }
+
+            /*
+            * Berhasil sebagian atau seluruhnya.
+            */
+            return redirect()
+                ->route('classes.index')
+                ->with(
+                    'success',
+                    "Import selesai. {$successCount} kelas berhasil diimport."
+                )
+                ->with(
+                    'import_errors',
+                    $errors
+                )
+                ->with(
+                    'import_success_count',
+                    $successCount
+                )
+                ->with(
+                    'import_error_count',
+                    count($errors)
+                );
+
+        } catch (\Throwable $e) {
+
+            /*
+            * Simpan detail error ke log.
+            */
+            report($e);
+
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'file' =>
+                        'Terjadi kesalahan saat membaca atau memproses file Excel. Pastikan format file sesuai template.',
+                ]);
+        }
+    }
+
+    /**
+     * Detail kelas.
      */
     public function show(Xclass $class)
     {
@@ -361,11 +545,10 @@ class ClassController extends Controller
     }
 
     /**
-     * Show the form for editing the specified class.
+     * Form edit kelas.
      */
     public function edit(Xclass $class)
     {
-        // Cek akses sekolah
         if (!$this->canAccessSchool($class)) {
             abort(
                 403,
@@ -373,24 +556,29 @@ class ClassController extends Controller
             );
         }
 
-        $academicYears = $this->getAvailableAcademicYears();
-        $users = $this->getAvailableTeachers();
+        $academicYears =
+            $this->getAvailableAcademicYears();
 
-        return view('admin.class.edit', [
-            'class' => $class,
-            'academicYears' => $academicYears,
-            'users' => $users,
-        ]);
+        $users =
+            $this->getAvailableTeachers();
+
+        return view(
+            'admin.class.edit',
+            [
+                'class' => $class,
+                'academicYears' => $academicYears,
+                'users' => $users,
+            ]
+        );
     }
 
     /**
-     * Update the specified class.
+     * Update kelas.
      */
     public function update(
         Request $request,
         Xclass $class
     ) {
-        // Cek akses sekolah
         if (!$this->canAccessSchool($class)) {
             abort(
                 403,
@@ -398,9 +586,6 @@ class ClassController extends Controller
             );
         }
 
-        /*
-         * Validasi input.
-         */
         $data = $request->validate([
             'name' => [
                 'required',
@@ -443,14 +628,13 @@ class ClassController extends Controller
         $user = Auth::user();
 
         /*
-         * Secara default, kelas tetap berada
-         * di sekolah sebelumnya.
+         * Sekolah tetap mengikuti kelas.
          */
-        $data['school_id'] = $class->school_id;
+        $data['school_id'] =
+            $class->school_id;
 
         /*
-         * SUPERADMIN boleh mengubah school_id
-         * apabila field tersebut dikirim dari form.
+         * SUPERADMIN boleh mengubah sekolah.
          */
         if (
             $user->role === 'SUPERADMIN' &&
@@ -469,11 +653,12 @@ class ClassController extends Controller
         }
 
         /*
-         * Pastikan tahun ajaran sesuai sekolah.
+         * Validasi tahun ajaran.
          */
-        $academicYear = AcademicYear::findOrFail(
-            $data['academic_year_id']
-        );
+        $academicYear =
+            AcademicYear::findOrFail(
+                $data['academic_year_id']
+            );
 
         if (
             (int) $academicYear->school_id !==
@@ -488,11 +673,7 @@ class ClassController extends Controller
         }
 
         /*
-         * Pastikan kode kelas tidak digunakan
-         * oleh kelas lain pada sekolah dan
-         * tahun ajaran yang sama.
-         *
-         * Kelas yang sedang diedit dikecualikan.
+         * Cek kode kelas.
          */
         $exists = Xclass::query()
             ->where(
@@ -524,16 +705,17 @@ class ClassController extends Controller
         }
 
         /*
-         * Jika wali kelas dipilih,
-         * validasi role dan sekolah.
+         * Validasi wali kelas.
          */
         if (!empty($data['user_id'])) {
 
-            $teacher = User::findOrFail(
-                $data['user_id']
-            );
+            $teacher =
+                User::findOrFail(
+                    $data['user_id']
+                );
 
             if ($teacher->role !== 'GURU') {
+
                 return back()
                     ->withInput()
                     ->withErrors([
@@ -556,10 +738,7 @@ class ClassController extends Controller
         }
 
         /*
-         * Cek apakah guru sudah menjadi wali
-         * kelas lain pada tahun ajaran yang sama.
-         *
-         * Kelas yang sedang diedit dikecualikan.
+         * Cek wali kelas duplikat.
          */
         if (!empty($data['user_id'])) {
 
@@ -584,18 +763,16 @@ class ClassController extends Controller
                 ->exists();
 
             if ($exists) {
+
                 return back()
                     ->withInput()
                     ->withErrors([
                         'user_id' =>
-                            'Guru tersebut sudah menjadi wali kelas pada tahun ajaran ini di sekolah ini.',
+                            'Guru tersebut sudah menjadi wali kelas pada tahun ajaran ini.',
                     ]);
             }
         }
 
-        /*
-         * Update kelas.
-         */
         $class->update($data);
 
         return redirect()
@@ -607,11 +784,10 @@ class ClassController extends Controller
     }
 
     /**
-     * Remove the specified class.
+     * Hapus kelas.
      */
     public function destroy(Xclass $class)
     {
-        // Cek akses sekolah
         if (!$this->canAccessSchool($class)) {
             abort(
                 403,
@@ -630,11 +806,10 @@ class ClassController extends Controller
     }
 
     /**
-     * Menampilkan jadwal pelajaran kelas.
+     * Jadwal kelas.
      */
     public function schedules(Xclass $class)
     {
-        // Cek akses sekolah
         if (!$this->canAccessSchool($class)) {
             abort(
                 403,
@@ -642,9 +817,6 @@ class ClassController extends Controller
             );
         }
 
-        /*
-         * Load jadwal kelas.
-         */
         $class->load([
             'schedules.user',
         ]);
@@ -661,11 +833,10 @@ class ClassController extends Controller
     }
 
     /**
-     * Get students by class (JSON).
+     * Siswa berdasarkan kelas.
      */
     public function students(Xclass $class)
     {
-        // Cek akses sekolah
         if (!$this->canAccessSchool($class)) {
             abort(
                 403,
@@ -673,10 +844,6 @@ class ClassController extends Controller
             );
         }
 
-        /*
-         * Relasi students() menggunakan
-         * student_enrollments sebagai pivot.
-         */
         $students = $class
             ->students()
             ->select([

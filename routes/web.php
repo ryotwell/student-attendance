@@ -108,6 +108,10 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->group(function() {
     Route::get( '/teacher-attendance', [App\Http\Controllers\Admin\TeacherAttendanceController::class, 'index'] )->name('admin.teacher-attendance.index');
     Route::get( '/teacher-attendance/export-pdf', [App\Http\Controllers\Admin\TeacherAttendanceController::class, 'exportPdf'] )->name('admin.teacher-attendance.export-pdf');
     Route::get( '/teacher-attendance/{teacherAttendance}', [App\Http\Controllers\Admin\TeacherAttendanceController::class, 'show'] )->name('admin.teacher-attendance.show');
+
+    // impprt kelas
+    Route::get('/classes-import', [ClassController::class, 'importForm'])->name('classes.import.form');
+    Route::post('/classes-import', [ClassController::class, 'import'])->name('classes.import');
 });
 
 // GURU
