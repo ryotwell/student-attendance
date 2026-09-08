@@ -28,6 +28,17 @@ FROM php:8.4-cli-alpine AS vendor
 
 WORKDIR /app
 
+# Install dependencies yang dibutuhkan untuk PHP GD
+RUN apk add --no-cache \
+        freetype-dev \
+        libjpeg-turbo-dev \
+        libpng-dev \
+    && docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg \
+    && docker-php-ext-install \
+        gd
+
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -55,10 +66,22 @@ WORKDIR /var/www/html
 RUN apk add --no-cache \
         nginx \
         supervisor \
+        freetype \
+        libjpeg-turbo \
+        libpng \
+    && apk add --no-cache --virtual .build-deps \
+        freetype-dev \
+        libjpeg-turbo-dev \
+        libpng-dev \
+    && docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg \
     && docker-php-ext-install \
+        gd \
         pdo_mysql \
         bcmath \
-        opcache
+        opcache \
+    && apk del .build-deps
 
 # Copy Laravel application
 COPY . .
