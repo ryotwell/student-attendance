@@ -36,6 +36,7 @@ class MenuHelper
             'subItems' => [   // perbaikan di sini
                 ['name' => 'Daftar', 'path' => route('students.index')],
                 ['name' => 'Tambah Siswa Baru', 'path' => route('students.create')],
+                ['name' => 'Import Siswa Excel', 'path' => route('students.import.form')],
             ],
         ],
         [
@@ -44,6 +45,7 @@ class MenuHelper
             'subItems' => [
                 ['name' => 'Daftar', 'path' => route('classes.index')],
                 ['name' => 'Tambah Kelas Baru', 'path' => route('classes.create')],
+                ['name' => 'Import Kelas Excel', 'path' => route('classes.import.form')],
             ],
         ],
         [
