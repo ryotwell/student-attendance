@@ -452,13 +452,13 @@
 
                 <div class="flex items-center gap-3">
 
-                    <button
-                        type="button"
-                        onclick="downloadTemplate()"
+                    {{-- Download Template Kelas --}}
+                    <a
+                        href="{{ route('import.template', ['type' => 'kelas']) }}"
                         class="inline-flex items-center justify-center rounded-lg bg-gray-100 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                     >
                         Download Template
-                    </button>
+                    </a>
 
                     <button
                         type="submit"
@@ -475,39 +475,5 @@
     </form>
 
 </x-common.component-card>
-
-
-{{-- Script Download Template --}}
-<script>
-    function downloadTemplate() {
-
-        const content =
-            "Nama_Kelas,Kode_Kelas,Wali_Kelas\n" +
-            "X IPA 1,XIPA1,guru1@example.com\n" +
-            "X IPA 2,XIPA2,guru2@example.com\n";
-
-        const blob = new Blob(
-            [content],
-            {
-                type: 'text/csv;charset=utf-8;'
-            }
-        );
-
-        const url = URL.createObjectURL(blob);
-
-        const link = document.createElement('a');
-
-        link.href = url;
-        link.download = 'template_import_kelas.csv';
-
-        document.body.appendChild(link);
-
-        link.click();
-
-        document.body.removeChild(link);
-
-        URL.revokeObjectURL(url);
-    }
-</script>
 
 @endsection

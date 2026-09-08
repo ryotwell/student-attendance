@@ -10,9 +10,30 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\Teacher\AssignmentController;
 use App\Http\Controllers\TeacherDocumentController;
 use App\Http\Controllers\UserController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 Route::get('/', fn () => redirect()->route('login'))->middleware('guest');
+
+
+Route::get('/download-import-template', function (Request $request) {
+    $type = $request->query('type');
+
+    $files = [
+        'siswa' => 'templates/siswa_example.xlsx',
+        'kelas' => 'templates/kelas_example.xlsx',
+    ];
+
+    if (!isset($files[$type])) {
+        abort(404, 'Type template tidak valid. Gunakan siswa atau kelas.');
+    }
+
+    return Storage::disk('s3')->download(
+        $files[$type],
+        $type . '_example.xlsx'
+    );
+})->name('import.template');
 
 // SUPERADMIN
 Route::middleware(['auth', 'role:SUPERADMIN'])->prefix('superadmin')->name('superadmin.')->group(function () {
