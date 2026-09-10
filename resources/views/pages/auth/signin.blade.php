@@ -139,7 +139,7 @@
                                             value="{{ old('email') }}"
                                             autocomplete="email"
                                             autofocus
-                                            placeholder="admin@sekolah.id atau username"
+                                            placeholder="admin@sekolah.id"
                                             class="h-12 w-full rounded-xl border bg-gray-50 py-2.5 pr-4 pl-11 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:ring-4
                                             @error('email')
                                                 border-error-400/60 focus:border-error-400 focus:ring-error-500/10
