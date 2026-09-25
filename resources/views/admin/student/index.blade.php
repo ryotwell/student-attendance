@@ -11,15 +11,75 @@
 
     <x-common.component-card title="Daftar Siswa">
         <div class="flex flex-col gap-4">
-            <div class="flex flex-wrap items-center justify-between gap-4">
+        {{-- Header --}}
+        <div class="flex flex-wrap items-center justify-between gap-4">
+
+            <div>
+
                 <p class="text-sm text-gray-500 dark:text-gray-400">
-                    {{ $students->total() }} siswa terdaftar
+                    {{ $students->total() }} students terdaftar
                 </p>
-                <a href="{{ route('students.create') }}"
-                    class="bg-brand-500 shadow-theme-xs hover:bg-brand-600 inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white transition">
-                    Tambah Siswa
-                </a>
+
             </div>
+
+
+            {{-- Action --}}
+            <div class="flex flex-wrap items-center gap-2">
+
+                {{-- Import Excel --}}
+                <a
+                    href="{{ route('students.import.form') }}"
+                    class="bg-brand-500 shadow-theme-xs hover:bg-brand-600 inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition"
+                >
+
+                    {{-- Excel Icon --}}
+                    <svg
+                        class="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"
+                        />
+                    </svg>
+
+                    Import Excel
+
+                </a>
+
+
+                {{-- Tambah students --}}
+                <a
+                    href="{{ route('students.create') }}"
+                    class="bg-brand-500 shadow-theme-xs hover:bg-brand-600 inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition"
+                >
+
+                    {{-- Plus Icon --}}
+                    <svg
+                        class="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 4v16m8-8H4"
+                        />
+                    </svg>
+
+                    Tambah Siswa
+
+                </a>
+
+            </div>
+
+        </div>
 
             <!-- Form Filter -->
             <form method="GET" action="{{ route('students.index') }}" class="flex flex-wrap items-end gap-4">

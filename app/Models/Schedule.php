@@ -61,4 +61,9 @@ class Schedule extends Model
     {
         return $this->hasMany(Attendance::class);
     }
+
+    public function guruPiket(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'guru_piket_id');
+    }
 }

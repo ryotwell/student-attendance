@@ -18,24 +18,29 @@ class ScheduleController extends Controller
     private function applySchoolFilter($query)
     {
         $user = Auth::user();
+
         if ($user->role !== 'SUPERADMIN') {
             $query->whereHas('xclass', function ($q) use ($user) {
                 $q->where('school_id', $user->school_id);
             });
         }
+
         return $query;
     }
 
     /**
-     * Cek apakah jadwal milik sekolah user (kecuali SUPERADMIN).
+     * Cek apakah jadwal milik sekolah user.
      */
     private function canAccessSchool(Schedule $schedule): bool
     {
         $user = Auth::user();
+
         if ($user->role === 'SUPERADMIN') {
             return true;
         }
-        return $schedule->xclass && $schedule->xclass->school_id === $user->school_id;
+
+        return $schedule->xclass
+            && $schedule->xclass->school_id === $user->school_id;
     }
 
     /**
@@ -44,10 +49,13 @@ class ScheduleController extends Controller
     private function getAvailableClasses()
     {
         $query = Xclass::orderBy('name');
+
         $user = Auth::user();
+
         if ($user->role !== 'SUPERADMIN') {
             $query->where('school_id', $user->school_id);
         }
+
         return $query->get();
     }
 
@@ -56,11 +64,15 @@ class ScheduleController extends Controller
      */
     private function getAvailableUsers()
     {
-        $query = User::where('role', 'GURU')->orderBy('name');
+        $query = User::where('role', 'GURU')
+            ->orderBy('name');
+
         $user = Auth::user();
+
         if ($user->role !== 'SUPERADMIN') {
             $query->where('school_id', $user->school_id);
         }
+
         return $query->get();
     }
 
@@ -69,76 +81,253 @@ class ScheduleController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Schedule::with(['xclass.academicYear', 'user']);
+        $query = Schedule::with([
+            'xclass.academicYear',
+            'user',
+            'guruPiket',
+        ]);
+
         $user = Auth::user();
 
-        // Filter berdasarkan sekolah (kecuali SUPERADMIN)
+        /*
+         * Filter berdasarkan sekolah.
+         */
         $this->applySchoolFilter($query);
 
-        // Guru: hanya jadwal miliknya dan tahun ajaran aktif
+        /*
+         * Guru hanya melihat jadwal miliknya
+         * dan tahun ajaran aktif.
+         */
         if ($user->role === 'GURU') {
+
             $query->where('user_id', $user->id);
-            $activeAcademicYear = AcademicYear::where('is_active', true)
-                ->when($user->role !== 'SUPERADMIN', function ($q) use ($user) {
-                    $q->where('school_id', $user->school_id);
-                })
+
+            $activeAcademicYear = AcademicYear::where(
+                'is_active',
+                true
+            )
+                ->where(
+                    'school_id',
+                    $user->school_id
+                )
                 ->first();
+
             if ($activeAcademicYear) {
-                $query->whereHas('xclass', fn($q) => $q->where('academic_year_id', $activeAcademicYear->id));
+                $query->whereHas(
+                    'xclass',
+                    fn ($q) => $q->where(
+                        'academic_year_id',
+                        $activeAcademicYear->id
+                    )
+                );
             }
         }
 
-        // Pencarian (cari di subject_name, xclass.name, user.name)
+        /*
+         * Pencarian.
+         */
         if ($request->filled('search')) {
+
             $search = $request->search;
+
             $query->where(function ($q) use ($search) {
-                $q->where('subject_name', 'like', "%{$search}%")
-                  ->orWhereHas('xclass', fn($xq) => $xq->where('name', 'like', "%{$search}%"))
-                  ->orWhereHas('user', fn($uq) => $uq->where('name', 'like', "%{$search}%"));
+
+                $q->where(
+                    'subject_name',
+                    'like',
+                    "%{$search}%"
+                )
+
+                ->orWhereHas(
+                    'xclass',
+                    fn ($xq) => $xq->where(
+                        'name',
+                        'like',
+                        "%{$search}%"
+                    )
+                )
+
+                ->orWhereHas(
+                    'user',
+                    fn ($uq) => $uq->where(
+                        'name',
+                        'like',
+                        "%{$search}%"
+                    )
+                )
+
+                ->orWhereHas(
+                    'guruPiket',
+                    fn ($pq) => $pq->where(
+                        'name',
+                        'like',
+                        "%{$search}%"
+                    )
+                );
             });
         }
 
-        // Filter hari
+        /*
+         * Filter hari.
+         */
         if ($request->filled('day')) {
-            $query->where('day', $request->day);
+            $query->where(
+                'day',
+                $request->day
+            );
         }
 
-        // Filter kelas
+        /*
+         * Filter kelas.
+         */
         if ($request->filled('xclass_id')) {
-            $query->where('xclass_id', $request->xclass_id);
+            $query->where(
+                'xclass_id',
+                $request->xclass_id
+            );
         }
 
-        // Filter guru (hanya untuk admin/superadmin)
-        if ($request->filled('user_id') && ($user->role === 'ADMIN' || $user->role === 'SUPERADMIN')) {
+        /*
+         * Filter guru pengajar.
+         */
+        if (
+            $request->filled('user_id')
+            && in_array(
+                $user->role,
+                ['ADMIN', 'SUPERADMIN']
+            )
+        ) {
+
             if ($user->role !== 'SUPERADMIN') {
-                $userExists = User::where('id', $request->user_id)
-                    ->where('school_id', $user->school_id)
+
+                $userExists = User::where(
+                    'id',
+                    $request->user_id
+                )
+                    ->where(
+                        'school_id',
+                        $user->school_id
+                    )
+                    ->where(
+                        'role',
+                        'GURU'
+                    )
                     ->exists();
+
                 if ($userExists) {
-                    $query->where('user_id', $request->user_id);
+                    $query->where(
+                        'user_id',
+                        $request->user_id
+                    );
                 }
+
             } else {
-                $query->where('user_id', $request->user_id);
+
+                $query->where(
+                    'user_id',
+                    $request->user_id
+                );
             }
         }
 
-        // Urutkan dan paginasi
+        /*
+         * Filter guru piket.
+         */
+        if (
+            $request->filled('guru_piket_id')
+            && in_array(
+                $user->role,
+                ['ADMIN', 'SUPERADMIN']
+            )
+        ) {
+
+            if ($user->role !== 'SUPERADMIN') {
+
+                $piketExists = User::where(
+                    'id',
+                    $request->guru_piket_id
+                )
+                    ->where(
+                        'school_id',
+                        $user->school_id
+                    )
+                    ->where(
+                        'role',
+                        'GURU'
+                    )
+                    ->exists();
+
+                if ($piketExists) {
+                    $query->where(
+                        'guru_piket_id',
+                        $request->guru_piket_id
+                    );
+                }
+
+            } else {
+
+                $query->where(
+                    'guru_piket_id',
+                    $request->guru_piket_id
+                );
+            }
+        }
+
+        /*
+         * Urutkan dan paginasi.
+         */
         $schedules = $query
-            ->orderByRaw("FIELD(day, 'MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY')")
+            ->orderByRaw(
+                "FIELD(
+                    day,
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                    'SATURDAY',
+                    'SUNDAY'
+                )"
+            )
             ->orderBy('start_time')
             ->paginate(10)
             ->withQueryString();
 
-        // Data untuk dropdown filter (hanya kelas dan guru)
+        /*
+         * Data dropdown.
+         */
         $days = MenuHelper::days();
+
         $classes = $this->getAvailableClasses();
+
         $users = $this->getAvailableUsers();
 
+        /*
+         * View guru.
+         */
         if ($user->isTeacher()) {
-            return view('teacher.schedule.index', compact('schedules', 'days', 'classes'));
+            return view(
+                'teacher.schedule.index',
+                compact(
+                    'schedules',
+                    'days',
+                    'classes'
+                )
+            );
         }
 
-        return view('admin.schedule.index', compact('schedules', 'days', 'classes', 'users'));
+        /*
+         * View admin.
+         */
+        return view(
+            'admin.schedule.index',
+            compact(
+                'schedules',
+                'days',
+                'classes',
+                'users'
+            )
+        );
     }
 
     /**
@@ -147,13 +336,17 @@ class ScheduleController extends Controller
     public function create()
     {
         $classes = $this->getAvailableClasses();
+
         $users = $this->getAvailableUsers();
 
-        return view('admin.schedule.create', [
-            'classes' => $classes,
-            'users'   => $users,
-            'days'    => MenuHelper::days(),
-        ]);
+        return view(
+            'admin.schedule.create',
+            [
+                'classes' => $classes,
+                'users'   => $users,
+                'days'    => MenuHelper::days(),
+            ]
+        );
     }
 
     /**
@@ -163,22 +356,43 @@ class ScheduleController extends Controller
     {
         $data = $this->validateRequest($request);
 
-        // Ambil school_id dari kelas yang dipilih
-        $xclass = Xclass::findOrFail($data['xclass_id']);
+        /*
+         * Pastikan kelas, guru pengajar,
+         * dan guru piket berada pada sekolah
+         * yang sesuai.
+         */
+        $this->ensureSameSchool(
+            $data['xclass_id'],
+            $data['user_id'],
+            $data['guru_piket_id']
+        );
+
+        /*
+         * Ambil school_id berdasarkan kelas.
+         */
+        $xclass = Xclass::findOrFail(
+            $data['xclass_id']
+        );
+
         $data['school_id'] = $xclass->school_id;
 
         Schedule::create($data);
 
-        return redirect()->route('schedules.index')->with('success', 'Jadwal berhasil ditambahkan.');
+        return redirect()
+            ->route('schedules.index')
+            ->with(
+                'success',
+                'Jadwal berhasil ditambahkan.'
+            );
     }
-
 
     /**
      * Display the specified resource.
      */
     public function show(Schedule $schedule)
     {
-        return redirect()->route('schedules.index');
+        return redirect()
+            ->route('schedules.index');
     }
 
     /**
@@ -187,38 +401,71 @@ class ScheduleController extends Controller
     public function edit(Schedule $schedule)
     {
         if (!$this->canAccessSchool($schedule)) {
-            abort(403, 'Anda tidak memiliki akses ke jadwal ini.');
+            abort(
+                403,
+                'Anda tidak memiliki akses ke jadwal ini.'
+            );
         }
 
         $classes = $this->getAvailableClasses();
+
         $users = $this->getAvailableUsers();
 
-        return view('admin.schedule.edit', [
-            'schedule' => $schedule,
-            'classes'  => $classes,
-            'users'    => $users,
-            'days'     => MenuHelper::days(),
-        ]);
+        return view(
+            'admin.schedule.edit',
+            [
+                'schedule' => $schedule,
+                'classes'  => $classes,
+                'users'    => $users,
+                'days'     => MenuHelper::days(),
+            ]
+        );
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Schedule $schedule)
-    {
+    public function update(
+        Request $request,
+        Schedule $schedule
+    ) {
         if (!$this->canAccessSchool($schedule)) {
-            abort(403, 'Anda tidak memiliki akses ke jadwal ini.');
+            abort(
+                403,
+                'Anda tidak memiliki akses ke jadwal ini.'
+            );
         }
 
         $data = $this->validateRequest($request);
 
-        // Ambil school_id dari kelas yang dipilih (bisa berubah)
-        $xclass = Xclass::findOrFail($data['xclass_id']);
+        /*
+         * Pastikan kelas, guru pengajar,
+         * dan guru piket berada pada sekolah
+         * yang sesuai.
+         */
+        $this->ensureSameSchool(
+            $data['xclass_id'],
+            $data['user_id'],
+            $data['guru_piket_id']
+        );
+
+        /*
+         * Ambil school_id berdasarkan kelas.
+         */
+        $xclass = Xclass::findOrFail(
+            $data['xclass_id']
+        );
+
         $data['school_id'] = $xclass->school_id;
 
         $schedule->update($data);
 
-        return redirect()->route('schedules.index')->with('success', 'Jadwal berhasil diperbarui.');
+        return redirect()
+            ->route('schedules.index')
+            ->with(
+                'success',
+                'Jadwal berhasil diperbarui.'
+            );
     }
 
     /**
@@ -227,50 +474,186 @@ class ScheduleController extends Controller
     public function destroy(Schedule $schedule)
     {
         if (!$this->canAccessSchool($schedule)) {
-            abort(403, 'Anda tidak memiliki akses ke jadwal ini.');
+            abort(
+                403,
+                'Anda tidak memiliki akses ke jadwal ini.'
+            );
         }
 
         $schedule->delete();
 
-        return redirect()->route('schedules.index')->with('success', 'Jadwal berhasil dihapus.');
+        return redirect()
+            ->route('schedules.index')
+            ->with(
+                'success',
+                'Jadwal berhasil dihapus.'
+            );
     }
 
     /**
      * Validasi request.
-     * subject_name wajib diisi sebagai string.
      */
-    private function validateRequest(Request $request): array
-    {
+    private function validateRequest(
+        Request $request
+    ): array {
         return $request->validate([
-            'day'          => ['required', 'in:MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,SATURDAY,SUNDAY'],
-            'start_time'   => ['required', 'date_format:H:i'],
-            'end_time'     => ['required', 'date_format:H:i', 'after:start_time'],
-            'subject_name' => ['required', 'string', 'max:255'],
-            'xclass_id'    => ['required', 'exists:xclasses,id'],
-            'user_id'      => ['required', 'exists:users,id'],
+
+            'day' => [
+                'required',
+                'in:MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,SATURDAY,SUNDAY',
+            ],
+
+            'start_time' => [
+                'required',
+                'date_format:H:i',
+            ],
+
+            'end_time' => [
+                'required',
+                'date_format:H:i',
+                'after:start_time',
+            ],
+
+            'subject_name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'xclass_id' => [
+                'required',
+                'exists:xclasses,id',
+            ],
+
+            'user_id' => [
+                'required',
+                'exists:users,id',
+            ],
+
+            /*
+             * GURU PIKET WAJIB.
+             */
+            'guru_piket_id' => [
+                'required',
+                'exists:users,id',
+            ],
         ]);
     }
 
     /**
-     * Pastikan kelas dan guru berada di sekolah yang sama.
+     * Pastikan kelas, guru pengajar,
+     * dan guru piket berada di sekolah yang sama.
      */
-    private function ensureSameSchool($xclassId, $userId)
-    {
+    private function ensureSameSchool(
+        $xclassId,
+        $userId,
+        $guruPiketId
+    ) {
         $user = Auth::user();
 
-        $xclass = Xclass::findOrFail($xclassId);
-        $teacher = User::findOrFail($userId);
+        $xclass = Xclass::findOrFail(
+            $xclassId
+        );
 
+        $teacher = User::findOrFail(
+            $userId
+        );
+
+        $guruPiket = User::findOrFail(
+            $guruPiketId
+        );
+
+        /*
+         * Guru pengajar harus GURU.
+         */
+        if ($teacher->role !== 'GURU') {
+            abort(
+                422,
+                'Guru pengajar harus merupakan guru.'
+            );
+        }
+
+        /*
+         * Guru piket harus GURU.
+         */
+        if ($guruPiket->role !== 'GURU') {
+            abort(
+                422,
+                'Guru piket harus merupakan guru.'
+            );
+        }
+
+        /*
+         * ADMIN.
+         */
         if ($user->role !== 'SUPERADMIN') {
-            if ($xclass->school_id !== $user->school_id) {
-                abort(422, 'Kelas tidak berada di sekolah Anda.');
+
+            /*
+             * Kelas harus berada di sekolah admin.
+             */
+            if (
+                $xclass->school_id
+                !== $user->school_id
+            ) {
+                abort(
+                    422,
+                    'Kelas tidak berada di sekolah Anda.'
+                );
             }
-            if ($teacher->school_id !== $user->school_id) {
-                abort(422, 'Guru tidak berada di sekolah Anda.');
+
+            /*
+             * Guru pengajar harus berada
+             * di sekolah admin.
+             */
+            if (
+                $teacher->school_id
+                !== $user->school_id
+            ) {
+                abort(
+                    422,
+                    'Guru tidak berada di sekolah Anda.'
+                );
             }
-        } else {
-            if ($xclass->school_id !== $teacher->school_id) {
-                abort(422, 'Kelas dan guru harus berada di sekolah yang sama.');
+
+            /*
+             * Guru piket harus berada
+             * di sekolah admin.
+             */
+            if (
+                $guruPiket->school_id
+                !== $user->school_id
+            ) {
+                abort(
+                    422,
+                    'Guru piket tidak berada di sekolah Anda.'
+                );
+            }
+        }
+
+        /*
+         * Untuk SUPERADMIN, kelas dan guru
+         * tetap harus berasal dari sekolah yang sama.
+         */
+        if ($user->role === 'SUPERADMIN') {
+
+            if (
+                $teacher->school_id
+                !== $xclass->school_id
+            ) {
+                abort(
+                    422,
+                    'Kelas dan guru harus berada di sekolah yang sama.'
+                );
+            }
+
+            if (
+                $guruPiket->school_id
+                !== $xclass->school_id
+            ) {
+                abort(
+                    422,
+                    'Guru piket harus berada di sekolah yang sama dengan kelas.'
+                );
             }
         }
     }

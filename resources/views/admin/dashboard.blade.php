@@ -58,7 +58,7 @@
 
         {{-- Kehadiran hari ini --}}
         <div class="mb-6">
-            <h3 class="mb-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Kehadiran Hari Ini</h3>
+            <h3 class="mb-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Kehadiran Siswa Hari Ini</h3>
             <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
                     <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ $todayCounts->get('HADIR', 0) }}</div>
@@ -83,7 +83,7 @@
             {{-- Ringkasan bulan ini --}}
             <div class="rounded-2xl bg-brand-50 p-5 dark:bg-brand-900/30 lg:col-span-1">
                 <div class="text-3xl font-bold text-brand-600 dark:text-brand-400">{{ $attendanceRate }}%</div>
-                <div class="text-sm font-semibold text-gray-600 dark:text-gray-300">Tingkat Kehadiran Sekolah</div>
+                <div class="text-sm font-semibold text-gray-600 dark:text-gray-300">Tingkat Kehadiran Siswa Sekolah</div>
                 <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ $monthLabel }}</div>
 
                 <div class="mt-4 space-y-1.5 border-t border-brand-100 pt-4 text-xs dark:border-brand-800">

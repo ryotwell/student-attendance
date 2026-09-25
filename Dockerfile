@@ -5,19 +5,14 @@ FROM node:22-bookworm-slim AS frontend
 
 WORKDIR /app
 
-# Enable Corepack untuk menggunakan pnpm
 RUN corepack enable
 
-# Copy dependency files terlebih dahulu agar Docker cache efektif
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# Install dependency berdasarkan lockfile
 RUN pnpm install --frozen-lockfile
 
-# Copy source code
 COPY . .
 
-# Build Vite
 RUN pnpm run build
 
 
@@ -27,6 +22,19 @@ RUN pnpm run build
 FROM php:8.4-cli-alpine AS vendor
 
 WORKDIR /app
+
+# Dependencies untuk GD + ZIP
+RUN apk add --no-cache \
+        freetype-dev \
+        libjpeg-turbo-dev \
+        libpng-dev \
+        libzip-dev \
+    && docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg \
+    && docker-php-ext-install \
+        gd \
+        zip
 
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -51,14 +59,31 @@ FROM php:8.4-fpm-alpine
 
 WORKDIR /var/www/html
 
-# Install system packages + PHP extensions
+# Runtime libraries
 RUN apk add --no-cache \
         nginx \
         supervisor \
+        freetype \
+        libjpeg-turbo \
+        libpng \
+        libzip
+
+# Build dependencies
+RUN apk add --no-cache --virtual .build-deps \
+        freetype-dev \
+        libjpeg-turbo-dev \
+        libpng-dev \
+        libzip-dev \
+    && docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg \
     && docker-php-ext-install \
+        gd \
+        zip \
         pdo_mysql \
         bcmath \
-        opcache
+        opcache \
+    && apk del .build-deps
 
 # Copy Laravel application
 COPY . .
@@ -93,5 +118,4 @@ RUN { \
 
 EXPOSE 80
 
-# Start Laravel
-CMD ["sh", "-c", "php artisan migrate --force && php artisan optimize && php artisan storage:link && supervisord -c /etc/supervisord.conf"]
+CMD ["sh", "-c", "php artisan migrate --force && php artisan optimize && php artisan storage:link || true; supervisord -c /etc/supervisord.conf"]

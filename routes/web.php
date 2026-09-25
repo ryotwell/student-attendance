@@ -10,9 +10,30 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\Teacher\AssignmentController;
 use App\Http\Controllers\TeacherDocumentController;
 use App\Http\Controllers\UserController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 Route::get('/', fn () => redirect()->route('login'))->middleware('guest');
+
+
+Route::get('/download-import-template', function (Request $request) {
+    $type = $request->query('type');
+
+    $files = [
+        'siswa' => 'templates/siswa_example.xlsx',
+        'kelas' => 'templates/kelas_example.xlsx',
+    ];
+
+    if (!isset($files[$type])) {
+        abort(404, 'Type template tidak valid. Gunakan siswa atau kelas.');
+    }
+
+    return Storage::disk('s3')->download(
+        $files[$type],
+        $type . '_example.xlsx'
+    );
+})->name('import.template');
 
 // SUPERADMIN
 Route::middleware(['auth', 'role:SUPERADMIN'])->prefix('superadmin')->name('superadmin.')->group(function () {
@@ -103,6 +124,21 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->group(function() {
 
     Route::get('/assignments/{assignment}', [App\Http\Controllers\Admin\AssignmentController::class, 'show'])
         ->name('admin.assignments.show');
+
+    // absensi guru
+    Route::get( '/teacher-attendance', [App\Http\Controllers\Admin\TeacherAttendanceController::class, 'index'] )->name('admin.teacher-attendance.index');
+    Route::get( '/teacher-attendance/export-pdf', [App\Http\Controllers\Admin\TeacherAttendanceController::class, 'exportPdf'] )->name('admin.teacher-attendance.export-pdf');
+    Route::get( '/teacher-attendance/{teacherAttendance}', [App\Http\Controllers\Admin\TeacherAttendanceController::class, 'show'] )->name('admin.teacher-attendance.show');
+
+    // impprt kelas
+    Route::get('/classes-import', [ClassController::class, 'importForm'])->name('classes.import.form');
+    Route::post('/classes-import', [ClassController::class, 'import'])->name('classes.import');
+
+    // Form import siswa
+    Route::get('/students-import', [StudentController::class, 'importForm'])->name('students.import.form');
+
+    // Proses import siswa
+    Route::post('/students-import', [StudentController::class, 'import'])->name('students.import');
 });
 
 // GURU
@@ -152,6 +188,18 @@ Route::middleware(['auth'])->prefix('guru')->group(function() {
             ->name('teacher.documents.edit');
         Route::put('/documents', [App\Http\Controllers\Teacher\TeacherDocumentController::class, 'update'])
             ->name('teacher.documents.update');
+
+        Route::middleware(['auth'])->group(function () {
+
+        /*
+        * Absensi Guru
+        */
+        Route::get('/teacher-attendance/attendance', [App\Http\Controllers\Teacher\TeacherAttendanceController::class, 'index'])->name('teacher.attendance.index');
+        Route::post('/teacher-attendance/attendance/check-in', [App\Http\Controllers\Teacher\TeacherAttendanceController::class, 'checkIn'])->name('teacher.attendance.check-in');
+        Route::post('/teacher-attendance/attendance/check-out', [App\Http\Controllers\Teacher\TeacherAttendanceController::class, 'checkOut'])->name('teacher.attendance.check-out');
+        Route::get('/teacher-attendance/attendance/{teacherAttendance}', [App\Http\Controllers\Teacher\TeacherAttendanceController::class, 'show'])->name('teacher.attendance.show');
+
+    });
     });
 });
 
